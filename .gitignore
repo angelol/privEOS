@@ -1,2 +1,4 @@
 .DS_Store
 node_modules
+/priveos/priveos.wasm
+/priveos/priveos.abi

@@ -6,7 +6,10 @@ EOS_CONTRACTS_DIR=/Users/al/Documents/eos/eos/build/contracts
 CLEOS=cleos
 
 build:
-	eosio-cpp $(CPP_IN).cpp -o $(CPP_IN).wasm --abigen
+	eosiocpp -o $(CPP_IN).wasm $(CPP_IN).cpp
+	
+abi:
+	eosiocpp -g $(CPP_IN).abi $(CPP_IN).cpp
 
 deploy: build
 	$(CLEOS) set contract $(CONTRACT_ACCOUNT) ../$(CPP_IN)
@@ -39,5 +42,15 @@ setup:
 	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode4 $(PK) $(PK)
 	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode5 $(PK) $(PK)
 	
+regnodes:
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode1", "$(PK)"]' -p testnode1
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode2", "$(PK)"]' -p testnode2
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode3", "$(PK)"]' -p testnode3
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode4", "$(PK)"]' -p testnode4
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode5", "$(PK)"]' -p testnode5
+	
+shownodes:
+	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) nodes
+
 clean:
 	rm -f $(CPP_IN).wast $(CPP_IN).wasm $(CPP_IN).abi 
