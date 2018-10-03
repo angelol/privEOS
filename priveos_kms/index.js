@@ -3,7 +3,7 @@ import restify from 'restify'
 import MongoClient from 'mongodb'
 import assert from 'assert'
 import Eos from 'eosjs'
-import eosjc_ecc from 'eosjs-ecc'
+import eosjs_ecc from 'eosjs-ecc'
 import ByteBuffer from 'bytebuffer'
 
 const httpEndpoint = 'http://localhost:8888'
@@ -47,7 +47,9 @@ server.post('/read/', function(req, res, next) {
 			const data = JSON.parse(trace.act.data.data)
 			
 			// get data relevante for my node
-			const my_share = data[this_node]
+			const my_share = data.filter(x => x.node == this_node)[0]
+			
+			assert.notEqual(null, my_share, "my_share not found!")
 			
 			// decrypt using the private key of my node
 			const plaintext = eosjs_ecc.Aes.decrypt(private_key, my_share.public_key, my_share.nonce, ByteBuffer.fromHex(my_share.message).toBinary(), my_share.checksum)

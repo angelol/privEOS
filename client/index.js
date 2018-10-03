@@ -140,13 +140,12 @@ function read(file) {
 
 const owner = 'angelo'
 const file = process.argv[2]
-const data = process.argv[3]
 
 
 
 
 function test() {
-  store(owner, file, data)
+  store(owner, file)
   .then((x) => {
     console.log("Successfully stored file, now off to reading.")
     read(file)
