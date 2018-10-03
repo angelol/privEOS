@@ -3,3 +3,4 @@ node_modules
 /priveos/priveos.wasm
 /priveos/priveos.abi
 /broker/dist
+/priveos_kms/dist
