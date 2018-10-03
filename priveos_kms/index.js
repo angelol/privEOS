@@ -92,12 +92,10 @@ server.listen(PORT, function() {
   console.log('%s listening at %s', server.name, server.url)
 })
 
-async function get_public_key(account_name, perm_name) {
-  const x = await eos.getAccount(account_name)
-  for (const perm of x.permissions) {
-    // console.log(perm.perm_name)
-    if(perm.perm_name == perm_name) {
-      return perm.required_auth.keys[0].key
-    }
-  }
+
+function get_public_key(account_name, perm_name) {
+	return eos.getAccount(account_name)
+	.then((x) => {
+		return x.permissions.filter(perm => perm.perm_name == perm_name)[0].required_auth.keys[0].key
+	})
 }

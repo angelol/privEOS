@@ -45,12 +45,9 @@ function get_original_nodes(file) {
 
 function get_node_urls(nodes) {
   const owners = nodes.map(value => value.node)
-  console.log("Owners: ", owners)
   return eos.getTableRows({json:true, scope: contract, code: contract,  table: 'nodes', limit:100})
   .then((res) => {
-    console.log("res.rows: ", res.rows)
     return res.rows.filter((x) => {
-      console.log("x.owner: ", x.owner);
       return owners.includes(x.owner)
     })
   })
@@ -66,30 +63,20 @@ server.use(restify.plugins.bodyParser())
 server.post('/read/', function(req, res, next) {
   const file = req.body.file
   const requester = req.body.requester
-  
-  console.log("File: ", file);
-  console.log("Requester: ", requester);
-  
   get_original_nodes(file).then((nodes) => {
-    console.log("Nodes: ", JSON.stringify(nodes))
     get_node_urls(nodes)
     .then((nodes) => {
-      console.log("Node URLs: ", nodes)
       Promise.map(nodes, (node) => {
-        console.log("Connecting to node ", JSON.stringify(node))
-        console.log("Node Address: ", node.url)
         return axios.post(node.url+'/read/', {
           file: file,
           requester: requester,
         })
         .then((response) => {
           const data = response.data
-          console.log("Data: ", data)
           return data
         })
       })
       .then((x) => {
-        console.log("Data from nodes: ", x)
         res.send(x)
       })
     })
