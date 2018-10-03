@@ -43,12 +43,15 @@ function get_original_nodes(file) {
   })
 }   
 
-function get_node_urls(nodes) {
-  const owners = nodes.map(value => value.node)
-  return eos.getTableRows({json:true, scope: contract, code: contract,  table: 'nodes', limit:100})
-  .then((res) => {
-    return res.rows.filter((x) => {
-      return owners.includes(x.owner)
+function get_node_urls(file) {
+  return get_original_nodes(file)
+  .then((nodes) => {
+    const owners = nodes.map(value => value.node)
+    return eos.getTableRows({json:true, scope: contract, code: contract,  table: 'nodes', limit:100})
+    .then((res) => {
+      return res.rows.filter((x) => {
+        return owners.includes(x.owner)
+      })
     })
   })
 }
@@ -59,35 +62,23 @@ function get_node_urls(nodes) {
 const server = restify.createServer({handleUncaughtExceptions: true})
 server.use(restify.plugins.bodyParser())
 
-
 server.post('/read/', function(req, res, next) {
   const file = req.body.file
   const requester = req.body.requester
-  get_original_nodes(file).then((nodes) => {
-    get_node_urls(nodes)
-    .then((nodes) => {
-      Promise.map(nodes, (node) => {
-        return axios.post(node.url+'/read/', {
-          file: file,
-          requester: requester,
-        })
-        .then((response) => {
-          const data = response.data
-          return data
-        })
-      })
-      .then((x) => {
-        res.send(x)
+  get_node_urls(file)
+  .then((nodes) => {
+    Promise.map(nodes, (node) => {
+      return axios.post(node.url + '/read/', {
+        file: file,
+        requester: requester,
       })
     })
+    .then((response) => {
+      res.send(response.data)
+    })
   })
-  
-  
   next()
 })
-
-
-
 
 server.listen(PORT, function() {
   console.log('Broker %s listening at %s', server.name, server.url)
