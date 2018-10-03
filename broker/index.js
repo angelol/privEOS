@@ -18,13 +18,6 @@ const eos = Eos({httpEndpoint, chainId})
 
 var PORT = 4000
 
-if(process.argv[2]) {
-	PORT = process.argv[2]
-}
-if(process.argv[3]) {
-	this_node = process.argv[3]
-}
-
 function getMongoConnection(url) {
   return MongoClient.connect(url, { 
 		promiseLibrary: Promise, 
@@ -33,7 +26,7 @@ function getMongoConnection(url) {
   .disposer(conn => conn.close())
 }
 
-function nodes() {
+function nodes(file) {
   return Promise.using(getMongoConnection(mongoUrl), conn => {
     return conn.db('EOS').collection('action_traces')
       .find({"act.account" : contract, "act.data.file": file})
@@ -61,7 +54,7 @@ server.post('/read/', function(req, res, next) {
   const file = req.body.file
   const requester = req.body.requester
   
-  Promise.map(nodes, (node) => {
+  Promise.map(nodes(file), (node) => {
     return axios.post(node.address+'/read/', {
       file: file,
       requester: requester,
@@ -83,5 +76,5 @@ server.post('/read/', function(req, res, next) {
 
 
 server.listen(PORT, function() {
-  console.log('%s listening at %s', server.name, server.url)
+  console.log('Broker %s listening at %s', server.name, server.url)
 })
