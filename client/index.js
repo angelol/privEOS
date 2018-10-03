@@ -18,7 +18,12 @@ const eos = Eos({httpEndpoint, chainId, keyProvider});
 const contract = 'priveosrules';
 
 function get_nodes() {
-  return ["testnode1", "testnode2", "testnode3", "testnode4", "testnode5"];
+  return eos.getTableRows({json:true, scope: contract, code: contract,  table: 'nodes', limit:100})
+  .then((res) => {
+    return res.rows.filter((x) => {
+      return x.is_active;
+    });
+  });
 }
 
 async function get_public_key(account_name, perm_name) {
@@ -33,7 +38,6 @@ async function get_public_key(account_name, perm_name) {
 
 
 function get_threshold(N) {
-  return 2;
   return Math.floor(N/2) + 1;
 }
 
@@ -45,41 +49,26 @@ async function store(owner, file) {
   const shared_secret = secret + nonce;
   console.log("shared_secret: ", shared_secret);
   
-  const nodes = get_nodes();
-  
-  console.log("Nodes: ", nodes);
-
-  
-  const shares = secrets.share(shared_secret, nodes.length, get_threshold(nodes.length));
-  console.log("Shares: ", shares);
-  
-  return Promise.map(nodes, async (x) => {
-    const public_key = await get_public_key(x, 'active');
-    const share = await eosjs_ecc.Aes.encrypt(key, public_key, shares.pop());
-    
-    return Promise.props({
-      node: x, 
-      message: share.message.toString('hex'),
-      nonce: String(share.nonce),
-      checksum: share.checksum,
-      public_key: public_key
-    });
-  }).then((encrypted_shares) => {
-    console.log("encrypted_shares: ", JSON.stringify(encrypted_shares));
-    
-    var data = {};
-    for(var i=0; i < encrypted_shares.length; i++) {
-      const x = encrypted_shares[i];
-      data[x.node] = {
-        message: x.message,
-        nonce: x.nonce,
-        checksum: x.checksum,
-        public_key: x.public_key
-      }
-    }
-    
-    
-    
+  return get_nodes()
+  .then((nodes) => {
+    console.log("Nodes: ", nodes);
+    const shares = secrets.share(shared_secret, nodes.length, get_threshold(nodes.length));
+    console.log("Shares: ", shares);
+    return nodes.map(function(node) {
+      const public_key = node.node_key;
+      const share = eosjs_ecc.Aes.encrypt(key, public_key, shares.pop());
+      
+      return {
+        node: node.owner, 
+        message: share.message.toString('hex'),
+        nonce: String(share.nonce),
+        checksum: share.checksum,
+        public_key: public_key
+      };
+    })
+  })
+  .then((data) => {
+    console.log("data: ", JSON.stringify(data));
     return eos.transaction(
       {
         actions: [
@@ -99,7 +88,8 @@ async function store(owner, file) {
         ]
       }
     )
-  }).then((data) => {
+  })
+  .then((data) => {
     console.log("Successfully stored in blockchain txid: ", data.transaction_id);
     return [secret, nonce];
   }).catch((e) => {
@@ -173,3 +163,4 @@ function test() {
   
 }
 test();
+
