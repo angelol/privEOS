@@ -15,7 +15,7 @@ class priveos : public contract {
     }
     
     //@abi action
-    void regnode(const account_name owner, const eosio::public_key node_key) {
+    void regnode(const account_name owner, const eosio::public_key node_key, const std::string url) {
       eosio_assert(node_key != eosio::public_key(), "public key should not be the default value");
       
       require_auth(owner);
@@ -24,11 +24,14 @@ class priveos : public contract {
       if(node_idx != nodes.end()) {
         nodes.modify(node_idx, owner, [&](nodeinfo& info) {
           info.node_key = node_key;
+          info.url = url;
+          info.is_active = true;
         });
       } else {
         nodes.emplace(owner, [&](nodeinfo& info) {
           info.owner = owner;
           info.node_key = node_key;
+          info.url = url;
         });
       }  
     }
@@ -45,13 +48,14 @@ class priveos : public contract {
   private:
     // @abi table nodes i64
     struct nodeinfo {
-      account_name  owner;
-      eosio::public_key    node_key;
-      bool          is_active = true;
+      account_name        owner;
+      eosio::public_key   node_key;
+      std::string              url;
+      bool                is_active = true;
       
       uint64_t primary_key()const { return owner; }
       
-      EOSLIB_SERIALIZE(nodeinfo, (owner)(node_key)(is_active))
+      EOSLIB_SERIALIZE(nodeinfo, (owner)(node_key)(url)(is_active))
     };
     typedef multi_index<N(nodes), nodeinfo> nodes_table;
     nodes_table nodes;

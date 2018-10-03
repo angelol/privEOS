@@ -43,11 +43,11 @@ setup:
 	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode5 $(PK) $(PK)
 	
 regnodes:
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode1", "$(PK)"]' -p testnode1
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode2", "$(PK)"]' -p testnode2
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode3", "$(PK)"]' -p testnode3
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode4", "$(PK)"]' -p testnode4
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode5", "$(PK)"]' -p testnode5
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode1", "$(PK)", "http://localhost:3001"]' -p testnode1
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode2", "$(PK)", "http://localhost:3002"]' -p testnode2
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode3", "$(PK)", "http://localhost:3003"]' -p testnode3
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode4", "$(PK)", "http://localhost:3004"]' -p testnode4
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnode5", "$(PK)", "http://localhost:3005"]' -p testnode5
 	
 shownodes:
 	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) nodes
