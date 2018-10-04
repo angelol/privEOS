@@ -1,0 +1,5 @@
+{
+    "eosRepoDir": "<PATH_TO_EOS_REPO_CONTRACTS_FOLDER_WITH_TRAILING_SLASH>",
+    "eosNodeosDataDir": "<PATH_TO_EOS_NODE_OS_DATA_DIRECTORY",
+    "eosAccountName": "priveos_user"
+}
