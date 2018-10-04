@@ -16,6 +16,7 @@ Install following cli utils:
 
 Please copy the config file in project root called `config-template.json` and name it `config.json`. Then replace all the properties in that file to match your local criteria:
 
+
 `eosContractsDir` The path to the contracts folder within the eos blockchain code repository.
 
 @TODO: add all other props
@@ -25,7 +26,7 @@ Please copy the config file in project root called `config-template.json` and na
 To generate the keys for eos, run:
 
 ```
-make init
+make eos_init
 ```
 
 ## Start Local Development Cluster
