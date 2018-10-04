@@ -67,19 +67,18 @@ server.post('/read/', function(req, res, next) {
   const requester = req.body.requester
   get_node_urls(file)
   .then((nodes) => {
-    Promise.map(nodes, (node) => {
+    return Promise.map(nodes, (node) => {
       return axios.post(node.url + '/read/', {
         file: file,
         requester: requester,
       })
       .then((response) => {
-        console.log("Response: ", response);
         return response.data
       })
     })
-    .then((data) => {
-      res.send(data)
-    })
+  })
+  .then((data) => {
+    res.send(data)
   })
   next()
 })
