@@ -72,9 +72,13 @@ server.post('/read/', function(req, res, next) {
         file: file,
         requester: requester,
       })
+      .then((response) => {
+        console.log("Response: ", response);
+        return response.data
+      })
     })
-    .then((response) => {
-      res.send(response.data)
+    .then((data) => {
+      res.send(data)
     })
   })
   next()
