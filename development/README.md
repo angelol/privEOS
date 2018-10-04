@@ -19,7 +19,12 @@ Please copy the config file in project root called `config-template.json` and na
 
 `eosContractsDir` The path to the contracts folder within the eos blockchain code repository.
 
-@TODO: add all other props
+`eosNodeosDataDir` The path to the nodeos data directory. On mac its: `/Users/<USER>/Library/Application Support/eosio/nodeos/data`.
+
+> Use absolute path without home directory substitution, otherwise the eos_flush make command wont work.
+
+`eosAccountName` The account name of the user for the eos blockchain.
+
 
 ## Initialize Blockchain
 
