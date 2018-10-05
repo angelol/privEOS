@@ -56,13 +56,15 @@ eos_setup_system:
 	$(CLEOS_EXECUTABLE) create account eosio eosio.vpay ${EOS_PUBLIC_KEY} ${EOS_PUBLIC_KEY}
 	$(CLEOS_EXECUTABLE) set contract eosio.token $(EOS_CONTRACTS_DIR)/eosio.token -p eosio.token
 	$(CLEOS_EXECUTABLE) set contract eosio.msig $(EOS_CONTRACTS_DIR)/eosio.msig -p eosio.msig
+	$(CLEOS_EXECUTABLE) push action eosio.token create '[ "eosio", "10000000000.0000 SYS" ]' -p eosio.token@active
+	$(CLEOS_EXECUTABLE) push action eosio.token issue '[ "eosio", "1000000000.0000 SYS", "memo" ]' -p eosio@active
 	$(CLEOS_EXECUTABLE) push action eosio.token create '["eosio", "10000000000.0000 EOS",0,0,0]' -p eosio.token
 	$(CLEOS_EXECUTABLE) push action eosio.token issue '["eosio","1000000000.0000 EOS", "issue"]' -p eosio
 	$(CLEOS_EXECUTABLE) transfer eosio angelo "1000.0000 EOS"
 	$(CLEOS_EXECUTABLE) set contract eosio $(EOS_CONTRACTS_DIR)/eosio.system -p eosio
 
 eos_setup_accounts:
-	$(CLEOS_EXECUTABLE) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio $(EOS_ACCOUNT_NAME) ${EOS_PUBLIC_KEY} ${EOS_PUBLIC_KEY}
+	$(CLEOS_EXECUTABLE) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio $(EOS_ACCOUNT_NAME) $(EOS_PUBLIC_KEY) $(EOS_PUBLIC_KEY)
 	$(CLEOS_EXECUTABLE) set account permission $(EOS_ACCOUNT_NAME) active '{"threshold": 1,"keys": [{"key": "${EOS_PUBLIC_KEY}","weight": 1}],"accounts": [{"permission":{"actor":"$(EOS_ACCOUNT_NAME)","permission":"eosio.code"},"weight":1}]}' owner -p $(EOS_ACCOUNT_NAME)
 	$(CLEOS_EXECUTABLE) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode1 ${EOS_PUBLIC_KEY} ${EOS_PUBLIC_KEY}
 	$(CLEOS_EXECUTABLE) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode2 ${EOS_PUBLIC_KEY} ${EOS_PUBLIC_KEY}
