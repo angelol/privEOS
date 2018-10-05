@@ -9,14 +9,14 @@ EOSIOCPP_EXECUTABLE=`cat ./config.json | jq '.eosiocppExecutable' -r`
 PM2_SERVICES_FILE="pm2-services.json"
 PM2_EOS_DOCKER_FILE="pm2-eos-docker.json"
 PM2_EOS_NATIVE_FILE="pm2-eos-native.json"
-PRIVEOS_FOLDER=../priveos
+PRIVEOS_CONTRACT_SRC_FOLDER=`cat ./config.json | jq '.priveosContractSrcFolder' -r`
 CPP_IN=priveos
 
 priveos_build:
-	eosiocpp -o $(PRIVEOS_FOLDER)/$(CPP_IN).wasm $(PRIVEOS_FOLDER)/$(CPP_IN).cpp
+	$(EOSIOCPP_EXECUTABLE) -o $(PRIVEOS_CONTRACT_SRC_FOLDER)/$(CPP_IN).wasm $(PRIVEOS_CONTRACT_SRC_FOLDER)/$(CPP_IN).cpp
 	
 priveos_abi:
-	eosiocpp -g $(PRIVEOS_FOLDER)/$(CPP_IN).abi $(PRIVEOS_FOLDER)/$(CPP_IN).cpp
+	$(EOSIOCPP_EXECUTABLE) -g $(PRIVEOS_CONTRACT_SRC_FOLDER)/$(CPP_IN).abi $(PRIVEOS_CONTRACT_SRC_FOLDER)/$(CPP_IN).cpp
 
 priveos_deploy: build
 	$(CLEOS) set contract $(CONTRACT_ACCOUNT) ../$(CPP_IN)
@@ -86,6 +86,11 @@ eos_docker_rebuild:
 	make eos_docker_start
 	sleep 3
 	make eos_docker_build
+
+eos_docker_restart:
+	make eos_docker_stop
+	make eos_docker_remove
+	make eos_docker_start
 
 eos_docker_start:
 	./bin/start-eos-docker.sh $(EOS_NODEOS_DATA_DIR)

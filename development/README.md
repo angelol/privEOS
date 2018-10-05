@@ -42,12 +42,12 @@ Please copy the config file `development/config-template.json` to `development/c
 
 - `cleosExecutable` The path to the cleos executable.
     
-   For __docker__, please read through [https://developers.eos.io/eosio-nodeos/docs/docker-quickstart#section-step-5-alias-cleos](https://developers.eos.io/eosio-nodeos/docs/docker-quickstart#section-step-5-alias-cleos) or use `docker exec -it nodeos /opt/eosio/bin/cleos --url http://127.0.0.1:8888 --wallet-url http://[keosd_ip]:9876` and adapt your ip's.
+   For __Docker__, please read through [https://developers.eos.io/eosio-nodeos/docs/docker-quickstart#section-step-5-alias-cleos](https://developers.eos.io/eosio-nodeos/docs/docker-quickstart#section-step-5-alias-cleos) or use `docker exec -it nodeos /opt/eosio/bin/cleos --url http://127.0.0.1:8888 --wallet-url http://[keosd_ip]:9876` and adapt your ip's.
 
 
 - `eosiocppExecutable` The path to the eosiocpp tool.
 
-    For __docker__, us `docker exec nodeos /opt/eosio/bin/eosiocpp`.
+    For __Docker__, us `docker exec nodeos /opt/eosio/bin/eosiocpp`.
 
 - `eosContractsDir` The path to the contracts folder within the eos blockchain code repository or docker container.
 
@@ -60,6 +60,12 @@ Please copy the config file `development/config-template.json` to `development/c
     For __Docker__, use `/tmp/eosio/data` as this is the mounted volume in the docker run script.
 
 - `eosAccountName` The account name of the user for the eos blockchain.
+
+- `priveosContractSrcFolder` The path to the folder of the priveos eos contract source files.
+
+    For __Docker__, use `/priveos` as the priveos source folder is mounted into docker.
+
+    For all other, use `../priveos`.
 
 
 ## Verbosity in EOS
