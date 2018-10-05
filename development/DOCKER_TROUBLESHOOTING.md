@@ -13,4 +13,4 @@ make: *** [eos_docker_rebuild] Error 2
 ```
 
 Solution:
-Execute the `/eos/eosio_build.sh` script directly in container.
+Execute the `/eos/eosio_build.sh -s EOS` script directly in container. Take care to use the `EOS` symbol.

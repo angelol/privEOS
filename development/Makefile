@@ -56,8 +56,6 @@ eos_setup_system:
 	$(CLEOS_EXECUTABLE) create account eosio eosio.vpay ${EOS_PUBLIC_KEY} ${EOS_PUBLIC_KEY}
 	$(CLEOS_EXECUTABLE) set contract eosio.token $(EOS_CONTRACTS_DIR)/eosio.token -p eosio.token
 	$(CLEOS_EXECUTABLE) set contract eosio.msig $(EOS_CONTRACTS_DIR)/eosio.msig -p eosio.msig
-	$(CLEOS_EXECUTABLE) push action eosio.token create '[ "eosio", "10000000000.0000 SYS" ]' -p eosio.token@active
-	$(CLEOS_EXECUTABLE) push action eosio.token issue '[ "eosio", "1000000000.0000 SYS", "memo" ]' -p eosio@active
 	$(CLEOS_EXECUTABLE) push action eosio.token create '["eosio", "10000000000.0000 EOS",0,0,0]' -p eosio.token
 	$(CLEOS_EXECUTABLE) push action eosio.token issue '["eosio","1000000000.0000 EOS", "issue"]' -p eosio
 	$(CLEOS_EXECUTABLE) transfer eosio angelo "1000.0000 EOS"

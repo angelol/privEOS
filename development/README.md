@@ -15,7 +15,7 @@ When using the docker container, make sure, that you have the contracts folder b
 ```
 # within the docker container
 cd /eos
-./eosio_build.sh
+./eosio_build.sh -s EOS
 cd build
 sudo make system
 ```
