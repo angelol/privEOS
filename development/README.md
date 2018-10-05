@@ -16,8 +16,11 @@ Install following cli utils:
 
 Please copy the config file in project root called `config-template.json` and name it `config.json`. Then replace all the properties in that file to match your local criteria:
 
+`cleosExecutable` The path to the cleos executable. For the docker version, see [https://developers.eos.io/eosio-nodeos/docs/docker-quickstart#section-step-5-alias-cleos](https://developers.eos.io/eosio-nodeos/docs/docker-quickstart#section-step-5-alias-cleos) or use `docker exec -it nodeos /opt/eosio/bin/cleos --url http://127.0.0.1:8888 --wallet-url http://172.18.0.3:9876` and adapt your ip's.
 
-`eosContractsDir` The path to the contracts folder within the eos blockchain code repository. For the docker version, simply use `/contracts/` as the contracts are inside the docker container.
+`eosiocppExecutable` The path to the eosiocpp tool. For docker, use `docker exec nodeos /opt/eosio/bin/eosiocpp`.
+
+`eosContractsDir` The path to the contracts folder within the eos blockchain code repository or docker container. For the docker version, simply use `/eos/contracts/` as the contracts are inside the docker container.
 
 `eosNodeosDataDir` The path to the nodeos data directory. On mac its: `/Users/<USER>/Library/Application Support/eosio/nodeos/data`. For the docker version, use `/tmp/eosio/data`.
 
@@ -25,6 +28,7 @@ Please copy the config file in project root called `config-template.json` and na
 
 `eosAccountName` The account name of the user for the eos blockchain.
 
+> When using Docker... please read this: [https://developers.eos.io/eosio-nodeos/docs/docker-quickstart](https://developers.eos.io/eosio-nodeos/docs/docker-quickstart)
 
 ## Start Blockchain
 
