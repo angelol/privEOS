@@ -63,7 +63,7 @@ eos_setup_system:
 
 eos_setup_accounts:
 	$(CLEOS_EXECUTABLE) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio $(EOS_ACCOUNT_NAME) $(EOS_PUBLIC_KEY) $(EOS_PUBLIC_KEY)
-	$(CLEOS_EXECUTABLE) set account permission $(EOS_ACCOUNT_NAME) active '{"threshold": 1,"keys": [{"key": "${EOS_PUBLIC_KEY}","weight": 1}],"accounts": [{"permission":{"actor":"$(EOS_ACCOUNT_NAME)","permission":"eosio.code"},"weight":1}]}' owner -p $(EOS_ACCOUNT_NAME)
+	$(CLEOS_EXECUTABLE) set account permission $(EOS_ACCOUNT_NAME) active '{"threshold": 1,"keys": [{"key": "'$(EOS_PUBLIC_KEY)'","weight": 1}],"accounts": [{"permission":{"actor":"'$(EOS_ACCOUNT_NAME)'","permission":"eosio.code"},"weight":1}]}' owner -p $(EOS_ACCOUNT_NAME)
 	$(CLEOS_EXECUTABLE) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode1 ${EOS_PUBLIC_KEY} ${EOS_PUBLIC_KEY}
 	$(CLEOS_EXECUTABLE) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode2 ${EOS_PUBLIC_KEY} ${EOS_PUBLIC_KEY}
 	$(CLEOS_EXECUTABLE) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode3 ${EOS_PUBLIC_KEY} ${EOS_PUBLIC_KEY}
