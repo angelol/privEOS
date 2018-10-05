@@ -9,7 +9,17 @@ EOSIOCPP_EXECUTABLE=`cat ./config.json | jq '.eosiocppExecutable' -r`
 PM2_SERVICES_FILE="pm2-services.json"
 PM2_EOS_DOCKER_FILE="pm2-eos-docker.json"
 PM2_EOS_NATIVE_FILE="pm2-eos-native.json"
+PRIVEOS_FOLDER=../priveos
+CPP_IN=priveos
 
+priveos_build:
+	eosiocpp -o $(PRIVEOS_FOLDER)/$(CPP_IN).wasm $(PRIVEOS_FOLDER)/$(CPP_IN).cpp
+	
+priveos_abi:
+	eosiocpp -g $(PRIVEOS_FOLDER)/$(CPP_IN).abi $(PRIVEOS_FOLDER)/$(CPP_IN).cpp
+
+priveos_deploy: build
+	$(CLEOS) set contract $(CONTRACT_ACCOUNT) ../$(CPP_IN)
 
 eos_native_start:
 	pm2 start ${PM2_EOS_NATIVE_FILE}
