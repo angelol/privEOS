@@ -6,7 +6,11 @@ The Development Setup makes it easy to orchestrate the different services. For m
 
 ### EOS Installation
 
-You need to have a working eos installation ready, either natively on your host machine (built manually) or with a docker container. When using the docker container, make sure, that you have the contracts folder build:
+You need to have a working eos installation ready, either natively on your host machine (built manually) __or__ with a docker container.
+
+#### Using EOS Docker
+
+When using the docker container, make sure, that you have the contracts folder build:
 
 ```
 # within the docker container
@@ -47,7 +51,7 @@ Please copy the config file `development/config-template.json` to `development/c
 
 - `eosContractsDir` The path to the contracts folder within the eos blockchain code repository or docker container.
 
-    For __Docker__, simply use `/contracts/` as the contracts are inside the docker container. If this folder is empty, you need to rebuild the system (see _EOS Installation_ chapter above)
+    For __Docker__, simply use `/eos/build/contracts/` as the contracts are inside the docker container. If this folder is empty, you need to rebuild the system (see _EOS Installation_ chapter above)
 
 - `eosNodeosDataDir` The path to the nodeos data directory.
 
@@ -57,6 +61,15 @@ Please copy the config file `development/config-template.json` to `development/c
 
 - `eosAccountName` The account name of the user for the eos blockchain.
 
+
+## Verbosity in EOS
+
+Enable verbose error reporting in `config.ini`:
+
+```
+verbose-http-errors = true
+contracts-console = true
+```
 
 ## Start Blockchain
 
