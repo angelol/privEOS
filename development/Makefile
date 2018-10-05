@@ -108,6 +108,8 @@ eos_docker_test_connection:
 	curl http://localhost:8888/v1/chain/get_info
 
 eos_docker_flush:
+	echo "This command will wipe all data in 5 seconds!"
+	sleep 5
 	make eos_docker_stop
 	make eos_docker_remove
 	sleep 3
