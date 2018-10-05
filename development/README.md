@@ -101,7 +101,7 @@ make eos_init
 
 ## Reset Blockchain
 
-To reset the blockchain (flush accounts etc..) run for docker, run:
+To reset the blockchain (flush accounts etc..) run for docker, run the following but keep in mind that you need to rebuild (`eosio_build.sh -s EOS`)!
 
 ```
 make eos_docker_flush
@@ -111,4 +111,18 @@ or natively:
 
 ```
 make eos_native_flush
+```
+
+## Restart Nodeos
+
+To restart nodeos on docker, run:
+
+```
+make eos_docker_restart
+```
+
+For native:
+
+```
+TBD
 ```
