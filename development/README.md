@@ -139,3 +139,11 @@ To start the services `priveos_kms`, `broker` and `client` you can use the `pack
 ```
 pm2 start pm2-services.json
 ```
+
+### Log to stdout
+
+If you want do directly stream the outputs of each service to the console window, add the `--no-daemon` flag to `pm2`:
+
+```
+pm2 start pm2-services.json --no-daemon
+```
