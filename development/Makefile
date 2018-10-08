@@ -18,7 +18,7 @@ priveos_build:
 priveos_abi:
 	$(EOSIOCPP_EXECUTABLE) -g $(PRIVEOS_CONTRACT_SRC_FOLDER)/$(CPP_IN).abi $(PRIVEOS_CONTRACT_SRC_FOLDER)/$(CPP_IN).cpp
 
-priveos_deploy: build
+priveos_deploy: priveos_build
 	$(CLEOS) set contract $(CONTRACT_ACCOUNT) ../$(CPP_IN)
 
 eos_native_start:
