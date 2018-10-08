@@ -6,6 +6,7 @@ import Eos from 'eosjs'
 import eosjs_ecc from 'eosjs-ecc'
 import ByteBuffer from 'bytebuffer'
 
+import { get_original_nodes } from '../lib/mongo'
 const httpEndpoint = 'http://localhost:8888'
 const chainId = 'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f'
 
@@ -34,45 +35,32 @@ server.use(restify.plugins.bodyParser())
 
 server.post('/read/', function(req, res, next) {
   let file = req.body.file
-  MongoClient.connect(mongoUrl, function(err, client) {
-    assert.equal(null, err)
-    console.log("Connected successfully to server")
-
-    const db = client.db(dbName)
-    db.collection('action_traces').find({"act.account" : contract, "act.data.file": file}).sort({"receipt.global_sequence": -1}).toArray(function(err, items) {
-      assert.equal(null, err)
-      const trace = items[0]
-			assert.notEqual(null, trace, "Nothing found")
-			console.log("trace.act.data: ", trace.act.data.data)
-			const data = JSON.parse(trace.act.data.data)
-			
-			// get data relevante for my node
-			const my_share = data.filter(x => x.node == this_node)[0]
-			
-			assert.notEqual(null, my_share, "my_share not found!")
-			
-			// decrypt using the private key of my node
-			const plaintext = eosjs_ecc.Aes.decrypt(private_key, my_share.public_key, my_share.nonce, ByteBuffer.fromHex(my_share.message).toBinary(), my_share.checksum)
-			
-			// permission check with the blockchain to be implemented here
-			
-			// encrypt using the public_key of the requester
-			// so only the requester will be able to decrypt with his private key
-			get_public_key(req.body.requester, "active")
-			.then((public_key) => {
-				const share = eosjs_ecc.Aes.encrypt(private_key, public_key, String(plaintext))				
-				const data = {
-					message: share.message.toString('hex'),
-					nonce: String(share.nonce),
-					checksum: share.checksum,
-					public_key: public_key
-				}
-				res.send(data)
-			})
-    })
-
-    client.close()
-  })
+	
+	get_original_nodes(contract, file)
+  .then((nodes) => {
+		const my_share = nodes.filter(x => x.node == this_node)[0]
+		
+		assert.notEqual(null, my_share, "my_share not found!")
+		
+		// decrypt using the private key of my node
+		const plaintext = eosjs_ecc.Aes.decrypt(private_key, my_share.public_key, my_share.nonce, ByteBuffer.fromHex(my_share.message).toBinary(), my_share.checksum)
+		
+		// permission check with the blockchain to be implemented here
+		
+		// encrypt using the public_key of the requester
+		// so only the requester will be able to decrypt with his private key
+		get_public_key(req.body.requester, "active")
+		.then((public_key) => {
+			const share = eosjs_ecc.Aes.encrypt(private_key, public_key, String(plaintext))				
+			const data = {
+				message: share.message.toString('hex'),
+				nonce: String(share.nonce),
+				checksum: share.checksum,
+				public_key: public_key
+			}
+			res.send(data)
+		})
+	})
   next()
 })
 

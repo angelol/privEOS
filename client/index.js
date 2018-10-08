@@ -6,34 +6,12 @@ nacl.util = util
 import assert from 'assert'
 import axios from 'axios'
 import ByteBuffer from 'bytebuffer'
-import fs from 'fs'
-import Eos from 'eosjs'
 import eosjs_ecc from 'eosjs-ecc'
 import Promise from 'bluebird'
-
-const httpEndpoint = 'http://localhost:8888'
-const chainId = 'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f'
-
-const key = fs.readFileSync('key.txt', {encoding: 'utf8'})
-const keyProvider = [key]
-const eos = Eos({httpEndpoint, chainId, keyProvider})
-const contract = 'priveosrules'
-
-function get_nodes() {
-  return eos.getTableRows({json:true, scope: contract, code: contract,  table: 'nodes', limit:100})
-  .then((res) => {
-    return res.rows.filter((x) => {
-      return x.is_active
-    })
-  })
-}
+import { get_active_nodes, get_threshold, key, eos, contract } from './helpers.js'
 
 
-function get_threshold(N) {
-  return Math.floor(N/2) + 1
-}
-
-async function store(owner, file) {  
+function store(owner, file) {  
   const secret = Buffer.from(nacl.randomBytes(nacl.secretbox.keyLength)).toString('hex')
   const nonce = Buffer.from(nacl.randomBytes(nacl.secretbox.nonceLength)).toString('hex')
   console.log("Secret: ", secret)
@@ -41,7 +19,7 @@ async function store(owner, file) {
   const shared_secret = secret + nonce
   console.log("shared_secret: ", shared_secret)
   
-  return get_nodes()
+  return get_active_nodes()
   .then((nodes) => {
     console.log("Nodes: ", nodes)
     const shares = secrets.share(shared_secret, nodes.length, get_threshold(nodes.length))
@@ -148,7 +126,7 @@ function test() {
       console.log("Original key: ", x[0])
       console.log("Original nonce: ", x[1])
       console.log("Reconstructed key: ", y[0])
-      console.log("Reconstructed key: ", y[1])
+      console.log("Reconstructed nonce: ", y[1])
     })
   })
   
