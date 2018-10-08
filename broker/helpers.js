@@ -1,4 +1,4 @@
-import { get_original_nodes } from '../lib/mongo'
+import { get_original_nodes } from '../common/mongo'
 import Eos from 'eosjs'
 
 export const contract = 'priveosrules'

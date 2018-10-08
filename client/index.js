@@ -8,8 +8,8 @@ import axios from 'axios'
 import ByteBuffer from 'bytebuffer'
 import eosjs_ecc from 'eosjs-ecc'
 import Promise from 'bluebird'
-import { get_active_nodes, get_threshold, key, eos, contract } from './helpers.js'
-
+import { get_active_nodes, get_threshold, eos } from './helpers.js'
+import config from './config'
 
 function store(owner, file) {  
   const secret = Buffer.from(nacl.randomBytes(nacl.secretbox.keyLength)).toString('hex')
@@ -26,7 +26,7 @@ function store(owner, file) {
     console.log("Shares: ", shares)
     return nodes.map(function(node) {
       const public_key = node.node_key
-      const share = eosjs_ecc.Aes.encrypt(key, public_key, shares.pop())
+      const share = eosjs_ecc.Aes.encrypt(config.key, public_key, shares.pop())
       
       return {
         node: node.owner, 
@@ -43,7 +43,7 @@ function store(owner, file) {
       {
         actions: [
           {
-            account: contract,
+            account: config.contract,
             name: 'store',
             authorization: [{
               actor: owner,

@@ -5,12 +5,8 @@ import assert from 'assert'
 import axios from 'axios'
 import Promise from 'bluebird'
 
+import config from '../common/config'
 import { get_node_urls, contract } from './helpers'
-
-
-
-
-var PORT = 4000
 
 const server = restify.createServer({handleUncaughtExceptions: true})
 server.use(restify.plugins.bodyParser())
@@ -38,7 +34,7 @@ server.post('/read/', function(req, res, next) {
   next()
 })
 
-server.listen(PORT, function() {
+server.listen(config.BROKER_PORT, function() {
   console.log('Broker %s listening at %s', server.name, server.url)
 })
 
