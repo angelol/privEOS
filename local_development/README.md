@@ -95,6 +95,8 @@ contracts-console = true
 
 ### EOS Blockchain
 
+For all the eos related stuff, please go to the directory `priveos` and execute the respective commands with that folder as working directory.
+
 #### Start EOS Blockchain
 
 First, start your eos blockchain either with docker or natively:
@@ -147,9 +149,11 @@ TBD
 
 ### Node Services
 
+For the node services keep your working directory in the `local-development` folder and execute the commands there.
+
 #### Start Services
 
-To start the services `priveos_kms`, `broker` and `client` you can use the `package.json` start scripts in each folder or the pm2 process manager:
+To start the services `priveos_kms`, `broker` and `client` you can use the `package.json` start scripts in each folder or the pm2 process manager to start them in one window:
 
 ```
 pm2 start pm2-services.json

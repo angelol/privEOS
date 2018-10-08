@@ -4,4 +4,4 @@ node_modules
 /priveos/priveos.abi
 /broker/dist
 /priveos_kms/dist
-development/config.json
+local-config.json
