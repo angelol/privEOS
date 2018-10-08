@@ -27,8 +27,13 @@ When using docker, please carefully read: [https://developers.eos.io/eosio-nodeo
 You need the following node modules in order to work properly. To install run:
 
 ```
-npm install -g pm2
+npm install -g \
+    pm2 \
+    babel-cli \ 
+    nodemon
 ```
+
+> Nodemon may be removed later due to pm2... TBD
 
 ### CLI Utils
 
@@ -91,7 +96,7 @@ or
 make start_eos_native
 ```
 
-## Initialize Blockchain
+### Initialize Blockchain
 
 To setup the eos blockchain initially by installing all required contracts and accounts for testing, run:
 
@@ -99,7 +104,7 @@ To setup the eos blockchain initially by installing all required contracts and a
 make eos_init
 ```
 
-## Reset Blockchain
+### Reset Blockchain
 
 To reset the blockchain (flush accounts etc..) run for docker, run the following but keep in mind that you need to rebuild (`eosio_build.sh -s EOS`)!
 
@@ -113,7 +118,7 @@ or natively:
 make eos_native_flush
 ```
 
-## Restart Nodeos
+### Restart Nodeos
 
 To restart nodeos on docker, run:
 
@@ -125,4 +130,12 @@ For native:
 
 ```
 TBD
+```
+
+## Start Services
+
+To start the services `priveos_kms`, `broker` and `client` you can use the `package.json` start scripts in each folder or the pm2 process manager:
+
+```
+pm2 start pm2-services.json
 ```

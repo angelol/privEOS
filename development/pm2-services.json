@@ -1,0 +1,18 @@
+{
+    "apps" : [{
+      "name": "client",
+      "script": "bin/run-npm-service.sh",
+      "interpreter": "none",
+      "args": "client"
+    },{
+      "name": "broker",
+      "script": "bin/run-npm-service.sh",
+      "interpreter": "none",
+      "args": "broker"
+    },{
+      "name": "priveos_kms",
+      "script": "bin/run-npm-service.sh",
+      "interpreter": "none",
+      "args": "priveos_kms"
+    }]
+  }
