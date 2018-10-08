@@ -33,13 +33,21 @@ npm install -g \
     nodemon
 ```
 
+### Local Node Modules
+
+To install all local `node_modules` for the respective services, run:
+
+```
+bin/install-node-modules.sh
+```
+
 > Nodemon may be removed later due to pm2... TBD
 
 ### CLI Utils
 
 1. jq [https://stedolan.github.io/jq/download/](https://stedolan.github.io/jq/download/)
 
-## Config File
+### Config File
 
 The config file stores relevant information related to the development environment. It will be filled during the setup process with additional informations.
 
@@ -73,7 +81,7 @@ Please copy the config file `development/config-template.json` to `development/c
     For all other, use `../priveos`.
 
 
-## Verbosity in EOS
+### Verbosity in EOS
 
 Enable verbose error reporting in `config.ini`:
 
@@ -82,7 +90,11 @@ verbose-http-errors = true
 contracts-console = true
 ```
 
-## Start Blockchain
+## Start Developing
+
+### EOS Blockchain
+
+#### Start EOS Blockchain
 
 First, start your eos blockchain either with docker or natively:
 
@@ -96,7 +108,7 @@ or
 make start_eos_native
 ```
 
-### Initialize Blockchain
+#### Initialize Blockchain
 
 To setup the eos blockchain initially by installing all required contracts and accounts for testing, run:
 
@@ -104,7 +116,7 @@ To setup the eos blockchain initially by installing all required contracts and a
 make eos_init
 ```
 
-### Reset Blockchain
+#### Reset Blockchain
 
 To reset the blockchain (flush accounts etc..) run for docker, run the following but keep in mind that you need to rebuild (`eosio_build.sh -s EOS`)!
 
@@ -118,7 +130,7 @@ or natively:
 make eos_native_flush
 ```
 
-### Restart Nodeos
+#### Restart Nodeos
 
 To restart nodeos on docker, run:
 
@@ -132,7 +144,9 @@ For native:
 TBD
 ```
 
-## Start Services
+### Node Services
+
+#### Start Services
 
 To start the services `priveos_kms`, `broker` and `client` you can use the `package.json` start scripts in each folder or the pm2 process manager:
 
@@ -140,7 +154,7 @@ To start the services `priveos_kms`, `broker` and `client` you can use the `pack
 pm2 start pm2-services.json
 ```
 
-### Log to stdout
+#### Log to stdout
 
 If you want do directly stream the outputs of each service to the console window, add the `--no-daemon` flag to `pm2`:
 
