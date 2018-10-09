@@ -1,5 +1,0 @@
-CPP_IN=priveos
-PK=EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-CONTRACT_ACCOUNT=priveosrules
-EOS_CONTRACTS_DIR=/Users/al/Documents/eos/eos/build/contracts
-CLEOS=cleos
