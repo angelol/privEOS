@@ -13,21 +13,17 @@ deploy: build
 init:
 	make create_wallet
 	make import_keys
-	make setup_system
-	make setup_accounts
+	make system
+	make setup
 
 create_wallet:
-	cleos wallet create --name=eosio --file=/tmp/wallet_password
-	./bin/store-wallet-pass-in-config.sh
-
-create_keys:
-	bin/create-keys-in-config.sh
+	cleos wallet create --name=eosio --file=wallet-password.txt
 
 import_keys:
-	cleos wallet import --name=eosio --private-key=${PRIVATE_KEY}
+	cleos wallet import --name=eosio --private-key=$(PRIVATE_KEY)
 
 unlock_wallet:
-	cleos wallet unlock --name=eosio --password $(EOS_WALLET_PASSWORD)
+	cleos wallet unlock --name=eosio --password $(WALLET_PASSWORD)
 		
 system:
 	cleos create account eosio angelo $(PUBLIC_KEY) $(PUBLIC_KEY)

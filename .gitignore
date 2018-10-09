@@ -5,3 +5,4 @@ node_modules
 /broker/dist
 /priveos_kms/dist
 config-local.conf
+/priveos/wallet-password.txt
