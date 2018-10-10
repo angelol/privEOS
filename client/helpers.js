@@ -1,15 +1,14 @@
 import Eos from 'eosjs'
-import config from './config'
-
 
 export class EosWrapper {
   constructor(config) {
-    this.eos = Eos({httpEndpoint:config.httpEndpoint, chainId: config.chainId, keyProvider: [config.key]})
+    this.config = config
+    this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.key]})
   }
 
   get_active_nodes() {
 
-    return this.eos.getTableRows({json:true, scope: config.contract, code: config.contract,  table: 'nodes', limit:100})
+    return this.eos.getTableRows({json:true, scope: this.config.contract, code: this.config.contract,  table: 'nodes', limit:100})
     .then((res) => {
       return res.rows.filter((x) => {
         return x.is_active

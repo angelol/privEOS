@@ -15,11 +15,12 @@ export default class Priveos {
     if (!config) throw new Error('Instantiating Priveos requires config object')
     if (!config.key) throw new Error('Instantiating Priveos requires a private key set')
 
-    this.eosWrapper = new EosWrapper(config)
     this.config = {
       ...defaultConfig,
       ...config
     }
+    this.eosWrapper = new EosWrapper(this.config)
+
 
   }
 
