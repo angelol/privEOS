@@ -53,6 +53,7 @@ function store(owner, file) {
             }],
             data: {
               owner: owner,
+              contract: config.contract,
               file: file,
               data: JSON.stringify(data),
             }
