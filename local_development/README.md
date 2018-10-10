@@ -25,7 +25,8 @@ npm install -g \
     pm2@3.2.1 \
     babel-cli@^6.26.0 \
     nodemon@^1.18.4 \
-    rimraf@^2.6.2
+    rimraf@^2.6.2 \
+    webpack-cli
 ```
 
 ### Config File

@@ -1,5 +1,3 @@
-import fs from 'fs'
-
 export default {
   contract: 'priveosrules',
   httpEndpoint: 'http://localhost:8888',
