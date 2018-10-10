@@ -2,6 +2,10 @@
 
 The Development Setup makes it easy to orchestrate the different services. For management of processes we use `pm2`.
 
+## Testing
+
+Please see [TESTING.md](TESTING.md)
+
 ## Docker
 
 When you're using the EOS Docker container (for `eosiocpp`, `cleos` etc..) please read through [DOCKER.md](DOCKER.md).
@@ -32,13 +36,21 @@ To install all local `node_modules` for the respective services, run:
 bin/install-node-modules.sh
 ```
 
-### Verbosity in EOS
+### Make EOS work smoother
 
 Enable verbose error reporting in `config.ini`:
 
 ```
 verbose-http-errors = true
 contracts-console = true
+max-transaction-time = 10000
+```
+
+### Enable MongoDB in Config
+
+```
+plugin = eosio::http_plugin
+plugin = eosio::mongo_db_plugin
 ```
 
 ### Node Services
