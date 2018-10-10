@@ -9,10 +9,14 @@ class priveos : public contract {
     priveos(account_name self) : contract(self), nodes(_self, _self) {}
 
     //@abi action
-    void store(const account_name owner, const std::string file, const std::string data) {
+    void store(const account_name owner, const account_name contract, const std::string file, const std::string data) {
       require_auth(owner);
       // print( "Storing file ", file);
     }
+    // 
+    // void accessgrant(const account_name user, ) {
+    // 
+    // }
     
     //@abi action
     void regnode(const account_name owner, const eosio::public_key node_key, const std::string url) {
