@@ -1,13 +1,12 @@
 'use strict'
 import restify from 'restify'
-import MongoClient from 'mongodb'
 import assert from 'assert'
 import eosjs_ecc from 'eosjs-ecc'
 import ByteBuffer from 'bytebuffer'
 
 import config from '../common/config'
 import { get_original_nodes } from '../common/mongo'
-import { get_public_key } from './helpers'
+import { get_public_key, check_permissions } from './helpers'
 
 var PORT;
 var nodeAccount;
@@ -29,8 +28,8 @@ server.use(restify.plugins.bodyParser())
 
 
 server.post('/read/', function(req, res, next) {
-  let file = req.body.file
-	
+  const file = req.body.file
+	const requester = req.body.requester
 	get_original_nodes(config.contract, file)
   .then((nodes) => {
 		const my_share = nodes.filter(x => x.node == nodeAccount)[0]
@@ -41,20 +40,27 @@ server.post('/read/', function(req, res, next) {
 		const plaintext = eosjs_ecc.Aes.decrypt(config.privateKey, my_share.public_key, my_share.nonce, ByteBuffer.fromHex(my_share.message).toBinary(), my_share.checksum)
 		
 		// permission check with the blockchain to be implemented here
-		
-		// encrypt using the public_key of the requester
-		// so only the requester will be able to decrypt with his private key
-		get_public_key(req.body.requester, "active")
-		.then((public_key) => {
-			const share = eosjs_ecc.Aes.encrypt(config.privateKey, public_key, String(plaintext))				
-			const data = {
-				message: share.message.toString('hex'),
-				nonce: String(share.nonce),
-				checksum: share.checksum,
-				public_key: public_key
+		check_permissions(requester, file)
+		.then(is_authorised => {
+			if(!is_authorised) {
+				console.log("User is not authorised, bailing out")
+				return
 			}
-			res.send(data)
+			// encrypt using the public_key of the requester
+			// so only the requester will be able to decrypt with his private key
+			get_public_key(req.body.requester, "active")
+			.then((public_key) => {
+				const share = eosjs_ecc.Aes.encrypt(config.privateKey, public_key, String(plaintext))				
+				const data = {
+					message: share.message.toString('hex'),
+					nonce: String(share.nonce),
+					checksum: share.checksum,
+					public_key: public_key
+				}
+				res.send(data)
+			})
 		})
+		
 	})
   next()
 })
