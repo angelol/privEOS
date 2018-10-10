@@ -7,3 +7,4 @@ node_modules
 /priveos_kms/dist
 config-local.conf
 /priveos/wallet-password.txt
+*.swp
