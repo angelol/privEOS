@@ -26,6 +26,7 @@ export function get_original_nodes(contract, file) {
       .then((items) => {
         const trace = items[0]
         if(trace) {
+          console.log("trace: ", trace)
           return JSON.parse(trace.act.data.data)
         } else {
           return []

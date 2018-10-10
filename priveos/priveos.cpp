@@ -9,9 +9,15 @@ class priveos : public contract {
     priveos(account_name self) : contract(self), nodes(_self, _self) {}
 
     //@abi action
-    void store(const account_name owner, const std::string file, const std::string data) {
+    void store(const account_name owner, const account_name contract, const std::string file, const std::string data) {
       require_auth(owner);
       // print( "Storing file ", file);
+    }
+    
+    //@abi action
+    void accessgrant(const account_name user, const account_name contract, const std::string file) {
+      require_auth(user);
+      require_recipient(contract);
     }
     
     //@abi action
@@ -61,4 +67,4 @@ class priveos : public contract {
     nodes_table nodes;
 };
 
-EOSIO_ABI( priveos, (store)(regnode)(unregnode) )
+EOSIO_ABI( priveos, (store)(accessgrant)(regnode)(unregnode) )

@@ -40,6 +40,7 @@ function store(owner, file) {
   })
   .then((data) => {
     console.log("data: ", JSON.stringify(data))
+    console.log("config.contract: ", config.contract)
     return eos.transaction(
       {
         actions: [
@@ -52,6 +53,7 @@ function store(owner, file) {
             }],
             data: {
               owner: owner,
+              contract: config.contract,
               file: file,
               data: JSON.stringify(data),
             }
@@ -106,15 +108,11 @@ function read(file) {
   
 }
 
-
 const owner = 'angelo'
 var file = 'file'
 if (process.argv[2]) {
   file = process.argv[2]  
 }
-
-
-
 
 function test() {
   store(owner, file)
