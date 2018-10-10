@@ -44,6 +44,7 @@ server.post('/read/', function(req, res, next) {
 		.then(is_authorised => {
 			if(!is_authorised) {
 				console.log("User is not authorised, bailing out")
+				res.send("Not authorised")
 				return
 			}
 			// encrypt using the public_key of the requester
