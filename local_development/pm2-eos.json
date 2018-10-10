@@ -1,13 +1,22 @@
 {
-    "apps" : [{
-      "name": "eos",
-      "script": "bin/run-eos-node.sh",
-      "interpreter": "none",
-      "autorestart": false
-    },{
-      "name": "keosd",
-      "script": "bin/run-keosd.sh",
-      "interpreter": "none",
-      "autorestart": false
-    }]
+    "apps" : [
+      {
+        "name": "eos",
+        "script": "bin/run-eos-node.sh",
+        "interpreter": "none",
+        "autorestart": false
+      },
+      {
+        "name": "keosd",
+        "script": "bin/run-keosd.sh",
+        "interpreter": "none",
+        "autorestart": false
+      },
+      {
+        "name": "mongodb",
+        "script": "bin/run-mongodb.sh",
+        "interpreter": "none",
+        "autorestart": false
+      }
+    ]
   }
