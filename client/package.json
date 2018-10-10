@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rimraf dist/ && babel ./ --out-dir dist/ --ignore ./node_modules,./.babelrc,./package.json,./package-lock.json,./npm-debug.log --copy-files",
-    "start": "nodemon --exec babel-node index.js"
+    "build_node": "rimraf dist/node && babel ./ --out-dir dist/node --ignore ./node_modules,./.babelrc,./package.json,./package-lock.json,./npm-debug.log,webpack.browser.js,test.js,config-test.js --copy-files",
+    "build_browser": "rimraf dist/browser && webpack --config webpack.browser.js",
+    "test": "nodemon --exec babel-node test.js"
   },
   "author": "",
   "license": "ISC",
@@ -21,6 +21,9 @@
     "tweetnacl-util": "^0.15.0"
   },
   "devDependencies": {
-    "babel-preset-es2015": "^6.24.1"
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-es2018": "^1.0.0"
   }
 }

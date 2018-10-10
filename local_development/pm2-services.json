@@ -1,18 +1,33 @@
 {
     "apps" : [{
-      "name": "client",
-      "script": "bin/run-npm-service-script.sh",
-      "interpreter": "none",
-      "args": "client"
-    },{
       "name": "broker",
       "script": "bin/run-npm-service-script.sh",
       "interpreter": "none",
       "args": "broker"
     },{
-      "name": "priveos_kms",
+      "name": "priveos_kms_node_1",
       "script": "bin/run-npm-service-script.sh",
       "interpreter": "none",
-      "args": "priveos_kms"
+      "args": "priveos_kms 3001 testnode1"
+    },{
+      "name": "priveos_kms_node_2",
+      "script": "bin/run-npm-service-script.sh",
+      "interpreter": "none",
+      "args": "priveos_kms 3002 testnode2"
+    },{
+      "name": "priveos_kms_node_3",
+      "script": "bin/run-npm-service-script.sh",
+      "interpreter": "none",
+      "args": "priveos_kms 3003 testnode3"
+    },{
+      "name": "priveos_kms_node_4",
+      "script": "bin/run-npm-service-script.sh",
+      "interpreter": "none",
+      "args": "priveos_kms 3004 testnode4"
+    },{
+      "name": "priveos_kms_node_5",
+      "script": "bin/run-npm-service-script.sh",
+      "interpreter": "none",
+      "args": "priveos_kms 3005 testnode5"
     }]
   }
