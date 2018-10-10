@@ -12,6 +12,7 @@ import { get_active_nodes, get_threshold, eos } from './helpers.js'
 import config from './config'
 
 function store(owner, file) {  
+  assert.ok(owner && file, "Owner and file must not be supplied")
   const secret = Buffer.from(nacl.randomBytes(nacl.secretbox.keyLength)).toString('hex')
   const nonce = Buffer.from(nacl.randomBytes(nacl.secretbox.nonceLength)).toString('hex')
   console.log("Secret: ", secret)
@@ -107,7 +108,10 @@ function read(file) {
 
 
 const owner = 'angelo'
-const file = process.argv[2]
+var file = 'file'
+if (process.argv[2]) {
+  file = process.argv[2]  
+}
 
 
 
