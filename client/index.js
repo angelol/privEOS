@@ -7,11 +7,10 @@ import assert from 'assert'
 import axios from 'axios'
 import ByteBuffer from 'bytebuffer'
 import eosjs_ecc from 'eosjs-ecc'
-import Promise from 'bluebird'
 import { get_active_nodes, get_threshold, eos } from './helpers.js'
 import config from './config'
 
-function store(owner, file) {  
+export function store(owner, file) {  
   assert.ok(owner && file, "Owner and file must not be supplied")
   const secret = Buffer.from(nacl.randomBytes(nacl.secretbox.keyLength)).toString('hex')
   const nonce = Buffer.from(nacl.randomBytes(nacl.secretbox.nonceLength)).toString('hex')
@@ -73,7 +72,7 @@ function store(owner, file) {
   
 }
 
-function read(file) {
+export function read(file) {
   const private_key = '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3'
   return axios.post('http://localhost:4000/read/', {
     file: file,
@@ -135,3 +134,9 @@ function test() {
   
 }
 test()
+
+
+export default {
+  store,
+  read
+}
