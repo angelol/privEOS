@@ -25,6 +25,7 @@ export function check_permissions(user, file) {
 			.toArray()
       .then((items) => {
         const trace = items[0]
+				console.log("accessgrant check trace: ", trace);
         return trace
       })
   }).then(accessgrant_trace => {
@@ -40,6 +41,7 @@ export function check_permissions(user, file) {
 				.toArray()
 	      .then((items) => {
 	        const store_trace = items[0]
+					console.log("store_trace: ", store_trace)
 	        if(accessgrant_trace.act.data.contract == store_trace.act.data.contract) {
 						return true
 					} else {
@@ -48,5 +50,9 @@ export function check_permissions(user, file) {
 					}
 	      })
 	  })
+	})
+	.catch(x => {
+		console.log("err: ", x)
+		return false
 	})
 }

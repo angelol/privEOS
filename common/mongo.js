@@ -20,7 +20,11 @@ export function mongo(fun) {
 export function get_original_nodes(contract, file) {
   return mongo(conn => {
     return conn.db('EOS').collection('action_traces')
-      .find({"act.account" : contract, "act.data.file": file})
+      .find({
+        "act.account" : contract, 
+        "act.data.file": file,
+        "act.name": "store",
+      })
 			.sort({"receipt.global_sequence": -1})
 			.toArray()
       .then((items) => {

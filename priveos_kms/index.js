@@ -47,6 +47,8 @@ server.post('/read/', function(req, res, next) {
 				res.send("Not authorised")
 				return
 			}
+			
+			console.log("User is authorised, continuing")
 			// encrypt using the public_key of the requester
 			// so only the requester will be able to decrypt with his private key
 			get_public_key(req.body.requester, "active")
@@ -61,7 +63,6 @@ server.post('/read/', function(req, res, next) {
 				res.send(data)
 			})
 		})
-		
 	})
   next()
 })

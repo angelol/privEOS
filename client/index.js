@@ -94,7 +94,7 @@ export default class Priveos {
       requester: owner
     }).then(function (response) {
       const shares = response.data
-      console.log(shares)
+      console.log("Shares: ", shares)
       
       
       const decrypted_shares = shares.map((data) => {
@@ -106,11 +106,11 @@ export default class Priveos {
       return secrets.combine(decrypted_shares)
     })
     .then((combined) => {
-      // console.log(combined)
+      console.log("Combined: ", combined)
       const combined_hex_key = combined.slice(0, nacl.secretbox.keyLength*2)
       const combined_hex_nonce = combined.slice(nacl.secretbox.keyLength*2)
-      // console.log("Hex key: ", combined_hex_key)
-      // console.log("Nonce: ", combined_hex_nonce)
+      console.log("Hex key: ", combined_hex_key)
+      console.log("Nonce: ", combined_hex_nonce)
       return [combined_hex_key, combined_hex_nonce]
     })
     .catch(function (error) {
