@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "eosjs": "^16.0.9",
+    "es2015": "0.0.0",
     "mongodb": "^3.1.4",
     "restify": "^7.2.1"
   },

@@ -68,6 +68,7 @@ export default class Priveos {
               }],
               data: {
                 owner: owner,
+                contract: this.config.contract,
                 file: file,
                 data: JSON.stringify(data),
               }
