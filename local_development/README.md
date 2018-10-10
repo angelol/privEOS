@@ -52,6 +52,7 @@ Enable verbose error reporting in `config.ini`:
 verbose-http-errors = true
 contracts-console = true
 max-transaction-time = 10000
+http-validate-host = false
 ```
 
 ### Enable MongoDB in Config

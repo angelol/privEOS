@@ -28,6 +28,6 @@
       "name": "priveos_kms_node_5",
       "script": "bin/run-npm-service-script.sh",
       "interpreter": "none",
-      "args": "priveos_kms 3005 testnode5§"
+      "args": "priveos_kms 3005 testnode5"
     }]
   }
