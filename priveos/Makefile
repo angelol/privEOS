@@ -51,3 +51,18 @@ setup:
 	cleos system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode3 $(PUBLIC_KEY) $(PUBLIC_KEY)
 	cleos system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode4 $(PUBLIC_KEY) $(PUBLIC_KEY)
 	cleos system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode5 $(PUBLIC_KEY) $(PUBLIC_KEY)
+	
+regnodes:
+	cleos push action $(CONTRACT_ACCOUNT) regnode '["testnode1", "$(PUBLIC_KEY)", "http://localhost:3001"]' -p testnode1
+	cleos push action $(CONTRACT_ACCOUNT) regnode '["testnode2", "$(PUBLIC_KEY)", "http://localhost:3002"]' -p testnode2
+	cleos push action $(CONTRACT_ACCOUNT) regnode '["testnode3", "$(PUBLIC_KEY)", "http://localhost:3003"]' -p testnode3
+	cleos push action $(CONTRACT_ACCOUNT) regnode '["testnode4", "$(PUBLIC_KEY)", "http://localhost:3004"]' -p testnode4
+	cleos push action $(CONTRACT_ACCOUNT) regnode '["testnode5", "$(PUBLIC_KEY)", "http://localhost:3005"]' -p testnode5
+
+shownodes:
+	cleos get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) nodes
+
+clean:
+	rm -f $(CPP_IN).wast $(CPP_IN).wasm $(CPP_IN).abi 
+	
+	
