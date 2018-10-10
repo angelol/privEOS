@@ -55,6 +55,15 @@ max-transaction-time = 10000
 http-validate-host = false
 ```
 
+## Initial EOS Setup
+
+To initially setup the `EOS` docker container, run the following command inside an `interactive docker shell`:
+
+```
+cd /priveos
+make init
+```
+
 ### Enable MongoDB in Config
 
 ```
