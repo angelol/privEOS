@@ -28,6 +28,14 @@ npm install -g \
     rimraf@^2.6.2
 ```
 
+### Config File
+
+Copy the `local_development/config.conf` to `local_development/config-local.conf` and update your config to set the correct path for the nodeos mount:
+
+```
+NODEOS_MOUNT="/<PATH>"
+```
+
 ### Local Node Modules
 
 To install all local `node_modules` for the respective services, run:
