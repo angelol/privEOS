@@ -9,6 +9,8 @@ export function get_active_nodes() {
     return res.rows.filter((x) => {
       return x.is_active
     })
+  }).catch((err) => {
+    console.error('Cannot retreive active nodes: ', err)
   })
 }
 

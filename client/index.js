@@ -75,13 +75,12 @@ function store(owner, file) {
 
 function read(file) {
   const private_key = '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3'
-  
   return axios.post('http://localhost:4000/read/', {
     file: file,
     requester: owner
   }).then(function (response) {
     const shares = response.data
-    // console.log(data)
+    console.log(shares)
     
     
     const decrypted_shares = shares.map((data) => {
