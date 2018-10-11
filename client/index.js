@@ -30,8 +30,10 @@ export default class Priveos {
   store(owner, file) {
     const self = this
     assert.ok(owner && file, "Owner and file must be supplied")
-    const secret = Buffer.from(nacl.randomBytes(nacl.secretbox.keyLength)).toString('hex')
-    const nonce = Buffer.from(nacl.randomBytes(nonceLength)).toString('hex')
+    const secret_bytes = nacl.randomBytes(nacl.secretbox.keyLength)
+    const nonce_bytes = nacl.randomBytes(nacl.secretbox.nonceLength)
+    const secret = Buffer.from(secret_bytes).toString('hex')
+    const nonce = Buffer.from(nonce_bytes).toString('hex')
     console.log("Secret: ", secret)
     console.log("Nonce: ", nonce)
     const shared_secret = secret + nonce
@@ -88,7 +90,7 @@ export default class Priveos {
     })
     .then((data) => {
       console.log("Successfully stored in blockchain txid: ", data.transaction_id)
-      return [secret, nonce]
+      return [secret_bytes, nonce_bytes]
     }).catch((e) => {
       console.log("Error ", e)
     })
