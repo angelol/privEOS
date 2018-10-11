@@ -8,7 +8,7 @@ import axios from 'axios'
 axios.defaults.timeout = 2500;
 import ByteBuffer from 'bytebuffer'
 import eosjs_ecc from 'eosjs-ecc'
-import { get_active_nodes, get_threshold, EosWrapper } from './helpers.js'
+import { get_active_nodes, get_threshold, EosWrapper, hex_to_uint8array } from './helpers.js'
 import defaultConfig from './config'
 
 const nonceLength = 16
@@ -120,14 +120,10 @@ export default class Priveos {
       const combined_hex_nonce = combined.slice(nacl.secretbox.keyLength*2)
       console.log("Hex key: ", combined_hex_key)
       console.log("Nonce: ", combined_hex_nonce)
-      const key_buffer = new Uint8Array(ByteBuffer.fromHex(combined_hex_key).toArrayBuffer())
+      const key_buffer = hex_to_uint8array(combined_hex_key)
       
-      const nonce_buffer = new Uint8Array(ByteBuffer.fromHex(combined_hex_nonce).toArrayBuffer())
+      const nonce_buffer = hex_to_uint8array(combined_hex_nonce)
       return [key_buffer, nonce_buffer]
     })
-    .catch(function (error) {
-      console.log(error)
-    })
-    
   }
 }

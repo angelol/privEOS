@@ -1,3 +1,4 @@
+import ByteBuffer from 'ByteBuffer'
 import Eos from 'eosjs'
 
 export class EosWrapper {
@@ -22,4 +23,8 @@ export class EosWrapper {
 
 export function get_threshold(N) {
   return Math.floor(N/2) + 1
+}
+
+export function hex_to_uint8array(hex_string) {
+  return new Uint8Array(ByteBuffer.fromHex(hex_string).toArrayBuffer())
 }
