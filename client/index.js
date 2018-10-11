@@ -15,13 +15,13 @@ import Eos from 'eosjs'
 export default class Priveos {
   constructor(config) {
     if (!config) throw new Error('Instantiating Priveos requires config object')
-    if (!config.key) throw new Error('Instantiating Priveos requires a private key set')
+    if (!config.privateKey) throw new Error('Instantiating Priveos requires a private key set')
 
     this.config = {
       ...defaultConfig,
       ...config
     }
-    this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.key]})
+    this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.privateKey]})
   }
 
   store(owner, file) {
@@ -44,8 +44,7 @@ export default class Priveos {
       console.log("Shares: ", shares)
       var data = nodes.map(node => {
         const public_key = node.node_key
-        console.log(this.config.key)
-        const share = eosjs_ecc.Aes.encrypt(this.config.key, public_key, shares.pop())
+        const share = eosjs_ecc.Aes.encrypt(this.config.privateKey , public_key, shares.pop())
         
         return {
           node: node.owner, 
@@ -103,7 +102,7 @@ export default class Priveos {
       
       
       const decrypted_shares = shares.map((data) => {
-        return String(eosjs_ecc.Aes.decrypt(this.config.key, data.public_key, data.nonce, ByteBuffer.fromHex(data.message).toBinary(), data.checksum))
+        return String(eosjs_ecc.Aes.decrypt(this.config.privateKey, data.public_key, data.nonce, ByteBuffer.fromHex(data.message).toBinary(), data.checksum))
       })
       return decrypted_shares
     })

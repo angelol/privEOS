@@ -39,7 +39,6 @@ server.post('/read/', function(req, res, next) {
 		// decrypt using the private key of my node
 		const plaintext = eosjs_ecc.Aes.decrypt(config.privateKey, my_share.public_key, my_share.nonce, ByteBuffer.fromHex(my_share.message).toBinary(), my_share.checksum)
 		
-		// permission check with the blockchain to be implemented here
 		check_permissions(requester, file)
 		.then(is_authorised => {
 			if(!is_authorised) {
