@@ -97,8 +97,7 @@ export default class Priveos {
     
   } 
 
-  read(owner, file) {
-    const private_key = '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3'
+  read(owner, file, private_key) {
     return axios.post('http://localhost:4000/read/', {
       file: file,
       requester: owner
@@ -121,7 +120,10 @@ export default class Priveos {
       const combined_hex_nonce = combined.slice(nacl.secretbox.keyLength*2)
       console.log("Hex key: ", combined_hex_key)
       console.log("Nonce: ", combined_hex_nonce)
-      return [combined_hex_key, combined_hex_nonce]
+      const key_buffer = new Uint8Array(ByteBuffer.fromHex(combined_hex_key).toArrayBuffer())
+      
+      const nonce_buffer = new Uint8Array(ByteBuffer.fromHex(combined_hex_nonce).toArrayBuffer())
+      return [key_buffer, nonce_buffer]
     })
     .catch(function (error) {
       console.log(error)
