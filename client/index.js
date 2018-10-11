@@ -11,6 +11,8 @@ import eosjs_ecc from 'eosjs-ecc'
 import { get_active_nodes, get_threshold, EosWrapper } from './helpers.js'
 import defaultConfig from './config'
 
+const nonceLength = 16
+
 export default class Priveos {
   constructor(config) {
     if (!config) throw new Error('Instantiating Priveos requires config object')
@@ -29,7 +31,7 @@ export default class Priveos {
     const self = this
     assert.ok(owner && file, "Owner and file must be supplied")
     const secret = Buffer.from(nacl.randomBytes(nacl.secretbox.keyLength)).toString('hex')
-    const nonce = Buffer.from(nacl.randomBytes(nacl.secretbox.nonceLength)).toString('hex')
+    const nonce = Buffer.from(nacl.randomBytes(nonceLength)).toString('hex')
     console.log("Secret: ", secret)
     console.log("Nonce: ", nonce)
     const shared_secret = secret + nonce
@@ -44,7 +46,6 @@ export default class Priveos {
       console.log("Shares: ", shares)
       var data = nodes.map(function(node) {
         const public_key = node.node_key
-        console.log("#####!!!!!#####!!!!")
         console.log(self.config.key)
         const share = eosjs_ecc.Aes.encrypt(self.config.key, public_key, shares.pop())
         
