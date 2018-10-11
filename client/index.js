@@ -5,6 +5,7 @@ import util from 'tweetnacl-util'
 nacl.util = util
 import assert from 'assert'
 import axios from 'axios'
+axios.defaults.timeout = 2500;
 import ByteBuffer from 'bytebuffer'
 import eosjs_ecc from 'eosjs-ecc'
 import { get_active_nodes, get_threshold, EosWrapper } from './helpers.js'
@@ -37,9 +38,11 @@ export default class Priveos {
     return this.eosWrapper.get_active_nodes()
     .then((nodes) => {
       console.log("Nodes: ", nodes)
-      const shares = secrets.share(shared_secret, nodes.length, get_threshold(nodes.length))
+      const number_of_nodes = nodes.length
+      const threshold = get_threshold(number_of_nodes)
+      const shares = secrets.share(shared_secret, number_of_nodes, threshold)
       console.log("Shares: ", shares)
-      return nodes.map(function(node) {
+      var data = nodes.map(function(node) {
         const public_key = node.node_key
         console.log("#####!!!!!#####!!!!")
         console.log(self.config.key)
@@ -53,9 +56,13 @@ export default class Priveos {
           public_key: public_key,
         }
       })
+      return {
+        data: data,
+        threshold: threshold
+      }
     })
     .then((data) => {
-      console.log("Received response from broker (data): ", JSON.stringify(data))
+      console.log("Constructed this (data): ", JSON.stringify(data))
       console.log('this.config.contract', this.config.contract, owner)
       return this.eosWrapper.eos.transaction(
         {
