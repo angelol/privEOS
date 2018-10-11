@@ -11,7 +11,6 @@ if (process.argv[2]) {
 }
 const a = new Date()
 const priveos = new Priveos(config)
-const private_key = '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3'
 
 function test() {
   priveos.store(owner, file)
@@ -20,7 +19,7 @@ function test() {
     console.log("a-b ", (b-a))
     console.log("Successfully stored file, now off to reading.")
     
-    priveos.eosWrapper.eos.transaction(
+    priveos.eos.transaction(
       {
         actions: [
           {
@@ -46,7 +45,7 @@ function test() {
       const c = new Date()
       console.log("c-b", (c-b))
       
-      priveos.read(owner, file, private_key)
+      priveos.read(owner, file)
       .then((y) => {
         const d = new Date()
         console.log("d-c", (d-c))
@@ -61,8 +60,6 @@ function test() {
         // console.log("Original nonce: ", x[1])
         // console.log("Reconstructed key: ", y[0])
         // console.log("Reconstructed nonce: ", y[1])
-        const e = new Date()
-        console.log("e-d", (e-d))
       })
     })
   })
