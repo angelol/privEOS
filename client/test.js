@@ -4,7 +4,8 @@ import assert from 'assert'
 import Priveos from './index'
 import config from './config-test'
 
-const owner = 'angelo'
+const owner = 'priveosuser1'
+
 var file = 'file'
 if (process.argv[2]) {
   file = process.argv[2]
@@ -23,7 +24,7 @@ function test() {
       {
         actions: [
           {
-            account: priveos.config.contract,
+            account: priveos.config.priveosContract,
             name: 'accessgrant',
             authorization: [{
               actor: owner,
@@ -31,13 +32,15 @@ function test() {
             }],
             data: {
               user: owner,
-              contract: priveos.config.contract,
+              contract: priveos.config.dappContract,
               file: file,
+              public_key: config.publicKey,
             }
           }
         ]
       }
-    ).then(res => {
+    )
+    .then(res => {
       /* Wait for eos.transaction to finish before returning result */
       return x
     })
@@ -62,7 +65,9 @@ function test() {
         // console.log("Reconstructed nonce: ", y[1])
       })
     })
+    .catch(err => {
+      console.log(err)
+    })
   })
-  
 }
 test()

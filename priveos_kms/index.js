@@ -32,6 +32,7 @@ server.post('/read/', function(req, res, next) {
 	const requester = req.body.requester
 	get_original_nodes(config.contract, file)
   .then((nodes) => {
+		console.log("Original nodes: ", JSON.stringify(nodes))
 		const my_share = nodes.filter(x => x.node == nodeAccount)[0]
 		
 		assert.notEqual(null, my_share, "my_share not found!")
@@ -57,7 +58,7 @@ server.post('/read/', function(req, res, next) {
 					message: share.message.toString('hex'),
 					nonce: String(share.nonce),
 					checksum: share.checksum,
-					public_key: public_key
+					public_key: public_key,
 				}
 				res.send(data)
 			})

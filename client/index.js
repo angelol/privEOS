@@ -56,17 +56,19 @@ export default class Priveos {
       })
       return {
         data: data,
-        threshold: threshold
+        threshold: threshold,
       }
     })
     .then((data) => {
       console.log("Constructed this (data): ", JSON.stringify(data))
-      console.log('this.config.contract', this.config.contract, owner)
+      console.log("this.config.priveosContract: ", this.config.priveosContract)
+      console.log("this.config.dappContract: ", this.config.dappContract)
+      console.log("owner: ", owner)
       return this.eos.transaction(
         {
           actions: [
             {
-              account: this.config.contract,
+              account: this.config.priveosContract,
               name: 'store',
               authorization: [{
                 actor: owner,
@@ -74,7 +76,7 @@ export default class Priveos {
               }],
               data: {
                 owner: owner,
-                contract: this.config.contract,
+                contract: this.config.dappContract,
                 file: file,
                 data: JSON.stringify(data),
               }
@@ -123,7 +125,7 @@ export default class Priveos {
   }
   
   get_active_nodes(){
-    return this.eos.getTableRows({json:true, scope: this.config.contract, code: this.config.contract,  table: 'nodes', limit:100})
+    return this.eos.getTableRows({json:true, scope: this.config.priveosContract, code: this.config.priveosContract,  table: 'nodes', limit:100})
     .then((res) => {
       return res.rows.filter((x) => {
         return x.is_active
