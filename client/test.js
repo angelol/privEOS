@@ -2,7 +2,7 @@
 
 import assert from 'assert'
 import Priveos from './index'
-import config from './config-test'
+import config from './config'
 import { uint8array_to_hex } from './helpers'
 import uuidv4 from 'uuid/v4'
 import eosjs_ecc from 'eosjs-ecc'
@@ -10,7 +10,7 @@ const alice = 'priveosalice'
 const bob = 'priveosbob11'
 
 const config_alice = {
-  ...config,
+  dappContract: config.dappContract,
   ...{
     privateKey: '5HrReeu6FhGFWiHW7tsvLLN4dm2TDhizP9B7xWi4emG9RmVfLss',
     publicKey: 'EOS6Zy532Rgkuo1SKjYbPxLKYs8o2sEzLApNu8Ph66ysjstARrnHm', 
@@ -25,7 +25,10 @@ if (process.argv[2]) {
   file = process.argv[2]
 }
 const a = new Date()
-const priveos_alice = new Priveos(config_alice)
+console.log(config_alice)
+const priveos_alice = new Priveos({
+  ...config_alice
+})
 
 function test() {
   // generate ephemeral key
