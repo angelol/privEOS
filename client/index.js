@@ -44,6 +44,8 @@ export default class Priveos {
       console.log("Shares: ", shares)
       var data = nodes.map(node => {
         const public_key = node.node_key
+        console.log(`eosjs_ecc.Aes.encrypt this.config.privateKey: "${this.config.privateKey}"`)
+        console.log(`public_key: ${public_key}`)
         const share = eosjs_ecc.Aes.encrypt(this.config.privateKey , public_key, shares.pop())
         
         return {
@@ -57,6 +59,7 @@ export default class Priveos {
       return {
         data: data,
         threshold: threshold,
+        public_key: this.config.publicKey,
       }
     })
     .then((data) => {
@@ -88,10 +91,7 @@ export default class Priveos {
     .then((data) => {
       console.log("Successfully stored in blockchain txid: ", data.transaction_id)
       return [secret_bytes, nonce_bytes]
-    }).catch((e) => {
-      console.log("Error ", e)
     })
-    
   } 
 
   read(owner, file) {
@@ -104,8 +104,12 @@ export default class Priveos {
       
       
       const decrypted_shares = shares.map((data) => {
+        console.log("DATA: ", JSON.stringify(data))
+        console.log("Bob private: ", this.config.privateKey)
+        console.log("Alice public: ", data.public_key)
         return String(eosjs_ecc.Aes.decrypt(this.config.privateKey, data.public_key, data.nonce, ByteBuffer.fromHex(data.message).toBinary(), data.checksum))
       })
+      console.log("decrypted_shares: ", decrypted_shares)
       return decrypted_shares
     })
     .then((decrypted_shares) => {
@@ -118,7 +122,6 @@ export default class Priveos {
       console.log("Hex key: ", combined_hex_key)
       console.log("Nonce: ", combined_hex_nonce)
       const key_buffer = hex_to_uint8array(combined_hex_key)
-      
       const nonce_buffer = hex_to_uint8array(combined_hex_nonce)
       return [key_buffer, nonce_buffer]
     })

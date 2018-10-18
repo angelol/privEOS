@@ -43,10 +43,9 @@ export function check_permissions(user, file) {
 	        const store_trace = items[0]
 					console.log("store_trace: ", store_trace)
 	        if(accessgrant_trace.act.data.contract == store_trace.act.data.contract) {
-						return true
+						return accessgrant_trace.act.data.public_key
 					} else {
-						console.log("Nice try, zeroC00l")
-						return false
+						throw "Nice try, zeroC00l"
 					}
 	      })
 	  })
