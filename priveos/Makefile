@@ -11,10 +11,11 @@ deploy: build
 	$(CLEOS) set contract $(CONTRACT_ACCOUNT) ../$(CPP_IN)
 
 init:
-	make create_wallet
-	make import_keys
 	make system
 	make setup
+	make abi
+	make deploy
+	make regnodes
 
 create_wallet:
 	$(CLEOS) wallet create --name=eosio --file=wallet-password.txt
