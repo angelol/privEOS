@@ -1,4 +1,4 @@
-import { get_original_nodes } from '../common/mongo'
+import { get_store_trace } from '../common/mongo'
 import Eos from 'eosjs'
 
 export const contract = 'priveosrules'
@@ -9,7 +9,7 @@ const eos = Eos({httpEndpoint, chainId})
    
 
 export function get_node_urls(dappcontract, file) {
-  return get_original_nodes(dappcontract, file)
+  return get_store_trace(dappcontract, file)
   .then((data) => {
     const nodes = data.data
     const owners = nodes.map(value => value.node)
