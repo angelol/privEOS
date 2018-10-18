@@ -46,6 +46,7 @@ server.post('/read/', function(req, res, next) {
       return axios.post(node.url + '/read/', {
           file: file,
           requester: requester,
+          dappcontract: dappcontract,
         })
     })
     Promise.some(promises, store_trace.threshold)
