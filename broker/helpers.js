@@ -8,8 +8,8 @@ const chainId = 'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4
 const eos = Eos({httpEndpoint, chainId})
    
 
-export function get_node_urls(file) {
-  return get_original_nodes(contract, file)
+export function get_node_urls(dappcontract, file) {
+  return get_original_nodes(dappcontract, file)
   .then((data) => {
     const nodes = data.data
     const owners = nodes.map(value => value.node)

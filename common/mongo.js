@@ -18,13 +18,14 @@ export function mongo(fun) {
   return Promise.using(getMongoConnection(mongoUrl), fun)
 }
 
-export function get_original_nodes(contract, file) {
+export function get_original_nodes(dappcontract, file) {
   return mongo(conn => {
     return conn.db('EOS').collection('action_traces')
       .find({
-        "act.account" : contract, 
+        "act.account" : config.contract, 
         "act.data.file": file,
         "act.name": "store",
+        "act.data.contract": dappcontract,
       })
 			.sort({"receipt.global_sequence": -1})
 			.toArray()
@@ -41,7 +42,7 @@ export function get_original_nodes(contract, file) {
 }
 
 
-export function get_store_trace(file) {
+export function get_store_trace(dappcontract, file) {
   return mongo(conn => {
     return conn.db('EOS').collection('action_traces')
       .find({
@@ -49,6 +50,7 @@ export function get_store_trace(file) {
         "act.data.file": file,
         "act.name": "store",
         "receipt.receiver": config.contract,
+        "act.data.contract": dappcontract,
       })
       .sort({"receipt.global_sequence": -1})
       .toArray()
