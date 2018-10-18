@@ -1,4 +1,4 @@
-import ByteBuffer from 'ByteBuffer'
+import ByteBuffer from 'bytebuffer'
 
 
 export function get_threshold(N) {
