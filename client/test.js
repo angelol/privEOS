@@ -4,8 +4,9 @@ import assert from 'assert'
 import Priveos from './index'
 import config from './config-test'
 import { uint8array_to_hex } from './helpers'
-const owner = 'priveosalice'
-const requester = 'priveosbob11'
+import uuidv4 from 'uuid/v4'
+const alice = 'priveosalice'
+const bob = 'priveosbob11'
 
 const config_alice = {
   ...config,
@@ -25,7 +26,7 @@ const config_bob = {
 
 console.log("config_alice: ", JSON.stringify(config_alice))
 
-var file = 'file'
+var file = uuidv4()
 if (process.argv[2]) {
   file = process.argv[2]
 }
@@ -34,7 +35,7 @@ const priveos_alice = new Priveos(config_alice)
 const priveos_bob = new Priveos(config_bob)
 
 function test() {
-  priveos_alice.store(owner, file)
+  priveos_alice.store(alice, file)
   .then((x) => {
     const b = new Date()
     console.log("a-b ", (b-a))
@@ -49,11 +50,11 @@ function test() {
             account: priveos_bob.config.priveosContract,
             name: 'accessgrant',
             authorization: [{
-              actor: requester,
+              actor: bob,
               permission: 'active',
             }],
             data: {
-              user: requester,
+              user: bob,
               contract: priveos_bob.config.dappContract,
               file: file,
               public_key: priveos_bob.config.publicKey,
@@ -70,7 +71,7 @@ function test() {
       const c = new Date()
       console.log("c-b", (c-b))
       
-      priveos_bob.read(requester, file)
+      priveos_bob.read(bob, file)
       .then((y) => {
         const d = new Date()
         console.log("d-c", (d-c))

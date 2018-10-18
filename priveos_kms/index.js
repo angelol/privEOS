@@ -6,7 +6,7 @@ import ByteBuffer from 'bytebuffer'
 
 import config from '../common/config'
 import { get_original_nodes } from '../common/mongo'
-import { get_public_key, check_permissions } from './helpers'
+import { check_permissions } from './helpers'
 
 var PORT;
 var nodeAccount;
@@ -39,22 +39,14 @@ server.post('/read/', function(req, res, next) {
 		console.log("my_share: ", JSON.stringify(my_share))
 		assert.notEqual(null, my_share, "my_share not found!")
 		
-		console.log('decrypt using the private key of my node')
-		console.log(`config.privateKey: "${config.privateKey}"`)
-		console.log(`my_share.public_key: "${my_share.public_key}"`)
-		
 		// decrypt using the private key of my node
 		const plaintext = eosjs_ecc.Aes.decrypt(config.privateKey, data.public_key, my_share.nonce, ByteBuffer.fromHex(my_share.message).toBinary(), my_share.checksum)
 		
 		check_permissions(requester, file)
 		.then(recipient_public_key => {
-			// recipient_public_key = 'EOS6UxfgvWKm7qCKvKRPn5JNDeS4V8juzexiHCeUPeu6k4iZj8RYx'
 			console.log("User is authorised, continuing")
-			console.log("recipient_public_key: ", recipient_public_key)
 			// encrypt using the public_key of the requester
 			// so only the requester will be able to decrypt with his private key
-			console.log("Node secret: ", config.privateKey)
-			console.log("Bob public: ", recipient_public_key)
 			const share = eosjs_ecc.Aes.encrypt(config.privateKey, recipient_public_key, String(plaintext))	
 			// console.log("Share: ", JSON.stringify(share))			
 			const data = {

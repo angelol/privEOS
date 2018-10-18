@@ -31,10 +31,11 @@ server.post('/read/', function(req, res, next) {
   // console.log('Received read requests', req.body)
   const file = req.body.file
   const requester = req.body.requester
+  const dappcontract = req.body.dappcontract
   
   Promise.all([
-    get_store_trace(file),
-    get_node_urls(file),
+    get_store_trace(dappcontract, file),
+    get_node_urls(dappcontract, file),
   ])
   .then(([store_trace, nodes]) => {
     console.log("Store Trace: ", store_trace)

@@ -97,7 +97,8 @@ export default class Priveos {
   read(owner, file) {
     return axios.post(this.config.brokerUrl + '/read/', {
       file: file,
-      requester: owner
+      requester: owner,
+      dappcontract: this.config.dappContract,
     }).then(response => {
       const shares = response.data
       console.log("Shares: ", shares)
