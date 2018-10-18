@@ -10,7 +10,8 @@ const eos = Eos({httpEndpoint, chainId})
 
 export function get_node_urls(file) {
   return get_original_nodes(contract, file)
-  .then((nodes) => {
+  .then((data) => {
+    const nodes = data.data
     const owners = nodes.map(value => value.node)
     return eos.getTableRows({json:true, scope: contract, code: contract,  table: 'nodes', limit:100})
     .then((res) => {

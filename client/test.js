@@ -3,38 +3,60 @@
 import assert from 'assert'
 import Priveos from './index'
 import config from './config-test'
+import { uint8array_to_hex } from './helpers'
+const owner = 'priveosalice'
+const requester = 'priveosbob11'
 
-const owner = 'priveosuser1'
+const config_alice = {
+  ...config,
+  ...{
+    privateKey: '5HrReeu6FhGFWiHW7tsvLLN4dm2TDhizP9B7xWi4emG9RmVfLss',
+    publicKey: 'EOS6Zy532Rgkuo1SKjYbPxLKYs8o2sEzLApNu8Ph66ysjstARrnHm', 
+  }
+}
+
+const config_bob = {
+  ...config,
+  ...{
+    privateKey: '5JqvAdD1vQG3MRAsC9RVzdPJxnUCBNVfvRhL7ZmQ7rCqUoMGrnw',
+    publicKey: 'EOS87xyhE6czLCpuF8PaEGc3UiXHHyCMQB2zHygpEsXyDJHadHWFK',
+  }
+}
+
+console.log("config_alice: ", JSON.stringify(config_alice))
 
 var file = 'file'
 if (process.argv[2]) {
   file = process.argv[2]
 }
 const a = new Date()
-const priveos = new Priveos(config)
+const priveos_alice = new Priveos(config_alice)
+const priveos_bob = new Priveos(config_bob)
 
 function test() {
-  priveos.store(owner, file)
+  priveos_alice.store(owner, file)
   .then((x) => {
     const b = new Date()
     console.log("a-b ", (b-a))
     console.log("Successfully stored file, now off to reading.")
     
-    priveos.eos.transaction(
+    // Bob requests access to the file. 
+    // This transaction will fail if he is not authorised.
+    priveos_bob.eos.transaction(
       {
         actions: [
           {
-            account: priveos.config.priveosContract,
+            account: priveos_bob.config.priveosContract,
             name: 'accessgrant',
             authorization: [{
-              actor: owner,
+              actor: requester,
               permission: 'active',
             }],
             data: {
-              user: owner,
-              contract: priveos.config.dappContract,
+              user: requester,
+              contract: priveos_bob.config.dappContract,
               file: file,
-              public_key: config.publicKey,
+              public_key: priveos_bob.config.publicKey,
             }
           }
         ]
@@ -48,7 +70,7 @@ function test() {
       const c = new Date()
       console.log("c-b", (c-b))
       
-      priveos.read(owner, file)
+      priveos_bob.read(requester, file)
       .then((y) => {
         const d = new Date()
         console.log("d-c", (d-c))
@@ -59,10 +81,10 @@ function test() {
         
         console.log("Success!")
 
-        // console.log("Original key: ", x[0])
-        // console.log("Original nonce: ", x[1])
-        // console.log("Reconstructed key: ", y[0])
-        // console.log("Reconstructed nonce: ", y[1])
+        console.log("Original key: ", uint8array_to_hex(x[0]))
+        console.log("Original nonce: ", uint8array_to_hex(x[1]))
+        console.log("Reconstructed key: ", uint8array_to_hex(y[0]))
+        console.log("Reconstructed nonce: ", uint8array_to_hex(y[1]))
       })
     })
     .catch(err => {

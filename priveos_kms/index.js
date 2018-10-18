@@ -31,37 +31,43 @@ server.post('/read/', function(req, res, next) {
   const file = req.body.file
 	const requester = req.body.requester
 	get_original_nodes(config.contract, file)
-  .then((nodes) => {
-		console.log("Original nodes: ", JSON.stringify(nodes))
+  .then((data) => {
+		const nodes = data.data
+		console.log("DATA: ", JSON.stringify(data))
+		// console.log("Original nodes: ", JSON.stringify(nodes))
 		const my_share = nodes.filter(x => x.node == nodeAccount)[0]
-		
+		console.log("my_share: ", JSON.stringify(my_share))
 		assert.notEqual(null, my_share, "my_share not found!")
 		
+		console.log('decrypt using the private key of my node')
+		console.log(`config.privateKey: "${config.privateKey}"`)
+		console.log(`my_share.public_key: "${my_share.public_key}"`)
+		
 		// decrypt using the private key of my node
-		const plaintext = eosjs_ecc.Aes.decrypt(config.privateKey, my_share.public_key, my_share.nonce, ByteBuffer.fromHex(my_share.message).toBinary(), my_share.checksum)
+		const plaintext = eosjs_ecc.Aes.decrypt(config.privateKey, data.public_key, my_share.nonce, ByteBuffer.fromHex(my_share.message).toBinary(), my_share.checksum)
 		
 		check_permissions(requester, file)
-		.then(is_authorised => {
-			if(!is_authorised) {
-				console.log("User is not authorised, bailing out")
-				res.send("Not authorised")
-				return
-			}
-			
+		.then(recipient_public_key => {
+			// recipient_public_key = 'EOS6UxfgvWKm7qCKvKRPn5JNDeS4V8juzexiHCeUPeu6k4iZj8RYx'
 			console.log("User is authorised, continuing")
+			console.log("recipient_public_key: ", recipient_public_key)
 			// encrypt using the public_key of the requester
 			// so only the requester will be able to decrypt with his private key
-			get_public_key(req.body.requester, "active")
-			.then((public_key) => {
-				const share = eosjs_ecc.Aes.encrypt(config.privateKey, public_key, String(plaintext))				
-				const data = {
-					message: share.message.toString('hex'),
-					nonce: String(share.nonce),
-					checksum: share.checksum,
-					public_key: public_key,
-				}
-				res.send(data)
-			})
+			console.log("Node secret: ", config.privateKey)
+			console.log("Bob public: ", recipient_public_key)
+			const share = eosjs_ecc.Aes.encrypt(config.privateKey, recipient_public_key, String(plaintext))	
+			// console.log("Share: ", JSON.stringify(share))			
+			const data = {
+				message: share.message.toString('hex'),
+				nonce: String(share.nonce),
+				checksum: share.checksum,
+				public_key: my_share.public_key,
+			}
+			res.send(data)
+		})
+		.catch(err => {
+			console.log(err)
+			res.send("Not authorised")
 		})
 	})
   next()

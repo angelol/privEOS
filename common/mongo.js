@@ -32,7 +32,7 @@ export function get_original_nodes(contract, file) {
         const trace = items[0]
         if(trace) {
           // console.log("trace: ", JSON.parse(trace.act.data.data).data)
-          return JSON.parse(trace.act.data.data).data
+          return JSON.parse(trace.act.data.data)
         } else {
           return []
         }
