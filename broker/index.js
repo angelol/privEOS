@@ -1,6 +1,6 @@
 'use strict'
 import restify from 'restify'
-import assert from 'assert'
+import corsMiddleware from 'restify-cors-middleware'
 
 import axios from 'axios'
 axios.defaults.timeout = 2500;
@@ -13,6 +13,17 @@ import { get_store_trace } from '../common/mongo'
 
 const server = restify.createServer({handleUncaughtExceptions: true})
 server.use(restify.plugins.bodyParser())
+
+ 
+const cors = corsMiddleware({
+  preflightMaxAge: 5,
+  origins: ['*'],
+  allowHeaders: [''],
+  exposeHeaders: ['']
+})
+ 
+server.pre(cors.preflight)
+server.use(cors.actual)
 
 
 
@@ -30,7 +41,7 @@ server.post('/read/', function(req, res, next) {
     console.log("Nodes: ", nodes)
     console.log('Got Node Urls: ', nodes)
     const promises = nodes.map(node => {
-      console.log("nodes.map: ", node)
+      // console.log("nodes.map: ", node)
       return axios.post(node.url + '/read/', {
           file: file,
           requester: requester,
@@ -38,7 +49,7 @@ server.post('/read/', function(req, res, next) {
     })
     Promise.some(promises, store_trace.threshold)
     .then(data => {
-      console.log("DATAX: ", data)
+      // console.log("DATAX: ", data)
       return data.map(x => {
         // console.log("DATAX: ", x.data)
         return x.data

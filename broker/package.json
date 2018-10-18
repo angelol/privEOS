@@ -19,6 +19,7 @@
     "bluebird": "^3.5.2",
     "eosjs": "^16.0.9",
     "mongodb": "^3.1.6",
-    "restify": "^7.2.1"
+    "restify": "^7.2.1",
+    "restify-cors-middleware": "^1.1.1"
   }
 }
