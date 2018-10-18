@@ -5,7 +5,7 @@ import eosjs_ecc from 'eosjs-ecc'
 import ByteBuffer from 'bytebuffer'
 
 import config from '../common/config'
-import { get_original_nodes } from '../common/mongo'
+import { get_store_trace } from '../common/mongo'
 import { check_permissions } from './helpers'
 
 var PORT;
@@ -31,7 +31,7 @@ server.post('/read/', function(req, res, next) {
   const file = req.body.file
 	const requester = req.body.requester
 	const dappcontract = req.body.dappcontract
-	get_original_nodes(dappcontract, file)
+	get_store_trace(dappcontract, file)
   .then((data) => {
 		const nodes = data.data
 		console.log("DATA: ", JSON.stringify(data))
