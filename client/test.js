@@ -30,6 +30,8 @@ const priveos_alice = new Priveos(config_alice)
 function test() {
   // generate ephemeral key
   eosjs_ecc.randomKey().then(ephemeral_key_private => {
+    const b = new Date()
+    console.log("a-b ", (b-a))
     const ephemeral_key_public = eosjs_ecc.privateToPublic(ephemeral_key_private);
     const config_bob = {
       ...config,
@@ -47,8 +49,8 @@ function test() {
     
     priveos_alice.store(alice, file)
     .then((x) => {
-      const b = new Date()
-      console.log("a-b ", (b-a))
+      const c = new Date()
+      console.log("b-c ", (c-b))
       console.log("Successfully stored file, now off to reading.")
       
       // Bob requests access to the file. 
@@ -78,14 +80,14 @@ function test() {
         return x
       })
       .then(x => {
-        const c = new Date()
-        console.log("c-b", (c-b))
+        const d = new Date()
+        console.log("c-d", (d-c))
         
         priveos_bob.read(bob, file)
         .then((y) => {
-          const d = new Date()
-          console.log("d-c", (d-c))
-          console.log("d-a", (d-a))
+          const e = new Date()
+          console.log("d-e", (e-d))
+          console.log("a-a", (e-a))
           // console.log('Y: ', y)
           assert.deepStrictEqual(x[0], y[0])
           assert.deepStrictEqual(x[1], y[1])
