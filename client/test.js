@@ -5,6 +5,7 @@ import Priveos from './index'
 import config from './config-test'
 import { uint8array_to_hex } from './helpers'
 import uuidv4 from 'uuid/v4'
+import eosjs_ecc from 'eosjs-ecc'
 const alice = 'priveosalice'
 const bob = 'priveosbob11'
 
@@ -16,13 +17,6 @@ const config_alice = {
   }
 }
 
-const config_bob = {
-  ...config,
-  ...{
-    privateKey: '5JqvAdD1vQG3MRAsC9RVzdPJxnUCBNVfvRhL7ZmQ7rCqUoMGrnw',
-    publicKey: 'EOS87xyhE6czLCpuF8PaEGc3UiXHHyCMQB2zHygpEsXyDJHadHWFK',
-  }
-}
 
 console.log("config_alice: ", JSON.stringify(config_alice))
 
@@ -32,64 +26,78 @@ if (process.argv[2]) {
 }
 const a = new Date()
 const priveos_alice = new Priveos(config_alice)
-const priveos_bob = new Priveos(config_bob)
 
 function test() {
-  priveos_alice.store(alice, file)
-  .then((x) => {
-    const b = new Date()
-    console.log("a-b ", (b-a))
-    console.log("Successfully stored file, now off to reading.")
-    
+  // generate ephemeral key
+  eosjs_ecc.randomKey().then(ephemeral_key_private => {
+    const ephemeral_key_public = eosjs_ecc.privateToPublic(ephemeral_key_private);
+    const config_bob = {
+      ...config,
+      ...{
+        privateKey: '5JqvAdD1vQG3MRAsC9RVzdPJxnUCBNVfvRhL7ZmQ7rCqUoMGrnw',
+        publicKey: 'EOS87xyhE6czLCpuF8PaEGc3UiXHHyCMQB2zHygpEsXyDJHadHWFK',
+        ephemeralKeyPrivate: ephemeral_key_private,
+        ephemeralKeyPublic: ephemeral_key_public,
+      }
+    }
+    const priveos_bob = new Priveos(config_bob)
+
     // Bob requests access to the file. 
     // This transaction will fail if he is not authorised.
-    priveos_bob.eos.transaction(
-      {
-        actions: [
-          {
-            account: priveos_bob.config.priveosContract,
-            name: 'accessgrant',
-            authorization: [{
-              actor: bob,
-              permission: 'active',
-            }],
-            data: {
-              user: bob,
-              contract: priveos_bob.config.dappContract,
-              file: file,
-              public_key: priveos_bob.config.publicKey,
-            }
-          }
-        ]
-      }
-    )
-    .then(res => {
-      /* Wait for eos.transaction to finish before returning result */
-      return x
-    })
-    .then(x => {
-      const c = new Date()
-      console.log("c-b", (c-b))
+    
+    priveos_alice.store(alice, file)
+    .then((x) => {
+      const b = new Date()
+      console.log("a-b ", (b-a))
+      console.log("Successfully stored file, now off to reading.")
       
-      priveos_bob.read(bob, file)
-      .then((y) => {
-        const d = new Date()
-        console.log("d-c", (d-c))
-        console.log("d-a", (d-a))
-        // console.log('Y: ', y)
-        assert.deepStrictEqual(x[0], y[0])
-        assert.deepStrictEqual(x[1], y[1])
-        
-        console.log("Success!")
-
-        console.log("Original key: ", uint8array_to_hex(x[0]))
-        console.log("Original nonce: ", uint8array_to_hex(x[1]))
-        console.log("Reconstructed key: ", uint8array_to_hex(y[0]))
-        console.log("Reconstructed nonce: ", uint8array_to_hex(y[1]))
+      // Bob requests access to the file. 
+      // This transaction will fail if he is not authorised.
+      priveos_bob.eos.transaction(
+        {
+          actions: [
+            {
+              account: priveos_bob.config.priveosContract,
+              name: 'accessgrant',
+              authorization: [{
+                actor: bob,
+                permission: 'active',
+              }],
+              data: {
+                user: bob,
+                contract: priveos_bob.config.dappContract,
+                file: file,
+                public_key: priveos_bob.config.ephemeralKeyPublic,
+              }
+            }
+          ]
+        }
+      )
+      .then(res => {
+        /* Wait for eos.transaction to finish before returning result */
+        return x
       })
-    })
-    .catch(err => {
-      console.log(err)
+      .then(x => {
+        const c = new Date()
+        console.log("c-b", (c-b))
+        
+        priveos_bob.read(bob, file)
+        .then((y) => {
+          const d = new Date()
+          console.log("d-c", (d-c))
+          console.log("d-a", (d-a))
+          // console.log('Y: ', y)
+          assert.deepStrictEqual(x[0], y[0])
+          assert.deepStrictEqual(x[1], y[1])
+          
+          console.log("Success!")
+
+          console.log("Original key: ", uint8array_to_hex(x[0]))
+          console.log("Original nonce: ", uint8array_to_hex(x[1]))
+          console.log("Reconstructed key: ", uint8array_to_hex(y[0]))
+          console.log("Reconstructed nonce: ", uint8array_to_hex(y[1]))
+        })
+      })
     })
   })
 }
