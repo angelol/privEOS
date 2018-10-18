@@ -103,14 +103,11 @@ export default class Priveos {
       const shares = response.data
       console.log("Shares: ", shares)
       
+      const read_key = this.get_read_key()
       
       const decrypted_shares = shares.map((data) => {
-        console.log("DATA: ", JSON.stringify(data))
-        console.log("Bob private: ", this.config.privateKey)
-        console.log("Alice public: ", data.public_key)
-        return String(eosjs_ecc.Aes.decrypt(this.config.privateKey, data.public_key, data.nonce, ByteBuffer.fromHex(data.message).toBinary(), data.checksum))
+        return String(eosjs_ecc.Aes.decrypt(read_key.private, data.public_key, data.nonce, ByteBuffer.fromHex(data.message).toBinary(), data.checksum))
       })
-      console.log("decrypted_shares: ", decrypted_shares)
       return decrypted_shares
     })
     .then((decrypted_shares) => {
@@ -135,5 +132,19 @@ export default class Priveos {
         return x.is_active
       })
     })
+  }
+  
+  get_read_key() {
+    if(this.config.ephemeralKeyPublic && this.config.ephemeralKeyPrivate) {
+      return {
+        public: this.config.ephemeralKeyPublic,
+        private: this.config.ephemeralKeyPrivate
+      }
+    } else {
+      return {
+        public: this.config.privateKey,
+        private: this.config.publicKey,
+      }
+    }
   }
 }

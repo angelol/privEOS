@@ -30,7 +30,8 @@ server.use(restify.plugins.bodyParser())
 server.post('/read/', function(req, res, next) {
   const file = req.body.file
 	const requester = req.body.requester
-	get_original_nodes(config.contract, file)
+	const dappcontract = req.body.dappcontract
+	get_original_nodes(dappcontract, file)
   .then((data) => {
 		const nodes = data.data
 		console.log("DATA: ", JSON.stringify(data))
