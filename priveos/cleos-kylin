@@ -1,0 +1,10 @@
+#!/bin/sh
+################################################################################
+#
+# Scrip Created by http://CryptoLions.io
+# https://github.com/CryptoLions/scripts/
+#
+###############################################################################
+
+NODE="https://kylin.eoscanada.com"
+cleos -u $NODE "$@"

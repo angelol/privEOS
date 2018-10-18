@@ -8,27 +8,23 @@ import axios from 'axios'
 axios.defaults.timeout = 2500;
 import ByteBuffer from 'bytebuffer'
 import eosjs_ecc from 'eosjs-ecc'
-import { get_active_nodes, get_threshold, EosWrapper } from './helpers.js'
+import { get_threshold, hex_to_uint8array } from './helpers.js'
 import defaultConfig from './config'
-
-const nonceLength = 16
+import Eos from 'eosjs'
 
 export default class Priveos {
   constructor(config) {
     if (!config) throw new Error('Instantiating Priveos requires config object')
-    if (!config.key) throw new Error('Instantiating Priveos requires a private key set')
+    if (!config.privateKey) throw new Error('Instantiating Priveos requires a private key set')
 
     this.config = {
       ...defaultConfig,
       ...config
     }
-    this.eosWrapper = new EosWrapper(this.config)
-
-
+    this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.privateKey]})
   }
 
   store(owner, file) {
-    const self = this
     assert.ok(owner && file, "Owner and file must be supplied")
     const secret_bytes = nacl.randomBytes(nacl.secretbox.keyLength)
     const nonce_bytes = nacl.randomBytes(nacl.secretbox.nonceLength)
@@ -39,17 +35,16 @@ export default class Priveos {
     const shared_secret = secret + nonce
     console.log("shared_secret: ", shared_secret)
     
-    return this.eosWrapper.get_active_nodes()
+    return this.get_active_nodes()
     .then((nodes) => {
       console.log("Nodes: ", nodes)
       const number_of_nodes = nodes.length
       const threshold = get_threshold(number_of_nodes)
       const shares = secrets.share(shared_secret, number_of_nodes, threshold)
       console.log("Shares: ", shares)
-      var data = nodes.map(function(node) {
+      var data = nodes.map(node => {
         const public_key = node.node_key
-        console.log(self.config.key)
-        const share = eosjs_ecc.Aes.encrypt(self.config.key, public_key, shares.pop())
+        const share = eosjs_ecc.Aes.encrypt(this.config.privateKey , public_key, shares.pop())
         
         return {
           node: node.owner, 
@@ -61,17 +56,19 @@ export default class Priveos {
       })
       return {
         data: data,
-        threshold: threshold
+        threshold: threshold,
       }
     })
     .then((data) => {
       console.log("Constructed this (data): ", JSON.stringify(data))
-      console.log('this.config.contract', this.config.contract, owner)
-      return this.eosWrapper.eos.transaction(
+      console.log("this.config.priveosContract: ", this.config.priveosContract)
+      console.log("this.config.dappContract: ", this.config.dappContract)
+      console.log("owner: ", owner)
+      return this.eos.transaction(
         {
           actions: [
             {
-              account: this.config.contract,
+              account: this.config.priveosContract,
               name: 'store',
               authorization: [{
                 actor: owner,
@@ -79,7 +76,7 @@ export default class Priveos {
               }],
               data: {
                 owner: owner,
-                contract: this.config.contract,
+                contract: this.config.dappContract,
                 file: file,
                 data: JSON.stringify(data),
               }
@@ -98,17 +95,16 @@ export default class Priveos {
   } 
 
   read(owner, file) {
-    const private_key = '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3'
-    return axios.post('http://localhost:4000/read/', {
+    return axios.post(this.config.brokerUrl + '/read/', {
       file: file,
       requester: owner
-    }).then(function (response) {
+    }).then(response => {
       const shares = response.data
       console.log("Shares: ", shares)
       
       
       const decrypted_shares = shares.map((data) => {
-        return String(eosjs_ecc.Aes.decrypt(private_key, data.public_key, data.nonce, ByteBuffer.fromHex(data.message).toBinary(), data.checksum))
+        return String(eosjs_ecc.Aes.decrypt(this.config.privateKey, data.public_key, data.nonce, ByteBuffer.fromHex(data.message).toBinary(), data.checksum))
       })
       return decrypted_shares
     })
@@ -121,11 +117,19 @@ export default class Priveos {
       const combined_hex_nonce = combined.slice(nacl.secretbox.keyLength*2)
       console.log("Hex key: ", combined_hex_key)
       console.log("Nonce: ", combined_hex_nonce)
-      return [combined_hex_key, combined_hex_nonce]
+      const key_buffer = hex_to_uint8array(combined_hex_key)
+      
+      const nonce_buffer = hex_to_uint8array(combined_hex_nonce)
+      return [key_buffer, nonce_buffer]
     })
-    .catch(function (error) {
-      console.log(error)
+  }
+  
+  get_active_nodes(){
+    return this.eos.getTableRows({json:true, scope: this.config.priveosContract, code: this.config.priveosContract,  table: 'nodes', limit:100})
+    .then((res) => {
+      return res.rows.filter((x) => {
+        return x.is_active
+      })
     })
-    
   }
 }

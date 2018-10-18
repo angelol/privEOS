@@ -36,7 +36,7 @@ server.post('/read/', function(req, res, next) {
     get_store_trace(file),
     get_node_urls(file),
   ])
-  .spread(function(store_trace, nodes) {
+  .then(([store_trace, nodes]) => {
     console.log("Store Trace: ", store_trace)
     console.log("Nodes: ", nodes)
     console.log('Got Node Urls: ', nodes)
@@ -49,7 +49,6 @@ server.post('/read/', function(req, res, next) {
     })
     Promise.some(promises, store_trace.threshold)
     .then(data => {
-      // console.log("DATAX: ", data)
       return data.map(x => {
         // console.log("DATAX: ", x.data)
         return x.data

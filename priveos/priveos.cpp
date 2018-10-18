@@ -15,7 +15,7 @@ class priveos : public contract {
     }
     
     //@abi action
-    void accessgrant(const account_name user, const account_name contract, const std::string file) {
+    void accessgrant(const account_name user, const account_name contract, const std::string file, const eosio::public_key public_key) {
       require_auth(user);
       require_recipient(contract);
     }

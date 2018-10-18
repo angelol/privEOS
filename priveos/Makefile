@@ -8,7 +8,7 @@ abi:
 	eosiocpp -g $(CPP_IN).abi $(CPP_IN).cpp
 
 deploy: build
-	cleos set contract $(CONTRACT_ACCOUNT) ../$(CPP_IN)
+	$(CLEOS) set contract $(CONTRACT_ACCOUNT) ../$(CPP_IN)
 
 init:
 	make create_wallet
@@ -17,50 +17,52 @@ init:
 	make setup
 
 create_wallet:
-	cleos wallet create --name=eosio --file=wallet-password.txt
+	$(CLEOS) wallet create --name=eosio --file=wallet-password.txt
 
 import_keys:
-	cleos wallet import --name=eosio --private-key=$(PRIVATE_KEY)
+	$(CLEOS) wallet import --name=eosio --private-key=$(PRIVATE_KEY)
 
 unlock_wallet:
-	cleos wallet unlock --name=eosio --password $(WALLET_PASSWORD)
+	$(CLEOS) wallet unlock --name=eosio --password $(WALLET_PASSWORD)
 		
 system:
-	cleos create account eosio angelo $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos create account eosio eosio.token $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos create account eosio eosio.msig $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos create account eosio eosio.bpay $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos create account eosio eosio.names $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos create account eosio eosio.ram $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos create account eosio eosio.ramfee $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos create account eosio eosio.saving $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos create account eosio eosio.stake $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos create account eosio eosio.vpay $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos set contract eosio.token $(EOS_CONTRACTS_DIR)/eosio.token -p eosio.token
-	cleos set contract eosio.msig $(EOS_CONTRACTS_DIR)/eosio.msig -p eosio.msig
-	cleos push action eosio.token create '["eosio", "10000000000.0000 EOS",0,0,0]' -p eosio.token
-	cleos push action eosio.token issue '["eosio","1000000000.0000 EOS", "issue"]' -p eosio
-	cleos transfer eosio angelo "1000.0000 EOS"
-	cleos set contract eosio $(EOS_CONTRACTS_DIR)/eosio.system -p eosio
+	$(CLEOS) create account eosio eosio.token $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) create account eosio eosio.msig $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) create account eosio eosio.bpay $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) create account eosio eosio.names $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) create account eosio eosio.ram $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) create account eosio eosio.ramfee $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) create account eosio eosio.saving $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) create account eosio eosio.stake $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) create account eosio eosio.vpay $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) set contract eosio.token $(EOS_CONTRACTS_DIR)/eosio.token -p eosio.token
+	$(CLEOS) set contract eosio.msig $(EOS_CONTRACTS_DIR)/eosio.msig -p eosio.msig
+	$(CLEOS) push action eosio.token create '["eosio", "10000000000.0000 EOS",0,0,0]' -p eosio.token
+	$(CLEOS) push action eosio.token issue '["eosio","1000000000.0000 EOS", "issue"]' -p eosio
+	$(CLEOS) set contract eosio $(EOS_CONTRACTS_DIR)/eosio.system -p eosio
 
 setup:
-	cleos system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio $(CONTRACT_ACCOUNT) $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos set account permission $(CONTRACT_ACCOUNT) active '{"threshold": 1,"keys": [{"key": "$(PUBLIC_KEY)","weight": 1}],"accounts": [{"permission":{"actor":"$(CONTRACT_ACCOUNT)","permission":"eosio.code"},"weight":1}]}' owner -p $(CONTRACT_ACCOUNT)
-	cleos system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode1 $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode2 $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode3 $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode4 $(PUBLIC_KEY) $(PUBLIC_KEY)
-	cleos system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnode5 $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio $(CONTRACT_ACCOUNT) $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio dappcontract $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio priveosuser1 $(PUBLIC_KEY) $(PUBLIC_KEY)
+
+
+	$(CLEOS) set account permission $(CONTRACT_ACCOUNT) active '{"threshold": 1,"keys": [{"key": "$(PUBLIC_KEY)","weight": 1}],"accounts": [{"permission":{"actor":"$(CONTRACT_ACCOUNT)","permission":"eosio.code"},"weight":1}]}' owner -p $(CONTRACT_ACCOUNT)
+	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnodexxx1 $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnodexxx2 $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnodexxx3 $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnodexxx4 $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnodexxx5 $(PUBLIC_KEY) $(PUBLIC_KEY)
 	
 regnodes:
-	cleos push action $(CONTRACT_ACCOUNT) regnode '["testnode1", "$(PUBLIC_KEY)", "http://localhost:3001"]' -p testnode1
-	cleos push action $(CONTRACT_ACCOUNT) regnode '["testnode2", "$(PUBLIC_KEY)", "http://localhost:3002"]' -p testnode2
-	cleos push action $(CONTRACT_ACCOUNT) regnode '["testnode3", "$(PUBLIC_KEY)", "http://localhost:3003"]' -p testnode3
-	cleos push action $(CONTRACT_ACCOUNT) regnode '["testnode4", "$(PUBLIC_KEY)", "http://localhost:3004"]' -p testnode4
-	cleos push action $(CONTRACT_ACCOUNT) regnode '["testnode5", "$(PUBLIC_KEY)", "http://localhost:3005"]' -p testnode5
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx1", "$(PK_NODE_1)", "http://localhost:3001"]' -p testnodexxx1
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx2", "$(PK_NODE_2)", "http://localhost:3002"]' -p testnodexxx2
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx3", "$(PK_NODE_3)", "http://localhost:3003"]' -p testnodexxx3
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx4", "$(PK_NODE_4)", "http://localhost:3004"]' -p testnodexxx4
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx5", "$(PK_NODE_5)", "http://localhost:3005"]' -p testnodexxx5
 
 shownodes:
-	cleos get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) nodes
+	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) nodes
 
 clean:
 	rm -f $(CPP_IN).wast $(CPP_IN).wasm $(CPP_IN).abi 

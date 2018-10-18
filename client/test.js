@@ -4,7 +4,8 @@ import assert from 'assert'
 import Priveos from './index'
 import config from './config-test'
 
-const owner = 'angelo'
+const owner = 'priveosuser1'
+
 var file = 'file'
 if (process.argv[2]) {
   file = process.argv[2]
@@ -19,11 +20,11 @@ function test() {
     console.log("a-b ", (b-a))
     console.log("Successfully stored file, now off to reading.")
     
-    priveos.eosWrapper.eos.transaction(
+    priveos.eos.transaction(
       {
         actions: [
           {
-            account: priveos.config.contract,
+            account: priveos.config.priveosContract,
             name: 'accessgrant',
             authorization: [{
               actor: owner,
@@ -31,14 +32,16 @@ function test() {
             }],
             data: {
               user: owner,
-              contract: priveos.config.contract,
+              contract: priveos.config.dappContract,
               file: file,
+              public_key: config.publicKey,
             }
           }
         ]
       }
-    ).then(res => {
-      
+    )
+    .then(res => {
+      /* Wait for eos.transaction to finish before returning result */
       return x
     })
     .then(x => {
@@ -49,22 +52,22 @@ function test() {
       .then((y) => {
         const d = new Date()
         console.log("d-c", (d-c))
-          console.log("d-a", (d-a))
-        console.log('Y: ', y)
-        assert.strictEqual(x[0], y[0])
-        assert.strictEqual(x[1], y[1])
+        console.log("d-a", (d-a))
+        // console.log('Y: ', y)
+        assert.deepStrictEqual(x[0], y[0])
+        assert.deepStrictEqual(x[1], y[1])
         
         console.log("Success!")
 
-        console.log("Original key: ", x[0])
-        console.log("Original nonce: ", x[1])
-        console.log("Reconstructed key: ", y[0])
-        console.log("Reconstructed nonce: ", y[1])
-        const e = new Date()
-        console.log("e-d", (e-d))
+        // console.log("Original key: ", x[0])
+        // console.log("Original nonce: ", x[1])
+        // console.log("Reconstructed key: ", y[0])
+        // console.log("Reconstructed nonce: ", y[1])
       })
     })
+    .catch(err => {
+      console.log(err)
+    })
   })
-  
 }
 test()
