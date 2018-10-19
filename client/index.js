@@ -16,6 +16,7 @@ export default class Priveos {
   constructor(config) {
     if (!config) throw new Error('Instantiating Priveos requires config object')
     if (!config.privateKey) throw new Error('Instantiating Priveos requires a private key set')
+    if (!config.publicKey) throw new Error('Instantiating Priveos requires a public key set')
     if (!config.dappContract) throw new Error('Instantiating Priveos requires a dappContract set')
 
     this.config = {
