@@ -34,13 +34,14 @@ server.post('/read/', function(req, res, next) {
 	get_store_trace(dappcontract, file)
   .then((data) => {
 		const nodes = data.data
-		console.log("DATA: ", JSON.stringify(data))
+		console.log("DATA: ", JSON.stringify(data, null, 2))
 		// console.log("Original nodes: ", JSON.stringify(nodes))
 		const my_share = nodes.filter(x => x.node == nodeAccount)[0]
-		console.log("my_share: ", JSON.stringify(my_share))
+		console.log("my_share: ", JSON.stringify(my_share, null, 2))
 		assert.notEqual(null, my_share, "my_share not found!")
 		
 		// decrypt using the private key of my node
+		console.log(`Decrypt for public key ${data.public_key}`)
 		const plaintext = eosjs_ecc.Aes.decrypt(config.privateKey, data.public_key, my_share.nonce, ByteBuffer.fromHex(my_share.message).toBinary(), my_share.checksum)
 		
 		check_permissions(requester, file)

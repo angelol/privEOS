@@ -26,6 +26,7 @@ export default class Priveos {
   }
 
   store(owner, file) {
+    console.log(`\r\n###\r\npriveos.store(${owner}, ${file})`)
     assert.ok(owner && file, "Owner and file must be supplied")
     const secret_bytes = nacl.randomBytes(nacl.secretbox.keyLength)
     const nonce_bytes = nacl.randomBytes(nacl.secretbox.nonceLength)
@@ -38,13 +39,15 @@ export default class Priveos {
     
     return this.get_active_nodes()
     .then((nodes) => {
-      console.log("Nodes: ", nodes)
+      console.log("\r\nNodes: ", nodes)
       const number_of_nodes = nodes.length
       const threshold = get_threshold(number_of_nodes)
       const shares = secrets.share(shared_secret, number_of_nodes, threshold)
       console.log("Shares: ", shares)
+
       var data = nodes.map(node => {
         const public_key = node.node_key
+        console.log(`\r\nNode ${node.owner}`)
         console.log(`eosjs_ecc.Aes.encrypt this.config.privateKey: "${this.config.privateKey}"`)
         console.log(`public_key: ${public_key}`)
         const share = eosjs_ecc.Aes.encrypt(this.config.privateKey , public_key, shares.pop())
@@ -64,6 +67,7 @@ export default class Priveos {
       }
     })
     .then((data) => {
+      console.log("\r\nBundling... ")
       console.log("Constructed this (data): ", JSON.stringify(data))
       console.log("this.config.priveosContract: ", this.config.priveosContract)
       console.log("this.config.dappContract: ", this.config.dappContract)
@@ -90,7 +94,11 @@ export default class Priveos {
       )
     })
     .then((data) => {
-      console.log("Successfully stored in blockchain txid: ", data.transaction_id)
+      console.log(`\r\nSuccessfully pushed store transaction`)
+      console.log(`data.processed.action_traces[0].act.data.owner: ${data.processed.action_traces[0].act.data.owner}`)
+      console.log(`data.processed.action_traces[0].act.data.contract: ${data.processed.action_traces[0].act.data.contract}`)
+      console.log(`data.processed.action_traces[0].act.data.file: ${data.processed.action_traces[0].act.data.file}`)
+      console.log(`data.transaction_id: ${data.transaction_id}`)
       return [secret_bytes, nonce_bytes]
     })
   } 

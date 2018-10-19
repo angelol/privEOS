@@ -34,7 +34,7 @@ function test() {
   // generate ephemeral key
   eosjs_ecc.randomKey().then(ephemeral_key_private => {
     const b = new Date()
-    console.log("a-b ", (b-a))
+    console.log("Time elapsed - random key generation: ", (b-a))
     const ephemeral_key_public = eosjs_ecc.privateToPublic(ephemeral_key_private);
     const config_bob = {
       ...config,
@@ -52,12 +52,15 @@ function test() {
     
     priveos_alice.store(alice, file)
     .then((x) => {
+      // throw new Error("ABORT NOW")
+      // process.exit(1)
       const c = new Date()
-      console.log("b-c ", (c-b))
-      console.log("Successfully stored file, now off to reading.")
+      console.log("\r\nTime elapsed - storing file ", (c-b))
+      console.log(`Successfully stored file (${file}), now off to reading.`)
       
       // Bob requests access to the file. 
       // This transaction will fail if he is not authorised.
+      console.log(`Push accessgrant action for user ${bob}, contract ${priveos_bob.config.dappContract}, file ${file} and public key ${priveos_bob.config.ephemeralKeyPublic}`)
       priveos_bob.eos.transaction(
         {
           actions: [
@@ -71,7 +74,7 @@ function test() {
               data: {
                 user: bob,
                 contract: priveos_bob.config.dappContract,
-                file: file,
+                file,
                 public_key: priveos_bob.config.ephemeralKeyPublic,
               }
             }
@@ -80,11 +83,12 @@ function test() {
       )
       .then(res => {
         /* Wait for eos.transaction to finish before returning result */
+        console.log(`\r\nWaiting for transaction to finish`)
         return x
       })
       .then(x => {
         const d = new Date()
-        console.log("c-d", (d-c))
+        console.log("\r\nTime elapsed - accessgrant transaction", (d-c))
         
         priveos_bob.read(bob, file)
         .then((y) => {
