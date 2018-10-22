@@ -15,15 +15,20 @@ import Eos from 'eosjs'
 export default class Priveos {
   constructor(config) {
     if (!config) throw new Error('Instantiating Priveos requires config object')
-    if (!config.privateKey) throw new Error('Instantiating Priveos requires a private key set')
-    if (!config.publicKey) throw new Error('Instantiating Priveos requires a public key set')
+    if (!config.privateKey && !config.eos) throw new Error('Instantiating Priveos requires either config.privateKey or config.eos proxy instance (scatter)')
+    if (!config.publicKey) throw new Error('Instantiating Priveos requires config.publicKey')
     if (!config.dappContract) throw new Error('Instantiating Priveos requires a dappContract set')
 
     this.config = {
       ...defaultConfig,
       ...config
     }
-    this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.privateKey]})
+    
+    if (this.config.privateKey) {
+      this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.privateKey]})
+    } else {
+      this.eos = this.config.eos
+    }
   }
 
   store(owner, file) {
@@ -45,13 +50,14 @@ export default class Priveos {
       const threshold = get_threshold(number_of_nodes)
       const shares = secrets.share(shared_secret, number_of_nodes, threshold)
       console.log("Shares: ", shares)
+      const keys = this.get_keys()
 
       var data = nodes.map(node => {
         const public_key = node.node_key
         console.log(`\r\nNode ${node.owner}`)
-        console.log(`eosjs_ecc.Aes.encrypt this.config.privateKey: "${this.config.privateKey}"`)
+        console.log(`eosjs_ecc.Aes.encrypt keys.private: "${keys.private}"`)
         console.log(`public_key: ${public_key}`)
-        const share = eosjs_ecc.Aes.encrypt(this.config.privateKey , public_key, shares.pop())
+        const share = eosjs_ecc.Aes.encrypt(keys.private , public_key, shares.pop())
         
         return {
           node: node.owner, 
@@ -113,7 +119,7 @@ export default class Priveos {
       const shares = response.data
       console.log("Shares: ", shares)
       
-      const read_key = this.get_read_key()
+      const read_key = this.get_keys()
       
       const decrypted_shares = shares.map((data) => {
         return String(eosjs_ecc.Aes.decrypt(read_key.private, data.public_key, data.nonce, ByteBuffer.fromHex(data.message).toBinary(), data.checksum))
@@ -144,7 +150,7 @@ export default class Priveos {
     })
   }
   
-  get_read_key() {
+  get_keys() {
     if(this.config.ephemeralKeyPublic && this.config.ephemeralKeyPrivate) {
       return {
         public: this.config.ephemeralKeyPublic,
@@ -152,8 +158,8 @@ export default class Priveos {
       }
     } else {
       return {
-        public: this.config.privateKey,
-        private: this.config.publicKey,
+        public: this.config.publicKey,
+        private: this.config.privateKey,
       }
     }
   }
