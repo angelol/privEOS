@@ -59,10 +59,10 @@ server.post('/read/', function(req, res, next) {
 			}
 			res.send(data)
 		})
-		.catch(err => {
-			console.log(err)
-			res.send("Not authorised")
-		})
+	})
+	.catch(err => {
+		console.log(err)
+		res.send("Not authorised")
 	})
   next()
 })
