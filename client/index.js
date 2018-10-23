@@ -16,7 +16,7 @@ export default class Priveos {
   constructor(config) {
     if (!config) throw new Error('Instantiating Priveos requires config object')
     if (!config.privateKey && !config.eos) throw new Error('Instantiating Priveos requires either config.privateKey or config.eos proxy instance (scatter)')
-    if (!config.publicKey) throw new Error('Instantiating Priveos requires config.publicKey')
+    if (!config.publicKey && !config.ephemeralKeyPublic) throw new Error('Instantiating Priveos requires either config.publicKey or config.ephemeralKeyPublic')
     if (!config.dappContract) throw new Error('Instantiating Priveos requires a dappContract set')
 
     this.config = {
@@ -55,8 +55,6 @@ export default class Priveos {
       var data = nodes.map(node => {
         const public_key = node.node_key
         console.log(`\r\nNode ${node.owner}`)
-        console.log(`eosjs_ecc.Aes.encrypt keys.private: "${keys.private}"`)
-        console.log(`public_key: ${public_key}`)
         const share = eosjs_ecc.Aes.encrypt(keys.private , public_key, shares.pop())
         
         return {
@@ -70,7 +68,7 @@ export default class Priveos {
       return {
         data: data,
         threshold: threshold,
-        public_key: this.config.publicKey,
+        public_key: keys.public,
       }
     })
     .then((data) => {
