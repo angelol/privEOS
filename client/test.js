@@ -49,8 +49,10 @@ function test() {
 
     // Bob requests access to the file. 
     // This transaction will fail if he is not authorised.
+
+    const { secret_bytes, nonce_bytes } = priveos_alice.get_encryption_keys()
     
-    priveos_alice.store(alice, file)
+    priveos_alice.store(alice, file, secret_bytes, nonce_bytes)
     .then((x) => {
       // throw new Error("ABORT NOW")
       // process.exit(1)
@@ -108,6 +110,9 @@ function test() {
         })
       })
     })
+  })
+  .catch((err) => {
+    console.error(err)
   })
 }
 test()
