@@ -15,8 +15,9 @@ import Eos from 'eosjs'
 export default class Priveos {
   constructor(config) {
     if (!config) throw new Error('Instantiating Priveos requires config object')
-    if (!config.privateKey && !config.eos) throw new Error('Instantiating Priveos requires either config.privateKey or config.eos proxy instance (scatter)')
-    if (!config.publicKey && !config.ephemeralKeyPublic) throw new Error('Instantiating Priveos requires either config.publicKey or config.ephemeralKeyPublic')
+    if (!config.privateKey && !config.eos) throw new Error('Instantiating Priveos requires either config.privateKey or config.eos proxy instance (e.g. scatter)')
+    if (config.privateKey && !config.publicKey) throw new Error('When passing config.privateKey the related config.publicKey must be present too')
+    if (config.ephemeralKeyPrivate && !config.ephemeralKeyPublic) throw new Error('When passing config.ephemeralKeyPrivate the related config.ephemeralKeyPublic must be present too')
     if (!config.dappContract) throw new Error('Instantiating Priveos requires a dappContract set')
 
     this.config = {
