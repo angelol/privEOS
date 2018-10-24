@@ -46,8 +46,15 @@ export default class Priveos {
     }
   }
 
-
-  store(owner, file, secret_bytes, nonce_bytes) {
+  /**
+   * Trigger a store transaction at priveos level alongside the passed actions
+   * @param {string} owner 
+   * @param {string} file 
+   * @param {Uint8Array} secret_bytes 
+   * @param {Uint8Array} nonce_bytes 
+   * @param {array} actions Additional actions to trigger alongside store transaction (usability)
+   */
+  store(owner, file, secret_bytes, nonce_bytes, actions = []) {
     console.log(`\r\n###\r\npriveos.store(${owner}, ${file})`)
     
     assert.ok(owner && file, "Owner and file must be supplied")
@@ -78,7 +85,7 @@ export default class Priveos {
         const public_key = node.node_key
 
         console.log(`\r\nNode ${node.owner}`)
-        
+
         const share = eosjs_ecc.Aes.encrypt(keys.private , public_key, shares.pop())
         
         return {
@@ -103,7 +110,7 @@ export default class Priveos {
       console.log("owner: ", owner)
       return this.eos.transaction(
         {
-          actions: [
+          actions: actions.concat([
             {
               account: this.config.priveosContract,
               name: 'store',
@@ -118,7 +125,7 @@ export default class Priveos {
                 data: JSON.stringify(data),
               }
             }
-          ]
+          ])
         }
       )
     })
@@ -128,6 +135,7 @@ export default class Priveos {
       console.log(`data.processed.action_traces[0].act.data.contract: ${data.processed.action_traces[0].act.data.contract}`)
       console.log(`data.processed.action_traces[0].act.data.file: ${data.processed.action_traces[0].act.data.file}`)
       console.log(`data.transaction_id: ${data.transaction_id}`)
+      // TODO remove this return...not required as secret/nonce is passed
       return [secret_bytes, nonce_bytes]
     })
   } 
