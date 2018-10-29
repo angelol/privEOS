@@ -1,11 +1,8 @@
 import { get_store_trace } from '../common/mongo'
 import Eos from 'eosjs'
+import config from '../common/config'
 
-export const contract = 'priveosrules'
-const httpEndpoint = 'http://localhost:8888'
-const chainId = 'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f'
-
-const eos = Eos({httpEndpoint, chainId})
+const eos = Eos({httpEndpoint: config.httpEndpoint, chainId: config.chainId})
    
 
 export function get_node_urls(dappcontract, file) {
@@ -13,7 +10,7 @@ export function get_node_urls(dappcontract, file) {
   .then((data) => {
     const nodes = data.data
     const owners = nodes.map(value => value.node)
-    return eos.getTableRows({json:true, scope: contract, code: contract,  table: 'nodes', limit:100})
+    return eos.getTableRows({json:true, scope: config.contract, code: config.contract,  table: 'nodes', limit:100})
     .then((res) => {
       return res.rows.filter((x) => {
         return owners.includes(x.owner)
