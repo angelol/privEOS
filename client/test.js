@@ -2,7 +2,7 @@
 
 import assert from 'assert'
 import Priveos from './index'
-import config from './config'
+import config from './config-test'
 import { uint8array_to_hex } from './helpers'
 import uuidv4 from 'uuid/v4'
 import eosjs_ecc from 'eosjs-ecc'

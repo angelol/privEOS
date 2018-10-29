@@ -9,7 +9,6 @@ axios.defaults.timeout = 2500;
 import ByteBuffer from 'bytebuffer'
 import eosjs_ecc from 'eosjs-ecc'
 import { get_threshold, hex_to_uint8array } from './helpers.js'
-import defaultConfig from './config'
 import Eos from 'eosjs'
 
 export default class Priveos {
@@ -20,10 +19,7 @@ export default class Priveos {
     if (config.ephemeralKeyPrivate && !config.ephemeralKeyPublic) throw new Error('When passing config.ephemeralKeyPrivate the related config.ephemeralKeyPublic must be present too')
     if (!config.dappContract) throw new Error('Instantiating Priveos requires a dappContract set')
 
-    this.config = {
-      ...defaultConfig,
-      ...config
-    }
+    this.config = config
     
     if (this.config.privateKey) {
       this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.privateKey]})
