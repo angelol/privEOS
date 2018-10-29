@@ -10,7 +10,7 @@ const alice = 'priveosalice'
 const bob = 'priveosbob11'
 
 const config_alice = {
-  dappContract: config.dappContract,
+  ...config,
   ...{
     privateKey: '5HrReeu6FhGFWiHW7tsvLLN4dm2TDhizP9B7xWi4emG9RmVfLss',
     publicKey: 'EOS6Zy532Rgkuo1SKjYbPxLKYs8o2sEzLApNu8Ph66ysjstARrnHm', 
@@ -26,9 +26,7 @@ if (process.argv[2]) {
 }
 const a = new Date()
 console.log(config_alice)
-const priveos_alice = new Priveos({
-  ...config_alice
-})
+const priveos_alice = new Priveos(config_alice)
 
 function test() {
   // generate ephemeral key
