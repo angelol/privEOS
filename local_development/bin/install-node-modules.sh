@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 services=(broker client priveos_kms common)
 for service in ${services[*]}
 do

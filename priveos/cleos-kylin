@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 ################################################################################
 #
 # Scrip Created by http://CryptoLions.io
