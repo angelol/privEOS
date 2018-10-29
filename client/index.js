@@ -15,43 +15,78 @@ import Eos from 'eosjs'
 export default class Priveos {
   constructor(config) {
     if (!config) throw new Error('Instantiating Priveos requires config object')
-    if (!config.privateKey) throw new Error('Instantiating Priveos requires a private key set')
-    if (!config.publicKey) throw new Error('Instantiating Priveos requires a public key set')
+    if (!config.privateKey && !config.eos) throw new Error('Instantiating Priveos requires either config.privateKey or config.eos proxy instance (e.g. scatter)')
+    if (config.privateKey && !config.publicKey) throw new Error('When passing config.privateKey the related config.publicKey must be present too')
+    if (config.ephemeralKeyPrivate && !config.ephemeralKeyPublic) throw new Error('When passing config.ephemeralKeyPrivate the related config.ephemeralKeyPublic must be present too')
     if (!config.dappContract) throw new Error('Instantiating Priveos requires a dappContract set')
 
     this.config = {
       ...defaultConfig,
       ...config
     }
-    this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.privateKey]})
+    
+    if (this.config.privateKey) {
+      this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.privateKey]})
+    } else {
+      this.eos = this.config.eos
+    }
   }
 
-  store(owner, file) {
-    console.log(`\r\n###\r\npriveos.store(${owner}, ${file})`)
-    assert.ok(owner && file, "Owner and file must be supplied")
+  /**
+   * Generate a new symmetric secret + nonce to encrypt files
+   */
+  get_encryption_keys() {
     const secret_bytes = nacl.randomBytes(nacl.secretbox.keyLength)
     const nonce_bytes = nacl.randomBytes(nacl.secretbox.nonceLength)
+    console.log("Secret (bytes): ", JSON.stringify(secret_bytes))
+    console.log("Nonce (bytes): ", JSON.stringify(nonce_bytes))
+    return {
+      secret_bytes,
+      nonce_bytes
+    }
+  }
+
+  /**
+   * Trigger a store transaction at priveos level alongside the passed actions
+   * @param {string} owner 
+   * @param {string} file 
+   * @param {Uint8Array} secret_bytes 
+   * @param {Uint8Array} nonce_bytes 
+   * @param {array} actions Additional actions to trigger alongside store transaction (usability)
+   */
+  store(owner, file, secret_bytes, nonce_bytes, actions = []) {
+    console.log(`\r\n###\r\npriveos.store(${owner}, ${file})`)
+    
+    assert.ok(owner && file, "Owner and file must be supplied")
+    assert.ok(secret_bytes && nonce_bytes, "secret_bytes and nonce_bytes must be supplied (run priveos.get_encryption_keys() before)")
+
     const secret = Buffer.from(secret_bytes).toString('hex')
     const nonce = Buffer.from(nonce_bytes).toString('hex')
+    const shared_secret = secret + nonce
+
+    console.log("shared_secret: ", shared_secret)
     console.log("Secret: ", secret)
     console.log("Nonce: ", nonce)
-    const shared_secret = secret + nonce
     console.log("shared_secret: ", shared_secret)
     
     return this.get_active_nodes()
     .then((nodes) => {
       console.log("\r\nNodes: ", nodes)
+
       const number_of_nodes = nodes.length
       const threshold = get_threshold(number_of_nodes)
       const shares = secrets.share(shared_secret, number_of_nodes, threshold)
+
       console.log("Shares: ", shares)
+
+      const keys = this.get_config_keys()
 
       var data = nodes.map(node => {
         const public_key = node.node_key
+
         console.log(`\r\nNode ${node.owner}`)
-        console.log(`eosjs_ecc.Aes.encrypt this.config.privateKey: "${this.config.privateKey}"`)
-        console.log(`public_key: ${public_key}`)
-        const share = eosjs_ecc.Aes.encrypt(this.config.privateKey , public_key, shares.pop())
+
+        const share = eosjs_ecc.Aes.encrypt(keys.private , public_key, shares.pop())
         
         return {
           node: node.owner, 
@@ -64,7 +99,7 @@ export default class Priveos {
       return {
         data: data,
         threshold: threshold,
-        public_key: this.config.publicKey,
+        public_key: keys.public,
       }
     })
     .then((data) => {
@@ -75,7 +110,7 @@ export default class Priveos {
       console.log("owner: ", owner)
       return this.eos.transaction(
         {
-          actions: [
+          actions: actions.concat([
             {
               account: this.config.priveosContract,
               name: 'store',
@@ -90,7 +125,7 @@ export default class Priveos {
                 data: JSON.stringify(data),
               }
             }
-          ]
+          ])
         }
       )
     })
@@ -100,6 +135,7 @@ export default class Priveos {
       console.log(`data.processed.action_traces[0].act.data.contract: ${data.processed.action_traces[0].act.data.contract}`)
       console.log(`data.processed.action_traces[0].act.data.file: ${data.processed.action_traces[0].act.data.file}`)
       console.log(`data.transaction_id: ${data.transaction_id}`)
+      // TODO remove this return...not required as secret/nonce is passed
       return [secret_bytes, nonce_bytes]
     })
   } 
@@ -113,7 +149,7 @@ export default class Priveos {
       const shares = response.data
       console.log("Shares: ", shares)
       
-      const read_key = this.get_read_key()
+      const read_key = this.get_config_keys()
       
       const decrypted_shares = shares.map((data) => {
         return String(eosjs_ecc.Aes.decrypt(read_key.private, data.public_key, data.nonce, ByteBuffer.fromHex(data.message).toBinary(), data.checksum))
@@ -144,7 +180,10 @@ export default class Priveos {
     })
   }
   
-  get_read_key() {
+  /**
+   * Return the keys passed when instantiating priveos
+   */
+  get_config_keys() {
     if(this.config.ephemeralKeyPublic && this.config.ephemeralKeyPrivate) {
       return {
         public: this.config.ephemeralKeyPublic,
@@ -152,8 +191,8 @@ export default class Priveos {
       }
     } else {
       return {
-        public: this.config.privateKey,
-        private: this.config.publicKey,
+        public: this.config.publicKey,
+        private: this.config.privateKey,
       }
     }
   }
