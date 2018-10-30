@@ -11,7 +11,7 @@ import config from '../common/config'
 import { get_node_urls, contract } from './helpers'
 import { get_store_trace } from '../common/mongo'
 
-const server = restify.createServer({handleUncaughtExceptions: true})
+const server = restify.createServer()
 server.use(restify.plugins.bodyParser())
 
  
@@ -63,21 +63,11 @@ server.post('/read/', function(req, res, next) {
   })
   .catch(err => {
     console.log("Error: ", err)
+    res.send("Generic Error")
   })
   next()
 })
 
-server.on('InternalServer', function(req, res, err, callback) {
-  // this will get fired first, as it's the most relevant listener
-	console.log('InternalServer')
-  return callback()
-})
-
-server.on('uncaughtException', function(req, res, route, err) {
-    // this event will be fired, with the error object from above:
-    // ReferenceError: x is not defined
-		console.log('uncaughtException ', err)
-})
 server.listen(config.BROKER_PORT, function() {
   console.log('Broker %s listening at %s', server.name, server.url)
 })
