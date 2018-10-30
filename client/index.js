@@ -125,13 +125,6 @@ export default class Priveos {
         }
       )
     })
-    .then((data) => {
-      console.log(`\r\nSuccessfully pushed store transaction`)
-      console.log(`data.processed.action_traces[0].act.data.owner: ${data.processed.action_traces[0].act.data.owner}`)
-      console.log(`data.processed.action_traces[0].act.data.contract: ${data.processed.action_traces[0].act.data.contract}`)
-      console.log(`data.processed.action_traces[0].act.data.file: ${data.processed.action_traces[0].act.data.file}`)
-      console.log(`data.transaction_id: ${data.transaction_id}`)
-    })
   } 
 
   read(owner, file) {

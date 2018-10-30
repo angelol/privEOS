@@ -51,7 +51,8 @@ function test() {
     const { secret_bytes, nonce_bytes } = priveos_alice.get_encryption_keys()
     
     priveos_alice.store(alice, file, secret_bytes, nonce_bytes)
-    .then((x) => {
+    .then(transaction_data => {
+      console.log("Successfully store file. Transaction id: ", transaction_data.transaction_id)
       // throw new Error("ABORT NOW")
       // process.exit(1)
       const c = new Date()
