@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "babel-plugin-transform-builtin-extend": "^1.1.2",
     "eosjs": "^16.0.9",
     "es2015": "0.0.0",
     "mongo": "^0.1.0",
