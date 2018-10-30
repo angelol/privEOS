@@ -81,30 +81,31 @@ function test() {
           ]
         }
       )
-      .then(res => {
+      .then(_ => {
         /* Wait for eos.transaction to finish before returning result */
         console.log(`\r\nWaiting for transaction to finish`)
-        return x
       })
-      .then(x => {
+      .then(_ => {
         const d = new Date()
         console.log("\r\nTime elapsed - accessgrant transaction", (d-c))
         
         priveos_bob.read(bob, file)
-        .then((y) => {
+        .then(([recovered_secret_bytes, recovered_nonce_bytes]) => {
           const e = new Date()
           console.log("d-e", (e-d))
           console.log("a-a", (e-a))
           // console.log('Y: ', y)
-          assert.deepStrictEqual(x[0], y[0])
-          assert.deepStrictEqual(x[1], y[1])
+
+          console.log("Original key: ", uint8array_to_hex(secret_bytes))
+          console.log("Original nonce: ", uint8array_to_hex(nonce_bytes))
+          console.log("Reconstructed key: ", uint8array_to_hex(recovered_secret_bytes))
+          console.log("Reconstructed nonce: ", uint8array_to_hex(recovered_nonce_bytes))
+          
+          assert.deepStrictEqual(secret_bytes, recovered_secret_bytes)
+          assert.deepStrictEqual(nonce_bytes, recovered_nonce_bytes)
           
           console.log("Success!")
 
-          console.log("Original key: ", uint8array_to_hex(x[0]))
-          console.log("Original nonce: ", uint8array_to_hex(x[1]))
-          console.log("Reconstructed key: ", uint8array_to_hex(y[0]))
-          console.log("Reconstructed nonce: ", uint8array_to_hex(y[1]))
         })
       })
     })

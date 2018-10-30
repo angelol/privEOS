@@ -131,8 +131,6 @@ export default class Priveos {
       console.log(`data.processed.action_traces[0].act.data.contract: ${data.processed.action_traces[0].act.data.contract}`)
       console.log(`data.processed.action_traces[0].act.data.file: ${data.processed.action_traces[0].act.data.file}`)
       console.log(`data.transaction_id: ${data.transaction_id}`)
-      // TODO remove this return...not required as secret/nonce is passed
-      return [secret_bytes, nonce_bytes]
     })
   } 
 
