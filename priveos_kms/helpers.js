@@ -1,9 +1,10 @@
 import Eos from 'eosjs'
 import config from '../common/config'
 import { mongo } from '../common/mongo'
+import Promise from 'bluebird'
 
 const eos = Eos({httpEndpoint: config.httpEndpoint, chainId: config.chainId})
-
+export class UserNotAuthorized extends Error {}
 
 export function check_permissions(user, file) {
 	return mongo(conn => {
@@ -39,13 +40,9 @@ export function check_permissions(user, file) {
 	        if(accessgrant_trace.act.data.contract == store_trace.act.data.contract) {
 						return accessgrant_trace.act.data.public_key
 					} else {
-						throw "Nice try, zeroC00l"
+						throw new UserNotAuthorized("Nice try, zeroC00l")
 					}
 	      })
 	  })
-	})
-	.catch(x => {
-		console.log("err: ", x)
-		return false
 	})
 }
