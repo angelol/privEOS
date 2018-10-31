@@ -26,6 +26,10 @@ export default class Priveos {
     } else {
       this.eos = this.config.eos
     }
+    
+    if(!this.config.priveosContract) {
+      this.config.priveosContract = 'priveosrules'
+    }
   }
 
   /**
