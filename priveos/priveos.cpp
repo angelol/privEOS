@@ -1,13 +1,12 @@
 #include "priveos.hpp"
 
 using namespace eosio;
-using namespace boost::accumulators;
 
 class priveos : public contract {
   public:
     using contract::contract;
     
-    priveos(account_name self) : contract(self), nodes(_self, _self), pricefeeds(_self, _self), prices(_self, _self) {}
+    priveos(account_name self) : contract(self), nodes(_self, _self), prices(_self, _self) {}
 
     //@abi action
     void store(const account_name owner, const account_name contract, const std::string file, const std::string data) {
@@ -51,24 +50,24 @@ class priveos : public contract {
         info.is_active = false;
       });
     }
+
+    
     
     void update_price(const account_name node, const asset price) {
-      accumulator_set<int64_t, features<tag::median>> acc;
+      pricefeed_table pricefeeds(_self, price.symbol);
+      std::vector<int64_t> vec;
       for(const auto& pf : pricefeeds) {
-        acc(pf.price.amount);
+        vec.push_back(pf.price.amount);        
       }
-      const auto m = median(acc);
-      asset new_price = asset(m, price.symbol);
-      eosio::print(m);
-      
+      asset median_price = asset(median(vec), price.symbol);      
       const auto& itr = prices.find(price.symbol);
       if(itr != prices.end()) {
         prices.modify(itr, node, [&](auto& p) {
-          p.money = new_price;
+          p.money = median_price;
         });
       } else {
         prices.emplace(node, [&](auto& p) {
-          p.money = new_price;
+          p.money = median_price;
         });
       }
     }
@@ -76,7 +75,9 @@ class priveos : public contract {
     //@abi action
     void setprice(const account_name node, const asset price) {
       nodes.get(node, "node not found.");
+      pricefeed_table pricefeeds(_self, price.symbol);
       auto itr = pricefeeds.find(node);
+      
       if(itr != pricefeeds.end()) {
         pricefeeds.modify(itr, node, [&](pricefeed& pf) {
           pf.price = price;
@@ -104,7 +105,7 @@ class priveos : public contract {
       
       EOSLIB_SERIALIZE(nodeinfo, (owner)(node_key)(url)(is_active))
     };
-    typedef multi_index<eosio::string_to_name("nodes"), nodeinfo> nodes_table;
+    typedef multi_index<N(nodes), nodeinfo> nodes_table;
     nodes_table nodes;
     
     // @abi table pricefeed i64
@@ -113,18 +114,16 @@ class priveos : public contract {
       asset price;
       uint64_t primary_key() const { return node; }
     };
-    typedef multi_index<eosio::string_to_name("pricefeed"), pricefeed> pricefeed_table;
-    pricefeed_table pricefeeds;
+    typedef multi_index<N(pricefeed), pricefeed> pricefeed_table;
     
     // @abi table price i64
     struct price {
       asset money;
       uint64_t primary_key() const { return money.symbol; }
     };
-    typedef multi_index<eosio::string_to_name("price"), price> price_table;
+    typedef multi_index<N(price), price> price_table;
     price_table prices;
 };
 
-// Re-define N because EOSIO_ABI needs it
-#define N(X) ::eosio::string_to_name(#X)
+
 EOSIO_ABI( priveos, (store)(accessgrant)(regnode)(unregnode)(setprice) )
