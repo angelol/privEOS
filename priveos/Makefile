@@ -67,5 +67,23 @@ regnodes:
 shownodes:
 	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) nodes
 
+setprice:
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx1", "1000.0000 EOS"]' -p testnodexxx1
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx2", "2.0000 EOS"]' -p testnodexxx2
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx3", "3.0000 EOS"]' -p testnodexxx3
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx4", "4.0000 EOS"]' -p testnodexxx4
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx5", "400.0000 EOS"]' -p testnodexxx5
+
+
+
+
+
+showpricefeed:
+	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) pricefeed
+		
+	
+showprice:
+	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) price
+		
 clean:
 	rm -f $(CPP_IN).wast $(CPP_IN).wasm $(CPP_IN).abi 
