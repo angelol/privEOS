@@ -53,6 +53,11 @@ setup:
 	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnodexxx4 $(PUBLIC_KEY) $(PUBLIC_KEY)
 	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnodexxx5 $(PUBLIC_KEY) $(PUBLIC_KEY)
 	
+fundusers:
+	$(CLEOS) transfer eosio $(ALICE) "100.0000 EOS" -p eosio
+	$(CLEOS) transfer eosio $(BOB) "100.0000 EOS" -p eosio
+
+	
 regnodes:
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx1", "$(PK_NODE_1)", "http://localhost:3001"]' -p testnodexxx1
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx2", "$(PK_NODE_2)", "http://localhost:3002"]' -p testnodexxx2
@@ -78,6 +83,20 @@ showpricefeed:
 	
 showprice:
 	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) price
+
+addcurrency:
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) addcurrency '["4,EOS", "eosio.token"]' -p $(CONTRACT_ACCOUNT)
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) addcurrency '["2,EUR", "eurotoken"]' -p $(CONTRACT_ACCOUNT)
+
+prepare:
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) prepare '["$(ALICE)", "4,EOS"]' -p $(ALICE)
+	
+deposit:
+	$(CLEOS) transfer $(ALICE) $(CONTRACT_ACCOUNT) "1.0000 EOS" -p $(ALICE)
+
+showbalances:
+	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(ALICE) balances
+
 		
 clean:
 	rm -f $(CPP_IN).wast $(CPP_IN).wasm $(CPP_IN).abi 
