@@ -2,18 +2,14 @@ include config.conf
 -include config-local.conf
 
 build:
-	eosiocpp -o $(CPP_IN).wasm $(CPP_IN).cpp
+	 eosio-cpp -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
 	
-abi:
-	eosiocpp -g $(CPP_IN).abi $(CPP_IN).cpp
-
 deploy: build
 	$(CLEOS) set contract $(CONTRACT_ACCOUNT) ../$(CPP_IN)
 
 init:
 	make system
 	make setup
-	make abi
 	make deploy
 	make regnodes
 
