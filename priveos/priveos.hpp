@@ -100,7 +100,7 @@ CONTRACT priveos : public eosio::contract {
       name from;
       name to;
       asset quantity;
-      const std::string memo;
+      std::string memo;
     };
     
     void validate_asset(priveos::transfer_t transfer, name contract) {

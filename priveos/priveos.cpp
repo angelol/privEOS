@@ -116,19 +116,16 @@ datastream<const char*> get_stream(name self, name code) {
      read_action_data( buffer, size );
   }
   
-  // std::tuple<std::decay_t<Args>...> args;
   datastream<const char*> ds((char*)buffer, size);
-  // ds >> args;
   return ds;
 }
 
 extern "C" {
   [[noreturn]] void apply(uint64_t receiver, uint64_t code, uint64_t action) {
-    priveos thiscontract(name(receiver), name(code), get_stream(name(receiver), name(code)));
     if (action == "transfer"_n.value && code != receiver) {
+      priveos thiscontract(name(receiver), name(code), get_stream(name(receiver), name(code)));
       const auto transfer = unpack_action_data<priveos::transfer_t>();
       thiscontract.validate_asset(transfer, name(code));
-      execute_action(name(receiver), name(code), &priveos::transfer);
     }
     
     if (code == receiver) {
