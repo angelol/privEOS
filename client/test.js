@@ -67,6 +67,32 @@ function test() {
           actions: [
             {
               account: priveos_bob.config.priveosContract,
+              name: 'prepare',
+              authorization: [{
+                actor: bob,
+                permission: 'active',
+              }],
+              data: {
+                user: bob,
+                currency: "4,EOS",
+              }
+            },
+            {
+              account: "eosio.token",
+              name: 'transfer',
+              authorization: [{
+                actor: bob,
+                permission: 'active',
+              }],
+              data: {
+                from: bob,
+                to: priveos_bob.config.priveosContract,
+                quantity: "1.0000 EOS",
+                memo: "Paying to read file",
+              }
+            },
+            {
+              account: priveos_bob.config.priveosContract,
               name: 'accessgrant',
               authorization: [{
                 actor: bob,
@@ -77,6 +103,7 @@ function test() {
                 contract: priveos_bob.config.dappContract,
                 file,
                 public_key: priveos_bob.config.ephemeralKeyPublic,
+                token: "4,EOS",
               }
             }
           ]

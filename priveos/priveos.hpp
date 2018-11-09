@@ -14,6 +14,8 @@ CONTRACT priveos : public eosio::contract {
   public:
     priveos(name self,name code, datastream<const char*> ds) : eosio::contract(self,code,ds), nodes(_self, _self.value), prices(_self, _self.value), currencies(_self, _self.value){}
     
+    static constexpr auto fee_account = "priveosxfees"_n;
+    
     TABLE nodeinfo {
       name        owner;
       eosio::public_key   node_key;
@@ -66,7 +68,8 @@ CONTRACT priveos : public eosio::contract {
       const name user, 
       const name contract, 
       const std::string file, 
-      const eosio::public_key public_key
+      const eosio::public_key public_key,
+      const symbol token
     );
     
     ACTION regnode(
@@ -116,7 +119,9 @@ CONTRACT priveos : public eosio::contract {
     );
     
 
-    
+    const asset get_fee(symbol currency) {
+      return prices.get(currency.code().raw(), "Currency not found").money;
+    }
 
     
     void add_balance(name user, asset value) {

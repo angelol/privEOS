@@ -12,6 +12,10 @@ init:
 	make setup
 	make deploy
 	make regnodes
+	make fundusers
+	make addcurrency
+	make setprice
+
 
 create_wallet:
 	$(CLEOS) wallet create --name=eosio --file=wallet-password.txt
@@ -45,7 +49,7 @@ setup:
 	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio dappcontract $(PUBLIC_KEY) $(PUBLIC_KEY)
 	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio $(ALICE) $(ALICE_PUBLIC_KEY) $(ALICE_PUBLIC_KEY)
 	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio $(BOB) $(BOB_PUBLIC_KEY) $(BOB_PUBLIC_KEY)
-
+	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio priveosxfees $(PUBLIC_KEY) $(PUBLIC_KEY)
 	$(CLEOS) set account permission $(CONTRACT_ACCOUNT) active '{"threshold": 1,"keys": [{"key": "$(PUBLIC_KEY)","weight": 1}],"accounts": [{"permission":{"actor":"$(CONTRACT_ACCOUNT)","permission":"eosio.code"},"weight":1}]}' owner -p $(CONTRACT_ACCOUNT)
 	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnodexxx1 $(PUBLIC_KEY) $(PUBLIC_KEY)
 	$(CLEOS) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnodexxx2 $(PUBLIC_KEY) $(PUBLIC_KEY)
@@ -71,9 +75,9 @@ shownodes:
 setprice:
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx1", "1000.0000 EUR"]' -p testnodexxx1
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx2", "2000.0000 EUR"]' -p testnodexxx2
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx3", "3.0000 EOS"]' -p testnodexxx3
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx4", "4.0000 EOS"]' -p testnodexxx4
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx5", "400.0000 EOS"]' -p testnodexxx5
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx3", "2.0000 EOS"]' -p testnodexxx3
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx4", "1.0000 EOS"]' -p testnodexxx4
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx5", "0.0000 EOS"]' -p testnodexxx5
 
 
 showpricefeed:
@@ -87,6 +91,8 @@ showprice:
 addcurrency:
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) addcurrency '["4,EOS", "eosio.token"]' -p $(CONTRACT_ACCOUNT)
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) addcurrency '["2,EUR", "eurotoken"]' -p $(CONTRACT_ACCOUNT)
+showcurrency:
+	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) currencies
 
 prepare:
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) prepare '["$(ALICE)", "4,EOS"]' -p $(ALICE)
@@ -96,6 +102,7 @@ deposit:
 
 showbalances:
 	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(ALICE) balances
+	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(BOB) balances
 
 		
 clean:

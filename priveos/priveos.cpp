@@ -5,9 +5,20 @@ ACTION priveos::store(const name owner, const name contract, const std::string f
   // print( "Storing file ", file);
 }
     
-ACTION priveos::accessgrant(const name user, const name contract, const std::string file, const public_key public_key) {
+ACTION priveos::accessgrant(const name user, const name contract, const std::string file, const public_key public_key, const symbol token) {
   require_auth(user);
   require_recipient(contract);
+  
+  auto& curr = currencies.get(token.code().raw(), "Token not accepted");
+  const auto fee = get_fee(token);
+  
+  sub_balance(user, fee);
+  action(
+    permission_level{_self, "active"_n},
+    curr.contract,
+    "transfer"_n,
+    std::make_tuple(_self, fee_account, fee, std::string("Fee"))
+  ).send();
 }
     
 ACTION priveos::regnode(const name owner, const public_key node_key, const std::string url) {
@@ -41,6 +52,7 @@ ACTION priveos::unregnode(const name owner) {
 
 ACTION priveos::setprice(const name node, const asset price) {
   nodes.get(node.value, "node not found.");
+  currencies.get(price.symbol.code().raw(), "Token not accepted");
   pricefeed_table pricefeeds(_self, price.symbol.code().raw());
   auto itr = pricefeeds.find(node.value);
   
@@ -126,6 +138,7 @@ extern "C" {
       priveos thiscontract(name(receiver), name(code), get_stream(name(receiver), name(code)));
       const auto transfer = unpack_action_data<priveos::transfer_t>();
       thiscontract.validate_asset(transfer, name(code));
+      thiscontract.transfer(transfer.from, transfer.to, transfer.quantity, transfer.memo);
     }
     
     if (code == receiver) {
