@@ -99,13 +99,6 @@ CONTRACT priveos : public eosio::contract {
     
     void transfer(const name from, const name to, const asset quantity, const std::string memo);
     
-    struct transfer_t {
-      name from;
-      name to;
-      asset quantity;
-      std::string memo;
-    };
-    
     void validate_asset(const asset quantity) {
       auto& curr = currencies.get(quantity.symbol.code().raw(), "Currency not accepted");
       eosio_assert(curr.contract == get_code(), "We're not so easily fooled");
