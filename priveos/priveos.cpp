@@ -112,33 +112,19 @@ void priveos::transfer(const name from, const name to, const asset quantity, con
   if (from == _self || to != _self) {
     return;
   }
+  
+  validate_asset(quantity);
   add_balance(from, quantity);
 }
 
 // EOSIO_DISPATCH( priveos, (store)(accessgrant)(regnode)(unregnode)(setprice)(addcurrency) )
 
-datastream<const char*> get_stream(name self, name code) {
-  size_t size = action_data_size();
 
-  //using malloc/free here potentially is not exception-safe, although WASM doesn't support exceptions
-  constexpr size_t max_stack_buffer_size = 512;
-  void* buffer = nullptr;
-  if( size > 0 ) {
-     buffer = max_stack_buffer_size < size ? malloc(size) : alloca(size);
-     read_action_data( buffer, size );
-  }
-  
-  datastream<const char*> ds((char*)buffer, size);
-  return ds;
-}
 
 extern "C" {
   [[noreturn]] void apply(uint64_t receiver, uint64_t code, uint64_t action) {
     if (action == "transfer"_n.value && code != receiver) {
-      priveos thiscontract(name(receiver), name(code), get_stream(name(receiver), name(code)));
-      const auto transfer = unpack_action_data<priveos::transfer_t>();
-      thiscontract.validate_asset(transfer, name(code));
-      thiscontract.transfer(transfer.from, transfer.to, transfer.quantity, transfer.memo);
+      execute_action(eosio::name(receiver), eosio::name(code), &priveos::transfer);
     }
     
     if (code == receiver) {

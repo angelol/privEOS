@@ -106,9 +106,9 @@ CONTRACT priveos : public eosio::contract {
       std::string memo;
     };
     
-    void validate_asset(priveos::transfer_t transfer, name contract) {
-      auto& curr = currencies.get(transfer.quantity.symbol.code().raw(), "Currency not accepted");
-      eosio_assert(curr.contract == contract, "We're not so easily fooled");
+    void validate_asset(const asset quantity) {
+      auto& curr = currencies.get(quantity.symbol.code().raw(), "Currency not accepted");
+      eosio_assert(curr.contract == get_code(), "We're not so easily fooled");
       print("Curr: ", curr.currency, "contract: ", curr.contract);
     }
     
