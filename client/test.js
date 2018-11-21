@@ -62,53 +62,7 @@ function test() {
       // Bob requests access to the file. 
       // This transaction will fail if he is not authorised.
       console.log(`Push accessgrant action for user ${bob}, contract ${priveos_bob.config.dappContract}, file ${file} and public key ${priveos_bob.config.ephemeralKeyPublic}`)
-      priveos_bob.eos.transaction(
-        {
-          actions: [
-            {
-              account: priveos_bob.config.priveosContract,
-              name: 'prepare',
-              authorization: [{
-                actor: bob,
-                permission: 'active',
-              }],
-              data: {
-                user: bob,
-                currency: "4,EOS",
-              }
-            },
-            {
-              account: "eosio.token",
-              name: 'transfer',
-              authorization: [{
-                actor: bob,
-                permission: 'active',
-              }],
-              data: {
-                from: bob,
-                to: priveos_bob.config.priveosContract,
-                quantity: "1.0000 EOS",
-                memo: "Paying to read file",
-              }
-            },
-            {
-              account: priveos_bob.config.priveosContract,
-              name: 'accessgrant',
-              authorization: [{
-                actor: bob,
-                permission: 'active',
-              }],
-              data: {
-                user: bob,
-                contract: priveos_bob.config.dappContract,
-                file,
-                public_key: priveos_bob.config.ephemeralKeyPublic,
-                token: "4,EOS",
-              }
-            }
-          ]
-        }
-      )
+      priveos_bob.accessgrant(bob, file, "4,EOS")
       .then(_ => {
         /* Wait for eos.transaction to finish before returning result */
         console.log(`\r\nWaiting for transaction to finish`)
@@ -117,8 +71,10 @@ function test() {
         const d = new Date()
         console.log("\r\nTime elapsed - accessgrant transaction", (d-c))
         
+        console.log("Calling riveos_bob.read(bob, file)")
         priveos_bob.read(bob, file)
         .then(([recovered_secret_bytes, recovered_nonce_bytes]) => {
+          console.log("priveos_bob.read(bob, file) succeeded")
           const e = new Date()
           console.log("d-e", (e-d))
           console.log("a-a", (e-a))

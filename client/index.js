@@ -130,6 +130,68 @@ export default class Priveos {
       )
     })
   } 
+  
+  async accessgrant(user, file, token_symbol, actions = []) {
+    console.log(`accessgrant user: ${user}`)
+    return this.eos.transaction({
+      actions: actions.concat(
+        [
+          {
+            account: this.config.priveosContract,
+            name: 'prepare',
+            authorization: [{
+              actor: user,
+              permission: 'active',
+            }],
+            data: {
+              user: user,
+              currency: token_symbol,
+            }
+          },
+          {
+            account: "eosio.token",
+            name: 'transfer',
+            authorization: [{
+              actor: user,
+              permission: 'active',
+            }],
+            data: {
+              from: user,
+              to: this.config.priveosContract,
+              quantity: await this.get_priveos_fee(token_symbol),
+              memo: "PrivEOS fee",
+            }
+          },
+          {
+            account: this.config.priveosContract,
+            name: 'accessgrant',
+            authorization: [{
+              actor: user,
+              permission: 'active',
+            }],
+            data: {
+              user: user,
+              contract: this.config.dappContract,
+              file,
+              public_key: this.config.ephemeralKeyPublic,
+              token: token_symbol,
+            }
+          }
+        ]
+      )
+    })
+  }
+  
+  get_priveos_fee(token) {
+    if(token.indexOf(",") != -1) {
+      token = token.split(",")[1]
+    }
+    return this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'price', limit:1, lower_bound: token})
+    .then((res) => {
+      console.log('get_priveos_fee: ', res.rows[0].money)
+      return res.rows[0].money
+    })
+  }
 
   read(owner, file) {
     return axios.post(this.config.brokerUrl + '/read/', {

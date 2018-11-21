@@ -76,7 +76,7 @@ setprice:
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx1", "1000.0000 EUR"]' -p testnodexxx1
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx2", "2000.0000 EUR"]' -p testnodexxx2
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx3", "2.0000 EOS"]' -p testnodexxx3
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx4", "1.0000 EOS"]' -p testnodexxx4
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx4", "0.1000 EOS"]' -p testnodexxx4
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx5", "0.0000 EOS"]' -p testnodexxx5
 
 
