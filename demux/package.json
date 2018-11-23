@@ -1,0 +1,17 @@
+{
+  "name": "demux",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "nodemon --exec babel-node index.js"
+  },
+  "dependencies": {
+    "@babel/core": "^7.1.6",
+    "@babel/plugin-transform-classes": "^7.1.0",
+    "@babel/preset-env": "^7.1.6",
+    "bluebird": "^3.5.3",
+    "demux": "^3.0.0",
+    "demux-eos": "2.0.0"
+  }
+}
