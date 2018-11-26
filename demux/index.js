@@ -16,20 +16,20 @@ const actionHandler = new ObjectActionHandler([handlerVersion])
 
 
  
- actionHandler.get_starting_block()
- .then(blockNumber => {
-   const actionReader = new NodeosActionReader(
-     "http://127.0.0.1:8888",
-     blockNumber,
-   )
-   const actionWatcher = new BaseActionWatcher(
-     actionReader,
-     actionHandler,
-     250,
-   )
+actionHandler.get_starting_block()
+.then(blockNumber => {
+ const actionReader = new NodeosActionReader(
+   "http://127.0.0.1:8888",
+   blockNumber,
+ )
+ const actionWatcher = new BaseActionWatcher(
+   actionReader,
+   actionHandler,
+   250,
+ )
 
-   actionWatcher.watch()
- }) 
+ actionWatcher.watch()
+}) 
  
 
 

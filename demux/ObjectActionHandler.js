@@ -28,24 +28,36 @@
 
 const assert = require('assert')
 const { AbstractActionHandler } = require("demux")
-const { mongo } = require("../common/mongo")
+const mongo = require("./mongo")
 
 class ObjectActionHandler extends AbstractActionHandler {
 
   
   async handleWithState(handle) {
-    // console.log("handleWithState: state: ", JSON.stringify(state))
-    await handle(state)
-    
+    await handle()
   }
 
   async loadIndexState() {
-    return state.indexState
+    return mongo.run(db => {
+      return db.collection('index_state').findOne()
+    })
+    .then(x => {
+      if(x) {
+        return x
+      } else {
+        return {
+            blockNumber: 0,
+            blockHash: "",
+            isReplay: false,
+            handlerVersionName: "v1",
+        }
+      }
+    })
   }
 
   async updateIndexState(stateObj, block, isReplay, handlerVersionName) {
-    // console.log("updateIndexState block: ", block.blockInfo.blockNumber)
-    mongo(db => {
+    assert.ok(handlerVersionName, "handlerVersionName not set!!!")
+    await mongo.run(db => {
       return db.collection('index_state').replaceOne({}, {
         blockNumber: block.blockInfo.blockNumber,
         blockHash: block.blockInfo.blockHash,
@@ -61,13 +73,13 @@ class ObjectActionHandler extends AbstractActionHandler {
   
   
   get_starting_block() {
-    return mongo(db => {
+    return mongo.run(db => {
       return db.collection('index_state').findOne({})
     })
     .then(x => {
       if(x) {
         // start where we left off syncing
-        return x.blockNumber + 1
+        return x.blockNumber
       } else {
         // we're running this for the first time, so we're starting at the current block height
         return 0

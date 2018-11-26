@@ -28,40 +28,21 @@
  * https://github.com/EOSIO/demux-js/blob/develop/examples/eos-transfers/ObjectActionHandler.js
 */
 
-const { mongo } = require("../common/mongo")
+const mongo = require("./mongo")
 
-function parseTokenString(tokenString) {
-  const [amountString, symbol] = tokenString.split(" ")
-  const amount = parseFloat(amountString)
-  return { amount, symbol }
-}
-
-function updateTransferData(state, payload, blockInfo, context) {
-  const { amount, symbol } = parseTokenString(payload.data.quantity)
-  if (!state.volumeBySymbol[symbol]) {
-    state.volumeBySymbol[symbol] = amount
-  } else {
-    state.volumeBySymbol[symbol] += amount
-  }
-  state.totalTransfers += 1
-  context.stateCopy = JSON.parse(JSON.stringify(state)) // Deep copy state to de-reference
-}
 
 function insertStore(state, payload, blockInfo, context) {
-  // console.log("insertStore: payload.data: ", payload.data)
+  console.log("insertStore: payload.data: ", payload.data)
   const doc = Object.assign(payload, blockInfo)
-  mongo(db => {
+  mongo.run(db => {
     db.collection('store').insertOne(doc)
   })
 }
 
 function insertAccessgrant(state, payload, blockInfo, context) {
   console.log("insertAccessgrant: payload.data: ", payload.data)
-  console.log("insertStore: blockInfo: ", blockInfo)
-  console.log("insertStore: context: ", context)
   const doc = Object.assign(payload, blockInfo)
-  console.log("Doc: ", doc)
-  mongo(db => {
+  mongo.run(db => {
     db.collection('accessgrant').insertOne(doc)
   })
 
