@@ -38,9 +38,6 @@ server.post('/read/', function(req, res, next) {
     get_node_urls(dappcontract, file),
   ])
   .then(([store_trace, nodes]) => {
-    console.log("Store Trace: ", store_trace)
-    console.log("Nodes: ", nodes)
-    console.log('Got Node Urls: ', nodes)
     const promises = nodes.map(node => {
       // console.log("nodes.map: ", node)
       return axios.post(node.url + '/read/', {

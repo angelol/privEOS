@@ -28,22 +28,7 @@
 
 const assert = require('assert')
 const { AbstractActionHandler } = require("demux")
-const mongo = require("./mongo")
-
-// Initial state
-let state = {
-  volumeBySymbol: {},
-  totalTransfers: 0,
-  indexState: {
-    blockNumber: 0,
-    blockHash: "",
-    isReplay: false,
-    handlerVersionName: "v1",
-  },
-}
-
-const stateHistory = {}
-const stateHistoryMaxLength = 300
+const { mongo } = require("../common/mongo")
 
 class ObjectActionHandler extends AbstractActionHandler {
 

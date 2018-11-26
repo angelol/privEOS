@@ -7,8 +7,8 @@ const eos = Eos({httpEndpoint: config.httpEndpoint, chainId: config.chainId})
 export class UserNotAuthorized extends Error {}
 
 export function check_permissions(user, file) {
-	return mongo(conn => {
-    return conn.db('EOS').collection('action_traces')
+	return mongo(db => {
+    return db.collection('action_traces')
       .find({
 				"act.account" : config.contract, 
 				"act.data.file": file,
@@ -24,8 +24,8 @@ export function check_permissions(user, file) {
         return trace
       })
   }).then(accessgrant_trace => {
-		return mongo(conn => {
-	    return conn.db('EOS').collection('action_traces')
+		return mongo(db => {
+	    return db.collection('action_traces')
 	      .find({
 					"act.account" : config.contract, 
 					"act.data.file": file,

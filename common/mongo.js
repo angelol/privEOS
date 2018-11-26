@@ -1,18 +1,20 @@
 'use strict'
-import MongoClient from 'mongodb'
-import Promise from 'bluebird'
-import config from './config'
+const MongoClient = require('mongodb')
+const Promise = require('bluebird')
+const config = require('./config')
 
-function getMongoConnection(url) {
-  return MongoClient.connect(url, { 
-		promiseLibrary: Promise, 
-		useNewUrlParser: true,
-	})
-  .disposer(conn => conn.close())
-}
+var _mongodb
 
-export function mongo(fun) {
-  return Promise.using(getMongoConnection(config.mongoUrl), fun)
+MongoClient.connect(config.mongoUrl, { 
+  promiseLibrary: Promise, 
+  useNewUrlParser: true,
+})
+.then(db => {
+  _mongodb = db
+})
+
+function mongo(fun) {
+  return fun(_mongodb.db(config.dbName))
 }
 
 // export function get_store_trace(dappcontract, file) {
@@ -42,10 +44,9 @@ export function mongo(fun) {
 //   })
 // }
 
-
-export function get_store_trace(dappcontract, file) {
-  return mongo(conn => {
-    return conn.db(config.dbName).collection('action_traces')
+function get_store_trace(dappcontract, file) {
+  return mongo(db => {
+    return db.collection('action_traces')
       .find({
         "act.account" : config.contract, 
         "act.data.file": file,
@@ -60,4 +61,9 @@ export function get_store_trace(dappcontract, file) {
         return JSON.parse(trace.act.data.data)
       })
   })
+}
+
+module.exports = {
+  mongo: mongo,
+  get_store_trace, get_store_trace,
 }

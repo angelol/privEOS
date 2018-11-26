@@ -28,7 +28,7 @@
  * https://github.com/EOSIO/demux-js/blob/develop/examples/eos-transfers/ObjectActionHandler.js
 */
 
-const mongo = require("./mongo")
+const { mongo } = require("../common/mongo")
 
 function parseTokenString(tokenString) {
   const [amountString, symbol] = tokenString.split(" ")
