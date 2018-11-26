@@ -28,7 +28,7 @@
  * https://github.com/EOSIO/demux-js/blob/develop/examples/eos-transfers/ObjectActionHandler.js
 */
 
-const mongo = require("./mongo")
+import { mongo } from "./mongo"
 
 
 function insertStore(state, payload, blockInfo, context) {
