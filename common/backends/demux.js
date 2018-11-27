@@ -13,6 +13,7 @@ function get_store_trace(dappcontract, file) {
         "name": "store",
       })
       .sort({"blockNumber": -1})
+      .limit(1)
       .toArray()
       .then((items) => {
         const trace = items[0]
@@ -35,6 +36,7 @@ function get_accessgrant_trace(user, file) {
     return db.collection('accessgrant')
       .find(params)
 			.sort({"blockNumber": -1})
+      .limit(1)
 			.toArray()
       .then((items) => {
         console.log("items: ", items)

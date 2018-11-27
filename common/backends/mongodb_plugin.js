@@ -12,6 +12,7 @@ function get_store_trace(dappcontract, file) {
         "act.data.contract": dappcontract,
       })
       .sort({"receipt.global_sequence": -1})
+      .limit(1)
       .toArray()
       .then((items) => {
         const trace = items[0]
@@ -31,6 +32,7 @@ function get_accessgrant_trace(user, file) {
 				"act.data.user": user,
 			})
 			.sort({"receipt.global_sequence": -1})
+      .limit(1)
 			.toArray()
       .then((items) => {
         const trace = items[0]
