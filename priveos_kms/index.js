@@ -19,6 +19,10 @@ server.use(restify.plugins.bodyParser())
 
 
 server.post('/read/', function(req, res, next) {
+	if(!req.body || !req.body.file || !req.body.requester || !req.body.dappcontract) {
+    return res.send(400, "Bad request")
+  }
+	
   const file = req.body.file
 	const requester = req.body.requester
 	const dappcontract = req.body.dappcontract
