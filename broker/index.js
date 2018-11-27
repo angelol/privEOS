@@ -29,6 +29,10 @@ server.use(cors.actual)
 
 server.post('/read/', function(req, res, next) {
   // console.log('Received read requests', req.body)
+  if(!req.body || !req.body.file || !req.body.requester || !req.body.dappcontract) {
+    return res.send(400, "Bad request")
+  }
+  
   const file = req.body.file
   const requester = req.body.requester
   const dappcontract = req.body.dappcontract
@@ -60,7 +64,7 @@ server.post('/read/', function(req, res, next) {
   })
   .catch(err => {
     console.log("Error: ", err)
-    res.send("Generic Error")
+    res.send(500, "Generic Error")
   })
   next()
 })
