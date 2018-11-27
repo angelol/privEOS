@@ -25,7 +25,7 @@ actionHandler.get_starting_block()
  const actionWatcher = new BaseActionWatcher(
    actionReader,
    actionHandler,
-   250,
+   100,
  )
 
  actionWatcher.watch()

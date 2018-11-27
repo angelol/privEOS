@@ -8,7 +8,8 @@ import uuidv4 from 'uuid/v4'
 import eosjs_ecc from 'eosjs-ecc'
 const alice = 'priveosalice'
 const bob = 'priveosbob11'
-
+import Promise from 'bluebird'
+global.Promise = Promise
 const config_alice = {
   ...config,
   ...{
@@ -67,6 +68,7 @@ function test() {
         /* Wait for eos.transaction to finish before returning result */
         console.log(`\r\nWaiting for transaction to finish`)
       })
+      .delay(1500) // delay to make sure transaction can propagate
       .then(_ => {
         const d = new Date()
         console.log("\r\nTime elapsed - accessgrant transaction", (d-c))

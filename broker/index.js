@@ -6,7 +6,7 @@ import axios from 'axios'
 axios.defaults.timeout = 2500;
 
 import Promise from 'bluebird'
-
+import Backend from '../common/backend'
 import config from '../common/config'
 import { get_node_urls, contract } from './helpers'
 import { get_store_trace } from '../common/mongo'
@@ -33,29 +33,29 @@ server.post('/read/', function(req, res, next) {
   const requester = req.body.requester
   const dappcontract = req.body.dappcontract
   
-  Promise.all([
-    get_store_trace(dappcontract, file),
-    get_node_urls(dappcontract, file),
-  ])
-  .then(([store_trace, nodes]) => {
-    const promises = nodes.map(node => {
-      // console.log("nodes.map: ", node)
-      return axios.post(node.url + '/read/', {
-          file: file,
-          requester: requester,
-          dappcontract: dappcontract,
-        })
-    })
-    Promise.some(promises, store_trace.threshold)
-    .then(data => {
-      return data.map(x => {
-        // console.log("DATAX: ", x.data)
-        return x.data
+
+  Backend.get_store_trace(dappcontract, file)
+  .then(store_trace => {
+    const payload = JSON.parse(store_trace.data)
+    return get_node_urls(payload, dappcontract, file)
+    .then(nodes => {
+      const promises = nodes.map(node => {
+        // console.log("nodes.map: ", node)
+        return axios.post(node.url + '/read/', {
+            file: file,
+            requester: requester,
+            dappcontract: dappcontract,
+          })
       })
-    })
-    .then((data) => {
-      console.log('Finished Sending to all Nodes')
-      res.send(data)
+      console.log("payload.threshold: ", payload.threshold)
+      Promise.some(promises, payload.threshold)
+      .then(data => {
+        return data.map(x => x.data)
+      })
+      .then(data => {
+        console.log('Finished Sending to all Nodes')
+        res.send(data)
+      })
     })
   })
   .catch(err => {

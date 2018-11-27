@@ -1,8 +1,8 @@
 import eosjs_ecc from 'eosjs-ecc'
 import ByteBuffer from 'bytebuffer'
 
-import { get_store_trace } from '../common/mongo'
-import { check_permissions } from './helpers'
+import Backend from '../common/backend'
+import { get_public_key } from './helpers'
 
 import assert from 'assert'
 
@@ -13,8 +13,9 @@ export default class KMS {
   
   read(file, requester, dappcontract) {
     const context = {}
-    return get_store_trace(dappcontract, file)
-    .then((data) => {
+    return Backend.get_store_trace(dappcontract, file)
+    .then((store_trace) => {
+      const data = JSON.parse(store_trace.data)
   		const nodes = data.data
   		console.log("DATA: ", JSON.stringify(data, null, 2))
   		// console.log("Original nodes: ", JSON.stringify(nodes))
@@ -27,10 +28,11 @@ export default class KMS {
   		context.plaintext = eosjs_ecc.Aes.decrypt(this.config.privateKey, data.public_key, context.my_share.nonce, ByteBuffer.fromHex(context.my_share.message).toBinary(), context.my_share.checksum)
   	})
     .then(_ => {
-      return check_permissions(requester, file)
+      return get_public_key(requester, file)
     })
     .then(recipient_public_key => {
       console.log("User is authorised, continuing")
+      console.log("recipient_public_key: ", recipient_public_key)
       // encrypt using the public_key of the requester
       // so only the requester will be able to decrypt with his private key
       const share = eosjs_ecc.Aes.encrypt(this.config.privateKey, recipient_public_key, String(context.plaintext))	

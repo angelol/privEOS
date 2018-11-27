@@ -42,22 +42,5 @@ export class Mongo {
 
 export const mongo = new Mongo(config.mongoUrl, config.dbName)
 
-export function get_store_trace(dappcontract, file) {
-  return mongo.run(db => {
-    return db.collection('action_traces')
-      .find({
-        "act.account" : config.contract, 
-        "act.data.file": file,
-        "act.name": "store",
-        "receipt.receiver": config.contract,
-        "act.data.contract": dappcontract,
-      })
-      .sort({"receipt.global_sequence": -1})
-      .toArray()
-      .then((items) => {
-        const trace = items[0]
-        return JSON.parse(trace.act.data.data)
-      })
-  })
-}
+
 
