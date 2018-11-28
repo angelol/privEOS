@@ -4,7 +4,6 @@ import assert from 'assert'
 import Promise from 'bluebird'
 import config from '../common/config'
 import KMS from './kms'
-import { UserNotAuthorized } from './helpers'
 
 if(process.argv[2]) {
 	config.KMS_PORT = process.argv[2]
@@ -32,7 +31,7 @@ server.post('/read/', function(req, res, next) {
 		console.log("Read data from kms: ", data)
 		res.send(data)
 	})
-	.catch(UserNotAuthorized, (err) => {
+	.catch(KMS.UserNotAuthorized, (err) => {
 		console.log(err)
 		res.send("Not authorised")
 	})
