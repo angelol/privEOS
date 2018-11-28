@@ -23,7 +23,7 @@ function get_store_trace(dappcontract, file) {
   })
 }
 
-function get_accessgrant_trace(user, file) {
+function get_accessgrant_trace(dappcontract, user, file) {
   // console.log(`get_accessgrant_trace: ${user} ${file}`)
   return mongo.run(db => {
     const params = {
@@ -31,6 +31,7 @@ function get_accessgrant_trace(user, file) {
       "name": "accessgrant",
       "data.file": file,
       "data.user": user,
+      "data.contract": dappcontract,
     }
     // console.log("params: ", params)
     return db.collection('accessgrant')

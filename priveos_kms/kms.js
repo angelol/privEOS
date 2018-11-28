@@ -28,7 +28,7 @@ export default class KMS {
   		context.plaintext = eosjs_ecc.Aes.decrypt(this.config.privateKey, data.public_key, context.my_share.nonce, ByteBuffer.fromHex(context.my_share.message).toBinary(), context.my_share.checksum)
   	})
     .then(_ => {
-      return get_public_key(requester, file)
+      return get_public_key(dappcontract, requester, file)
     })
     .then(recipient_public_key => {
       console.log("User is authorised, continuing")
