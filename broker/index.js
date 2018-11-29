@@ -7,9 +7,14 @@ axios.defaults.timeout = 2500;
 
 import Promise from 'bluebird'
 import Backend from '../common/backend'
-import config from '../common/config'
+var config
+try {
+	config = require('../common/config')
+} catch(e) {
+	console.log("../common/config.js not found. Please copy ../common/config.js-example to ../common/config.js and modify to your needs.")
+	process.exit(1)
+}
 import { get_node_urls, contract } from './helpers'
-import { get_store_trace } from '../common/mongo'
 
 const server = restify.createServer()
 server.use(restify.plugins.bodyParser())

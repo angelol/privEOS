@@ -2,7 +2,13 @@
 import restify from 'restify'
 import assert from 'assert'
 import Promise from 'bluebird'
-import config from '../common/config'
+var config
+try {
+	config = require('../common/config')
+} catch(e) {
+	console.log("../common/config.js not found. Please copy ../common/config.js-example to ../common/config.js and modify to your needs.")
+	process.exit(1)
+}
 import KMS from './kms'
 
 if(process.argv[2]) {
