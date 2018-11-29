@@ -1,2 +1,4 @@
 const { Mongo } = require("../common/mongo")
-export const mongo = new Mongo('mongodb://127.0.0.1:27017', 'priveos')
+const config = require("./config.js")
+
+export const mongo = new Mongo(config.mongoUrl, config.dbName)

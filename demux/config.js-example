@@ -1,0 +1,6 @@
+module.exports = {
+  httpEndpoint: 'http://localhost:8888',
+  pollInterval: 100,
+  mongoUrl: 'mongodb://127.0.0.1:27017',
+  dbName: 'priveos',
+}

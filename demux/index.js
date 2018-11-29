@@ -7,7 +7,7 @@ const { BaseActionWatcher } = require("demux")
 const { NodeosActionReader } = require("demux-eos") // eslint-disable-line
 const ObjectActionHandler = require("./ObjectActionHandler")
 const handlerVersion = require("./handler")
-
+const config = require("./config.js")
 /*
  * This ObjectActionHandler, which does not change the signature from its parent AbstractActionHandler, takes an array
  * of `HandlerVersion` objects
@@ -19,13 +19,13 @@ const actionHandler = new ObjectActionHandler([handlerVersion])
 actionHandler.get_starting_block()
 .then(blockNumber => {
  const actionReader = new NodeosActionReader(
-   "http://127.0.0.1:8888",
+   config.httpEndpoint,
    blockNumber,
  )
  const actionWatcher = new BaseActionWatcher(
    actionReader,
    actionHandler,
-   100,
+   config.pollInterval,
  )
 
  actionWatcher.watch()
