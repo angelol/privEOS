@@ -8,3 +8,6 @@ node_modules
 config-local.conf
 /priveos/wallet-password.txt
 *.swp
+/demux/config.js
+/common/config.js
+/client/config-test.js
