@@ -35,32 +35,20 @@ export default class KMS {
       console.log(`Decrypt for public key ${data.public_key}`)
       
       // this is the (ephemeral) public key of the recipient
-  		const recipient_public_key = accessgrant_trace.public_key
-      
-  		// decrypt using the private key of my node
-      return encryption_service.decrypt({
+      return encryption_service.reencrypt({
         public_key: data.public_key,
         message: my_share.message,
         nonce: my_share.nonce,
         checksum: my_share.checksum,
+        recipient_public_key: accessgrant_trace.public_key,
       })
-      .then(plaintext => {
-        console.log("encryption_service.decrypt resolved: ", plaintext)
-        
-        // // encrypt using the public_key of the requester
-        // // so only the requester will be able to decrypt with his private key
-        return encryption_service.encrypt({
-          public_key: recipient_public_key,
-          plaintext: String(plaintext),
-        })
-        .then(share => {
-          return {
-            message: share.message.toString('hex'),
-            nonce: String(share.nonce),
-            checksum: share.checksum,
-            public_key: my_share.public_key,
-          }
-        })
+      .then(share => {
+        return {
+          message: share.message,
+          nonce: String(share.nonce),
+          checksum: share.checksum,
+          public_key: my_share.public_key,
+        }
       })
 
   		// const plaintext = eosjs_ecc.Aes.decrypt(this.config.privateKey, data.public_key, my_share.nonce, ByteBuffer.fromHex(my_share.message).toBinary(), my_share.checksum)

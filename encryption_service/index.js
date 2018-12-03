@@ -19,11 +19,10 @@ http.createServer((request, response) => {
     
     const payload = JSON.parse(body)
     
-    if(url == '/encrypt/') {
-      encrypt(payload, response)
-    } else if(url == '/decrypt/') {
-      decrypt(payload, response)
-    } else {
+    if(url == '/reencrypt/') {
+      reencrypt(payload, response)
+    } 
+    else {
       response.statusCode = 404;
       response.write("Not found")
     }
@@ -31,15 +30,13 @@ http.createServer((request, response) => {
   })
 }).listen(config.listenPort, "127.0.0.1")
 
-function encrypt(payload, response) {
-  /*
-    Depends on:
-    public_key of recipient as String,
-    plaintext message (to be encrypted for above recipient) as String
-  */
+
+function reencrypt(payload, response) {
+  const plaintext = eosjs_ecc.Aes.decrypt(config.privateKey, payload.public_key, payload.nonce, ByteBuffer.fromHex(payload.message).toBinary(), payload.checksum)
+  console.log(`Decrypt result" "${String(plaintext)}"`)
   console.log(`privateKey: "${config.privateKey}"`)
   
-  const share = eosjs_ecc.Aes.encrypt(config.privateKey, payload.public_key, payload.plaintext)	
+  const share = eosjs_ecc.Aes.encrypt(config.privateKey, payload.recipient_public_key, String(plaintext))	
 
 
   const json = JSON.stringify({
@@ -50,17 +47,5 @@ function encrypt(payload, response) {
   console.log(`Encrypt result: "${json}"`)
   
   response.write(json)
-}
-
-function decrypt(payload, response) {
-  /*
-    Depends on:
-    public_key of the sender as String,
-    message as hex String,
-    nonce as String,
-    checksum as Number,
-  */
-  const plaintext = eosjs_ecc.Aes.decrypt(config.privateKey, payload.public_key, payload.nonce, ByteBuffer.fromHex(payload.message).toBinary(), payload.checksum)
-  console.log(`Decrypt result" "${String(plaintext)}"`)
-  response.write(String(plaintext))
+  
 }
