@@ -7,6 +7,5 @@ module.exports = {
   KMS_PORT: 3000,
   BROKER_PORT: 4000,
   nodeAccount: 'testnode1',
-  privateKey: '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3',
   backend: 'demux',
 }
