@@ -6,10 +6,12 @@ class Proxy {
   
   decrypt(payload) {
     return axios.post(encryption_service_url + '/decrypt/', payload)
+    .then(res => res.data)
   }
   
   encrypt(payload) {
-    return axios.post(encryption_service_url + '/encrypt/', payload)    
+    return axios.post(encryption_service_url + '/encrypt/', payload)
+    .then(res => res.data)
   }
 }
 

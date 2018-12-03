@@ -1,5 +1,4 @@
 import eosjs_ecc from 'eosjs-ecc'
-import ByteBuffer from 'bytebuffer'
 import Eos from 'eosjs'
 import Promise from 'bluebird'
 import Backend from '../common/backend'
@@ -39,7 +38,7 @@ export default class KMS {
   		const recipient_public_key = accessgrant_trace.public_key
       
   		// decrypt using the private key of my node
-      encryption_service.decrypt({
+      return encryption_service.decrypt({
         public_key: data.public_key,
         message: my_share.message,
         nonce: my_share.nonce,
@@ -50,7 +49,7 @@ export default class KMS {
         
         // // encrypt using the public_key of the requester
         // // so only the requester will be able to decrypt with his private key
-        encryption_service.encrypt({
+        return encryption_service.encrypt({
           public_key: recipient_public_key,
           plaintext: String(plaintext),
         })
@@ -63,6 +62,7 @@ export default class KMS {
           }
         })
       })
+
   		// const plaintext = eosjs_ecc.Aes.decrypt(this.config.privateKey, data.public_key, my_share.nonce, ByteBuffer.fromHex(my_share.message).toBinary(), my_share.checksum)
       
       
