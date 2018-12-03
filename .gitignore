@@ -11,3 +11,4 @@ config-local.conf
 /demux/config.js
 /common/config.js
 /client/config-test.js
+/encryption_service/config.js
