@@ -1,4 +1,4 @@
-#include "priveos.hpp"
+#include "price.cpp"
 
 ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data) {
   require_auth(owner);
@@ -10,7 +10,7 @@ ACTION priveos::accessgrant(const name user, const name contract, const std::str
   require_recipient(contract);
   
   auto& curr = currencies.get(token.code().raw(), "Token not accepted");
-  const auto fee = get_fee(token);
+  const auto fee = get_read_fee(token);
   
   sub_balance(user, fee);
   action(
@@ -50,23 +50,19 @@ ACTION priveos::unregnode(const name owner) {
   });
 }
 
-ACTION priveos::setprice(const name node, const asset price) {
+ACTION priveos::setprice(const name node, const asset price, const std::string action) {
   nodes.get(node.value, "node not found.");
   currencies.get(price.symbol.code().raw(), "Token not accepted");
-  pricefeed_table pricefeeds(_self, price.symbol.code().raw());
-  auto itr = pricefeeds.find(node.value);
-  
-  if(itr != pricefeeds.end()) {
-    pricefeeds.modify(itr, node, [&](pricefeed& pf) {
-      pf.price = price;
-    });
+  if(action == store_action_name) {
+    print("store_action_name");
+    store_pricefeed_table pricefeeds(_self, price.symbol.code().raw());
+    update_pricefeed(node, price, action, pricefeeds);    
+  } else if(action == accessgrant_action_name) {
+    read_pricefeed_table pricefeeds(_self, price.symbol.code().raw());
+    update_pricefeed(node, price, action, pricefeeds);
   } else {
-    pricefeeds.emplace(node, [&](pricefeed& pf) {
-      pf.node = node;
-      pf.price = price;
-    });
+    eosio_assert(false, "Invalid action name");
   }
-  update_price(node, price);
 }
 
 ACTION priveos::addcurrency(const symbol currency, const name contract) {
@@ -88,24 +84,6 @@ ACTION priveos::prepare(const name user, const symbol currency) {
   }
 }
 
-void priveos::update_price(const name node, const asset price) {
-  pricefeed_table pricefeeds(_self, price.symbol.code().raw());
-  std::vector<int64_t> vec;
-  for(const auto& pf : pricefeeds) {
-    vec.push_back(pf.price.amount);        
-  }
-  asset median_price = asset{median(vec), price.symbol};      
-  const auto& itr = prices.find(price.symbol.code().raw());
-  if(itr != prices.end()) {
-    prices.modify(itr, node, [&](auto& p) {
-      p.money = median_price;
-    });
-  } else {
-    prices.emplace(node, [&](auto& p) {
-      p.money = median_price;
-    });
-  }
-}
 
 void priveos::transfer(const name from, const name to, const asset quantity, const std::string memo) {
   // only respond to incoming transfers

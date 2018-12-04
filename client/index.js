@@ -158,7 +158,7 @@ export default class Priveos {
             data: {
               from: user,
               to: this.config.priveosContract,
-              quantity: await this.get_priveos_fee(token_symbol),
+              quantity: await this.get_read_fee(token_symbol),
               memo: "PrivEOS fee",
             }
           },
@@ -182,11 +182,11 @@ export default class Priveos {
     })
   }
   
-  get_priveos_fee(token) {
+  get_read_fee(token) {
     if(token.indexOf(",") != -1) {
       token = token.split(",")[1]
     }
-    return this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'price', limit:1, lower_bound: token})
+    return this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'readprice', limit:1, lower_bound: token})
     .then((res) => {
       console.log('get_priveos_fee: ', res.rows[0].money)
       return res.rows[0].money

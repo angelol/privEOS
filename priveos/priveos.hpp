@@ -2,6 +2,7 @@
  *  @file
  *  @copyright defined in eos/LICENSE.txt
  */
+#pragma once
 #include <eosiolib/eosio.hpp>
 #include <eosiolib/public_key.hpp>
 #include <eosiolib/asset.hpp>
@@ -12,9 +13,11 @@ using namespace eosio;
 CONTRACT priveos : public eosio::contract {
   using contract::contract;
   public:
-    priveos(name self,name code, datastream<const char*> ds) : eosio::contract(self,code,ds), nodes(_self, _self.value), prices(_self, _self.value), currencies(_self, _self.value){}
+    priveos(name self,name code, datastream<const char*> ds) : eosio::contract(self,code,ds), nodes(_self, _self.value), read_prices(_self, _self.value), store_prices(_self, _self.value), currencies(_self, _self.value){}
     
-    static constexpr auto fee_account = "priveosxfees"_n;
+    const name fee_account{"priveosxfees"};
+    const std::string accessgrant_action_name{"accessgrant"};
+    const std::string store_action_name{"store"};    
     
     TABLE nodeinfo {
       name        owner;
@@ -25,13 +28,30 @@ CONTRACT priveos : public eosio::contract {
       uint64_t primary_key()const { return owner.value; }      
     };
     
-    TABLE pricefeed {
+    TABLE store_pricefeed {
       name node;
       asset price;
       uint64_t primary_key() const { return node.value; }
     };
     
-    TABLE price {
+    TABLE read_pricefeed {
+      name node;
+      asset price;
+      uint64_t primary_key() const { return node.value; }
+    };
+
+    /*
+     * Price for storing items (charged by the store action)
+     */ 
+    TABLE storeprice {
+      asset money;
+      uint64_t primary_key() const { return money.symbol.code().raw(); }
+    };
+
+    /*
+     * Price for reading items (charged by the accessgrant action) 
+     */ 
+    TABLE readprice {
       asset money;
       uint64_t primary_key() const { return money.symbol.code().raw(); }
     };
@@ -48,13 +68,16 @@ CONTRACT priveos : public eosio::contract {
     };
     
     typedef multi_index<"nodes"_n, nodeinfo> nodes_table;
-    typedef multi_index<"pricefeed"_n, pricefeed> pricefeed_table;
-    typedef multi_index<"price"_n, price> price_table;
+    typedef multi_index<"storepricef"_n, store_pricefeed> store_pricefeed_table;
+    typedef multi_index<"readpricef"_n, read_pricefeed> read_pricefeed_table;
+    typedef multi_index<"readprice"_n, readprice> readprice_table;
+    typedef multi_index<"storeprice"_n, storeprice> storeprice_table;
     typedef multi_index<"balances"_n, balance> balances_table;
     typedef multi_index<"currencies"_n, currency_t> currencies_table;
     
     nodes_table nodes;
-    price_table prices;
+    readprice_table read_prices;
+    storeprice_table store_prices;
     currencies_table currencies;
     
     ACTION store(
@@ -84,7 +107,8 @@ CONTRACT priveos : public eosio::contract {
     
     ACTION setprice(
       const name node,
-      const asset price
+      const asset price,
+      const std::string action
     );
     
     ACTION addcurrency(
@@ -101,19 +125,58 @@ CONTRACT priveos : public eosio::contract {
     
     void validate_asset(const asset quantity) {
       auto& curr = currencies.get(quantity.symbol.code().raw(), "Currency not accepted");
+      
+      /* If we are in a notification action that was initiated by 
+       * require_recipient in the eosio.token contract, get_code() is the
+       * account where the token contract is deployed. So for EOS tokens,
+       * that should be the "eosio.token" account.
+       * Make sure we're checking that against the known contract account. 
+       */
       eosio_assert(curr.contract == get_code(), "We're not so easily fooled");
       print("Curr: ", curr.currency, "contract: ", curr.contract);
     }
     
+    template<typename T>
+    void update_pricefeed(
+      const name node, 
+      const asset price, 
+      const std::string action, 
+      T& pricefeeds
+    );
+    
   private:
+    template<typename T>
     void update_price(
       const name node, 
-      const asset price
+      const asset price, 
+      const std::string action, 
+      T& pricefeeds
+    );
+    
+    template<typename T>
+    void update_price_table(
+      const name node,
+      const asset price,
+      T& prices
     );
     
 
-    const asset get_fee(symbol currency) {
-      return prices.get(currency.code().raw(), "Currency not found").money;
+    const asset get_read_fee(symbol currency) {
+      auto itr = read_prices.find(currency.code().raw());
+      if(itr != read_prices.end()) {
+        return itr->money;
+      } else {
+        return asset{0, currency};
+      }
+    }
+    
+    const asset get_store_fee(symbol currency) {
+      auto itr = store_prices.find(currency.code().raw());
+      if(itr != store_prices.end()) {
+        return itr->money;
+      } else {
+        return asset{0, currency};
+      }    
     }
 
     

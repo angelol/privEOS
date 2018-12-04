@@ -73,20 +73,22 @@ shownodes:
 	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) nodes
 
 setprice:
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx1", "1000.0000 EUR"]' -p testnodexxx1
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx2", "2000.0000 EUR"]' -p testnodexxx2
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx3", "2.0000 EOS"]' -p testnodexxx3
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx4", "0.1000 EOS"]' -p testnodexxx4
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx5", "0.0000 EOS"]' -p testnodexxx5
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx1", "1000.0000 EUR", "accessgrant"]' -p testnodexxx1
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx1", "0.0000 EOS", "store"]' -p testnodexxx1
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx2", "2000.0000 EUR", "accessgrant"]' -p testnodexxx2
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx3", "2.0000 EOS", "accessgrant"]' -p testnodexxx3
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx4", "0.1000 EOS", "accessgrant"]' -p testnodexxx4
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx5", "0.0000 EOS", accessgrant]' -p testnodexxx5
 
 
 showpricefeed:
-	$(CLEOS) get table $(CONTRACT_ACCOUNT) 4,EOS pricefeed
-	$(CLEOS) get table $(CONTRACT_ACCOUNT) 4,EUR pricefeed
+	$(CLEOS) get table $(CONTRACT_ACCOUNT) 4,EOS storepricef
+	$(CLEOS) get table $(CONTRACT_ACCOUNT) 4,EOS readpricef
 		
 	
 showprice:
-	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) price
+	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) readprice
+	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) storeprice
 
 addcurrency:
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) addcurrency '["4,EOS", "eosio.token"]' -p $(CONTRACT_ACCOUNT)
