@@ -1,12 +1,8 @@
-import eosjs_ecc from 'eosjs-ecc'
-import Eos from 'eosjs'
 import Promise from 'bluebird'
 import Backend from '../common/backend'
 import assert from 'assert'
 import config from '../common/config'
 import encryption_service from './proxy'
-
-const eos = Eos({httpEndpoint: config.httpEndpoint, chainId: config.chainId})
 
 class UserNotAuthorized extends Error {}
 
@@ -34,7 +30,6 @@ export default class KMS {
 
       console.log(`Decrypt for public key ${data.public_key}`)
       
-      // this is the (ephemeral) public key of the recipient
       return encryption_service.reencrypt({
         public_key: data.public_key,
         message: my_share.message,
@@ -50,23 +45,6 @@ export default class KMS {
           public_key: my_share.public_key,
         }
       })
-
-  		// const plaintext = eosjs_ecc.Aes.decrypt(this.config.privateKey, data.public_key, my_share.nonce, ByteBuffer.fromHex(my_share.message).toBinary(), my_share.checksum)
-      
-      
-      
-      // console.log("User is authorised, continuing")
-      // console.log("recipient_public_key: ", recipient_public_key)
-      // // encrypt using the public_key of the requester
-      // // so only the requester will be able to decrypt with his private key
-      // const share = eosjs_ecc.Aes.encrypt(this.config.privateKey, recipient_public_key, String(plaintext))	
-      // // console.log("Share: ", JSON.stringify(share))			
-      // return {
-      //   message: share.message.toString('hex'),
-      //   nonce: String(share.nonce),
-      //   checksum: share.checksum,
-      //   public_key: my_share.public_key,
-      // }
   	})
   }
 }
