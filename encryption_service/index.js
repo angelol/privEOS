@@ -45,7 +45,7 @@ function reencrypt(payload, response) {
     checksum: share.checksum,
   })
   console.log(`Encrypt result: "${json}"`)
-  
+  response.setHeader('Content-Type', 'application/json')
   response.write(json)
   
 }
