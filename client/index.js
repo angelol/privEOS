@@ -54,7 +54,7 @@ export default class Priveos {
    * @param {Uint8Array} nonce_bytes 
    * @param {array} actions Additional actions to trigger alongside store transaction (usability)
    */
-  store(owner, file, secret_bytes, nonce_bytes, actions = []) {
+  async store(owner, file, secret_bytes, nonce_bytes, token_symbol, actions = []) {
     console.log(`\r\n###\r\npriveos.store(${owner}, ${file})`)
     
     assert.ok(owner && file, "Owner and file must be supplied")
@@ -102,7 +102,7 @@ export default class Priveos {
         public_key: keys.public,
       }
     })
-    .then((data) => {
+    .then(async (data) => {
       console.log("\r\nBundling... ")
       console.log("Constructed this (data): ", JSON.stringify(data))
       console.log("this.config.priveosContract: ", this.config.priveosContract)
@@ -111,6 +111,32 @@ export default class Priveos {
       return this.eos.transaction(
         {
           actions: actions.concat([
+            {
+              account: this.config.priveosContract,
+              name: 'prepare',
+              authorization: [{
+                actor: owner,
+                permission: 'active',
+              }],
+              data: {
+                user: owner,
+                currency: token_symbol,
+              }
+            },
+            {
+              account: "eosio.token",
+              name: 'transfer',
+              authorization: [{
+                actor: owner,
+                permission: 'active',
+              }],
+              data: {
+                from: owner,
+                to: this.config.priveosContract,
+                quantity: await this.get_store_fee(token_symbol),
+                memo: "PrivEOS fee",
+              }
+            },
             {
               account: this.config.priveosContract,
               name: 'store',
@@ -123,6 +149,7 @@ export default class Priveos {
                 contract: this.config.dappContract,
                 file: file,
                 data: JSON.stringify(data),
+                token: token_symbol,
               }
             }
           ])
@@ -187,6 +214,17 @@ export default class Priveos {
       token = token.split(",")[1]
     }
     return this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'readprice', limit:1, lower_bound: token})
+    .then((res) => {
+      console.log('get_priveos_fee: ', res.rows[0].money)
+      return res.rows[0].money
+    })
+  }
+  
+  get_store_fee(token) {
+    if(token.indexOf(",") != -1) {
+      token = token.split(",")[1]
+    }
+    return this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'storeprice', limit:1, lower_bound: token})
     .then((res) => {
       console.log('get_priveos_fee: ', res.rows[0].money)
       return res.rows[0].money

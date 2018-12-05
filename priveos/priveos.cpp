@@ -1,8 +1,19 @@
 #include "price.cpp"
 
-ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data) {
+ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data, const symbol token) {
   require_auth(owner);
   // print( "Storing file ", file);
+  auto& curr = currencies.get(token.code().raw(), "Token not accepted");
+  const auto fee = get_store_fee(token);
+  print("Fee is ", fee);
+  
+  sub_balance(owner, fee);
+  action(
+    permission_level{_self, "active"_n},
+    curr.contract,
+    "transfer"_n,
+    std::make_tuple(_self, fee_account, fee, std::string("Fee"))
+  ).send();
 }
     
 ACTION priveos::accessgrant(const name user, const name contract, const std::string file, const public_key public_key, const symbol token) {
