@@ -68,10 +68,13 @@ CONTRACT priveos : public eosio::contract {
     };
     
     typedef multi_index<"nodes"_n, nodeinfo> nodes_table;
+    
     typedef multi_index<"storepricef"_n, store_pricefeed> store_pricefeed_table;
     typedef multi_index<"readpricef"_n, read_pricefeed> read_pricefeed_table;
+    
     typedef multi_index<"readprice"_n, readprice> readprice_table;
     typedef multi_index<"storeprice"_n, storeprice> storeprice_table;
+    
     typedef multi_index<"balances"_n, balance> balances_table;
     typedef multi_index<"currencies"_n, currency_t> currencies_table;
     
@@ -124,6 +127,7 @@ CONTRACT priveos : public eosio::contract {
     void transfer(const name from, const name to, const asset quantity, const std::string memo);
     
     void validate_asset(const asset quantity) {
+      eosio_assert(quantity.amount > 0, "Deposit amount must be > 0");
       auto& curr = currencies.get(quantity.symbol.code().raw(), "Currency not accepted");
       
       /* If we are in a notification action that was initiated by 
@@ -146,7 +150,7 @@ CONTRACT priveos : public eosio::contract {
     
   private:
     template<typename T>
-    void update_price(
+    void propagate_price_change(
       const name node, 
       const asset price, 
       const std::string action, 

@@ -3,6 +3,7 @@
 template<typename T>
 void priveos::update_pricefeed(const name node, const asset price, const std::string action, T& pricefeeds) {
   auto itr = pricefeeds.find(node.value);
+  print("inserting ", price, " into node ", node);
   if(itr != pricefeeds.end()) {
     pricefeeds.modify(itr, node, [&](auto& pf) {
       pf.price = price;
@@ -13,11 +14,11 @@ void priveos::update_pricefeed(const name node, const asset price, const std::st
       pf.price = price;
     });
   }
-  update_price(node, price, action, pricefeeds);
+  propagate_price_change(node, price, action, pricefeeds);
 }
 
 template<typename T>
-void priveos::update_price(const name node, const asset price, const std::string action, T& pricefeeds) {
+void priveos::propagate_price_change(const name node, const asset price, const std::string action, T& pricefeeds) {
   std::vector<int64_t> vec;
   for(const auto& pf : pricefeeds) {
     vec.push_back(pf.price.amount);        

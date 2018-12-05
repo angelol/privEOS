@@ -53,8 +53,9 @@ ACTION priveos::unregnode(const name owner) {
 ACTION priveos::setprice(const name node, const asset price, const std::string action) {
   nodes.get(node.value, "node not found.");
   currencies.get(price.symbol.code().raw(), "Token not accepted");
+  eosio_assert(price.amount >= 0, "Price must be >= 0");
+  
   if(action == store_action_name) {
-    print("store_action_name");
     store_pricefeed_table pricefeeds(_self, price.symbol.code().raw());
     update_pricefeed(node, price, action, pricefeeds);    
   } else if(action == accessgrant_action_name) {

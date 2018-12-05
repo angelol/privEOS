@@ -75,6 +75,8 @@ shownodes:
 setprice:
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx1", "1000.0000 EUR", "accessgrant"]' -p testnodexxx1
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx1", "0.0000 EOS", "store"]' -p testnodexxx1
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx2", "0.1000 EOS", "store"]' -p testnodexxx2
+
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx2", "2000.0000 EUR", "accessgrant"]' -p testnodexxx2
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx3", "2.0000 EOS", "accessgrant"]' -p testnodexxx3
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx4", "0.1000 EOS", "accessgrant"]' -p testnodexxx4
