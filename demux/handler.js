@@ -31,21 +31,28 @@
 import { mongo } from "./mongo"
 
 
-function insertStore(state, payload, blockInfo, context) {
+async function insertStore(state, payload, blockInfo, context) {
   console.log("insertStore: payload.data: ", payload.data)
   const doc = Object.assign(payload, blockInfo)
-  mongo.run(db => {
+  try {
+    const db = await mongo.db()
     db.collection('store').insertOne(doc)
-  })
+  } catch(e) {
+    console.log(e)
+    process.exit(1)
+  }
 }
 
-function insertAccessgrant(state, payload, blockInfo, context) {
+async function insertAccessgrant(state, payload, blockInfo, context) {
   console.log("insertAccessgrant: payload.data: ", payload.data)
   const doc = Object.assign(payload, blockInfo)
-  mongo.run(db => {
+  try {
+    const db = await mongo.db()
     db.collection('accessgrant').insertOne(doc)
-  })
-
+  } catch(e) {
+    console.log(e)
+    process.exit(1)
+  }
 }
 
 const updaters = [

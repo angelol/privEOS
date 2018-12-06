@@ -38,10 +38,9 @@ class ObjectActionHandler extends AbstractActionHandler {
   }
 
   async loadIndexState() {
-    return mongo.run(db => {
-      return db.collection('index_state').findOne()
-    })
-    .then(x => {
+    try {
+      const db = await mongo.db()    
+      const x = db.collection('index_state').findOne()
       if(x) {
         return x
       } else {
@@ -52,21 +51,29 @@ class ObjectActionHandler extends AbstractActionHandler {
             handlerVersionName: "v1",
         }
       }
-    })
+    } catch(e) {
+      console.log(e)
+      process.exit(1)
+    }
+    
   }
 
   async updateIndexState(stateObj, block, isReplay, handlerVersionName) {
     // console.log("updateIndexState: ", block.blockInfo)
     
     assert.ok(handlerVersionName, "handlerVersionName not set!!!")
-    await mongo.run(db => {
-      return db.collection('index_state').replaceOne({}, {
+    try {
+      const db = await mongo.db()
+      await db.collection('index_state').replaceOne({}, {
         blockNumber: block.blockInfo.blockNumber,
         blockHash: block.blockInfo.blockHash,
         isReplay: isReplay,
         handlerVersionName: handlerVersionName,
       }, { upsert: true})
-    })
+    } catch(e) {
+      console.log(e)
+      process.exit(1)
+    }
   }
 
   async rollbackTo(blockNumber) {
@@ -74,11 +81,10 @@ class ObjectActionHandler extends AbstractActionHandler {
   }
   
   
-  get_starting_block() {
-    return mongo.run(db => {
-      return db.collection('index_state').findOne({})
-    })
-    .then(x => {
+  async get_starting_block() {
+    try {
+      const db = await mongo.db()
+      const x = await db.collection('index_state').findOne({})
       if(x) {
         // start where we left off syncing
         return x.blockNumber
@@ -86,7 +92,12 @@ class ObjectActionHandler extends AbstractActionHandler {
         // we're running this for the first time, so we're starting at the current block height
         return 0
       }
-    })
+    } catch(e) {
+      console.log(e)
+      process.exit(1)
+    }
+  
+    
   }
 }
 

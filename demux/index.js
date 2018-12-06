@@ -21,21 +21,18 @@ const handlerVersion = require("./handler")
 const actionHandler = new ObjectActionHandler([handlerVersion])
 
 
- 
-actionHandler.get_starting_block()
-.then(blockNumber => {
- const actionReader = new NodeosActionReader(
-   config.httpEndpoint,
-   blockNumber,
- )
- const actionWatcher = new BaseActionWatcher(
-   actionReader,
-   actionHandler,
-   config.pollInterval,
- )
+async function start() { 
+  const actionReader = new NodeosActionReader(
+    config.httpEndpoint,
+    await actionHandler.get_starting_block(),
+  )
+  const actionWatcher = new BaseActionWatcher(
+    actionReader,
+    actionHandler,
+    config.pollInterval,
+  )
 
- actionWatcher.watch()
-}) 
- 
-
+  actionWatcher.watch()
+}
+start()
 

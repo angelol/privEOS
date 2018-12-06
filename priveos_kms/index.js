@@ -23,28 +23,28 @@ var server = restify.createServer()
 server.use(restify.plugins.bodyParser())
 
 
-server.post('/read/', function(req, res, next) {
-	if(!req.body || !req.body.file || !req.body.requester || !req.body.dappcontract) {
-    return res.send(400, "Bad request")
-  }
-	
-  const file = req.body.file
-	const requester = req.body.requester
-	const dappcontract = req.body.dappcontract
-	const kms = new KMS(config)
-	kms.read(file, requester, dappcontract)
-	.then(data => {
+server.post('/read/', async function(req, res, next) {
+	try {
+		if(!req.body || !req.body.file || !req.body.requester || !req.body.dappcontract) {
+	    return res.send(400, "Bad request")
+	  }
+		
+	  const file = req.body.file
+		const requester = req.body.requester
+		const dappcontract = req.body.dappcontract
+		const kms = new KMS(config)
+		const data = await kms.read(file, requester, dappcontract)
 		console.log("Read data from kms: ", data)
 		res.send(data)
-	})
-	.catch(KMS.UserNotAuthorized, (err) => {
-		console.log(err)
-		res.send("Not authorised")
-	})
-	.catch(err => {
-		console.log(err)
-		res.send("Generic Error")
-	})
+	} catch(e) {
+		if(e instanceof KMS.UserNotAuthorized) {
+			console.log(e)
+			res.send("Not authorised")
+		} else {
+			console.log(e)
+			res.send("Generic Error")
+		}
+	}
   next()
 })
 
