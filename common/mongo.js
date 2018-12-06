@@ -1,5 +1,4 @@
 import MongoClient from 'mongodb'
-import Promise from 'bluebird'
 import config from './config'
 import assert from "assert"
 
@@ -28,7 +27,6 @@ export class Mongo {
     }
     // console.log("this.url: ", this.url)
     const conn = await MongoClient.connect(this.url, { 
-      promiseLibrary: Promise, 
       useNewUrlParser: true,
       autoReconnect: true,
       reconnectTries: Number.MAX_VALUE,

@@ -1,4 +1,3 @@
-import Promise from 'bluebird'
 import Backend from '../common/backend'
 import assert from 'assert'
 import config from '../common/config'

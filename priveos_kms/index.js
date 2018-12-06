@@ -1,7 +1,6 @@
 'use strict'
 import restify from 'restify'
 import assert from 'assert'
-import Promise from 'bluebird'
 var config
 try {
 	config = require('../common/config')
