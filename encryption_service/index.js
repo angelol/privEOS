@@ -2,6 +2,21 @@ const http = require('http')
 const config = require('./config')
 const eosjs_ecc = require('eosjs-ecc')
 const ByteBuffer = require('bytebuffer')
+const fs = require('fs')
+
+/**
+  * The config file contains the private key
+  * and should not be world-readable.
+  * If the permissions are wrong, we fix them here and now.
+  */
+const config_path = "config.js"
+const stat = fs.statSync(config_path)
+if(stat.mode != 33152) {
+  fs.chmod(config_path, 0o600, () => {
+    console.log("Setting permissions of config.js to 600")
+  })  
+}
+
 
 http.createServer((request, response) => {
   const { headers, method, url } = request
