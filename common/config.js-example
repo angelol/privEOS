@@ -8,4 +8,5 @@ module.exports = {
   BROKER_PORT: 4000,
   nodeAccount: 'testnode1',
   backend: 'demux',
+  encryptionServiceUrl: 'http://127.0.0.1:6000',
 }
