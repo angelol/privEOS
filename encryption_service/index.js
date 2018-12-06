@@ -35,7 +35,13 @@ http.createServer((request, response) => {
     const payload = JSON.parse(body)
     
     if(url == '/reencrypt/') {
-      reencrypt(payload, response)
+      try {
+        reencrypt(payload, response)
+      } catch(e) {
+        console.log(e)
+        response.statusCode = 500;
+        response.write("Internal Server Error")
+      }
     } 
     else {
       response.statusCode = 404;
@@ -54,7 +60,7 @@ function reencrypt(payload, response) {
   const share = eosjs_ecc.Aes.encrypt(config.privateKey, payload.recipient_public_key, String(plaintext))	
 
 
-  const json = JSON.stringify({
+  const json = JSON.stringifyx({
     message: share.message.toString('hex'),
     nonce: String(share.nonce),
     checksum: share.checksum,
