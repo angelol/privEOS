@@ -60,7 +60,7 @@ function reencrypt(payload, response) {
   const share = eosjs_ecc.Aes.encrypt(config.privateKey, payload.recipient_public_key, String(plaintext))	
 
 
-  const json = JSON.stringifyx({
+  const json = JSON.stringify({
     message: share.message.toString('hex'),
     nonce: String(share.nonce),
     checksum: share.checksum,
