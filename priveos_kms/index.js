@@ -48,7 +48,7 @@ server.post('/read/', async function(req, res, next) {
 })
 
 console.log("PORT: ", config.KMS_PORT)
-server.listen(config.KMS_PORT, function() {
+server.listen(config.KMS_PORT, "127.0.0.1", function() {
   console.log('%s listening at %s', server.name, server.url)
 })
 
