@@ -13,3 +13,6 @@ config-local.conf
 /client/config-test.js
 /encryption_service/config.js
 /priveos/config.conf
+/contracts/priveos/config.conf
+/contracts/priveos/priveos.abi
+/contracts/priveos/priveos.wasm
