@@ -88,7 +88,8 @@ CONTRACT priveos : public eosio::contract {
       const name contract, 
       const std::string file, 
       const std::string data,
-      const symbol token
+      const symbol token,
+      bool auditable
     );
     
     ACTION accessgrant(

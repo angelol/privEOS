@@ -1,6 +1,6 @@
 #include "price.cpp"
 
-ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data, const symbol token) {
+ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data, const symbol token, bool auditable) {
   require_auth(owner);
   // print( "Storing file ", file);
   auto& curr = currencies.get(token.code().raw(), "Token not accepted");
