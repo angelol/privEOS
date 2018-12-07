@@ -35,7 +35,7 @@ server.use(cors.actual)
 server.post('/read/', async function(req, res, next) {
   // console.log('Received read requests', req.body)
 	try { 
-	  broker_main(req, res)
+	  await broker_main(req, res)
 	} catch(err) {
     console.log("Error: ", err)
     res.send(500, "Generic Error")
@@ -52,7 +52,6 @@ async function broker_main(req, res) {
 	const requester = req.body.requester
 	const dappcontract = req.body.dappcontract
 	
-
 	const store_trace = await Backend.get_store_trace(dappcontract, file)
 	const payload = JSON.parse(store_trace.data)
 	const nodes = await get_node_urls(payload, dappcontract, file)
