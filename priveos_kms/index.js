@@ -38,10 +38,10 @@ server.post('/read/', async function(req, res, next) {
 	} catch(e) {
 		if(e instanceof KMS.UserNotAuthorized) {
 			console.log(e)
-			res.send("Not authorised")
+			res.send(403, "Not authorised")
 		} else {
 			console.log(e)
-			res.send("Generic Error")
+			res.send(500, "Generic Error")
 		}
 	}
   next()
