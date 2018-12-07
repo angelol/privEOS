@@ -1,4 +1,12 @@
 module.exports = {
   listenPort: '6000',
-  privateKey: '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3',
+  currentPrivateKey: '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3',
+  /**
+    * If you're rotating your node key (above), keep a list of all the used 
+    * keys here, please. Otherwise, old files that were encrypted with the 
+    * old keys will be lost.
+    */
+  oldKeys: [
+    '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3', 
+  ]  
 }

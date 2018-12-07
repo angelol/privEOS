@@ -29,10 +29,8 @@ export default class KMS {
     console.log(`Decrypt for public key ${data.public_key}`)
     
     const share = await encryption_service.reencrypt({
+      share: my_share,
       public_key: data.public_key,
-      message: my_share.message,
-      nonce: my_share.nonce,
-      checksum: my_share.checksum,
       recipient_public_key: accessgrant_trace.public_key,
     })
     return {
