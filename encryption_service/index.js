@@ -33,6 +33,7 @@ function secure_permissions() {
   * private keys by their public key
   */
 function create_lookup_table() {
+  config.oldKeys.push(config.currentPrivateKey)
   config.keys = config.oldKeys.reduce((a, b) => {
     const public_key = eosjs_ecc.privateToPublic(b)
     a[public_key] = b
