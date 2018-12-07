@@ -22,9 +22,13 @@ const actionHandler = new ObjectActionHandler([handlerVersion])
 
 
 async function start() { 
+  await ensure_consistency()
+  
+  const starting_block = await actionHandler.get_current_block() + 1
+  console.log("starting_block: ", starting_block)
   const actionReader = new NodeosActionReader(
     config.httpEndpoint,
-    await actionHandler.get_starting_block(),
+    starting_block,
   )
   const actionWatcher = new BaseActionWatcher(
     actionReader,
@@ -35,4 +39,20 @@ async function start() {
   actionWatcher.watch()
 }
 start()
+
+async function ensure_consistency() {
+  const current_block = await actionHandler.get_current_block()
+  if(current_block == 0) {
+    return
+  }
+  actionHandler.rollbackTo(current_block - 1)
+  actionHandler.updateIndexState(null, {
+    blockInfo: {
+      blockNumber: current_block - 1,
+      blockHash: "",
+    }
+  }, false, 'v1')
+}
+
+
 

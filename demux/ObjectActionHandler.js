@@ -78,10 +78,18 @@ class ObjectActionHandler extends AbstractActionHandler {
 
   async rollbackTo(blockNumber) {
     console.log("rollbackTo ", blockNumber)
+    try {
+      const db = await mongo.db()
+      console.log("Deleteing all txs with block number > ", blockNumber)
+      db.collection('accessgrant').deleteMany({"blockNumber": { $gt: blockNumber }})
+      db.collection('store').deleteMany({"blockNumber": { $gt: blockNumber }})
+    } catch(e) {
+      console.log(e)
+      process.exit(1)
+    }
   }
   
-  
-  async get_starting_block() {
+  async get_current_block() {
     try {
       const db = await mongo.db()
       const x = await db.collection('index_state').findOne({})
@@ -96,9 +104,8 @@ class ObjectActionHandler extends AbstractActionHandler {
       console.log(e)
       process.exit(1)
     }
-  
-    
   }
+  
 }
 
 module.exports = ObjectActionHandler
