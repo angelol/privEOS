@@ -29,7 +29,7 @@
 */
 
 import { mongo } from "./mongo"
-
+import ipfsClient from 'ipfs-http-client'
 
 async function insertStore(state, payload, blockInfo, context) {
   console.log("insertStore: payload.data: ", payload.data)
@@ -41,6 +41,16 @@ async function insertStore(state, payload, blockInfo, context) {
     console.log(e)
     process.exit(1)
   }
+  
+  const ipfs_hash = payload.data.data
+  console.log("IPFS HASH: ", ipfs_hash)
+  const ipfs = ipfsClient('localhost', '5001', { protocol: 'http' })
+  const res = await ipfs.pin.add(ipfs_hash)
+  console.log("IPFS res: ", res)
+  
+  ipfs.files.stat(`/ipfs/${ipfs_hash}`, (err, stats) => {
+    console.log(stats)
+  })
 }
 
 async function insertAccessgrant(state, payload, blockInfo, context) {

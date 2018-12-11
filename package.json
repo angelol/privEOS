@@ -11,12 +11,13 @@
     "babel-plugin-transform-builtin-extend": "^1.1.2",
     "babel-preset-env": "^1.7.0",
     "bluebird": "^3.5.3",
+    "demux": "^3.0.0",
+    "demux-eos": "2.0.0",
     "eosjs": "16",
     "eosjs-ecc": "^4.0.4",
+    "ipfs-http-client": "^28.0.0",
     "mongodb": "^3.1.10",
     "restify": "^7.2.3",
-    "restify-cors-middleware": "^1.1.1",
-    "demux": "^3.0.0",
-    "demux-eos": "2.0.0"
+    "restify-cors-middleware": "^1.1.1"
   }
 }
