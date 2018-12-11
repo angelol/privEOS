@@ -10,7 +10,6 @@ async function get_store_trace(dappcontract, file) {
       "account": config.contract,
       "data.contract": dappcontract,
       "data.file": file,
-      "name": "store",
     })
     .sort({"blockNumber": -1})
     .limit(1)
