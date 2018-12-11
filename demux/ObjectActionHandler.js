@@ -40,7 +40,7 @@ class ObjectActionHandler extends AbstractActionHandler {
   async loadIndexState() {
     try {
       const db = await mongo.db()    
-      const x = db.collection('index_state').findOne()
+      const x = await db.collection('index_state').findOne()
       if(x) {
         return x
       } else {
