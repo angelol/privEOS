@@ -13,6 +13,7 @@ const { BaseActionWatcher } = require("demux")
 const { NodeosActionReader } = require("demux-eos") // eslint-disable-line
 const ObjectActionHandler = require("./ObjectActionHandler")
 const handlerVersion = require("./handler")
+const { mongo } = require("./mongo")
 
 /*
  * This ObjectActionHandler, which does not change the signature from its parent AbstractActionHandler, takes an array
@@ -22,6 +23,7 @@ const actionHandler = new ObjectActionHandler([handlerVersion])
 
 
 async function start() { 
+  await create_indexes()
   await ensure_consistency()
   
   const starting_block = await actionHandler.get_current_block() + 1
@@ -54,5 +56,14 @@ async function ensure_consistency() {
   }, false, 'v1')
 }
 
+async function create_indexes() {
+  // createIndex does nothing if index already exists, so it's safe to call this at every start
+  const db = await mongo.db()
+  await db.collection('store').createIndex({"blockNumber": 1})
+  await db.collection('accessgrant').createIndex({"blockNumber": 1})
+  
+  await db.collection('store').createIndex({"data.file": 1})
+  await db.collection('accessgrant').createIndex({"data.file": 1})
+}
 
 
