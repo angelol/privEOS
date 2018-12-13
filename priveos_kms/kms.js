@@ -9,6 +9,10 @@ export default class KMS {
   constructor(config) {
     this.config = config
   }
+  
+  async store(file, data, owner, dappcontract) {
+    Backend.store_data(file, data, owner, dappcontract)
+  }
       
   async read(file, requester, dappcontract) {
     const [store_trace, accessgrant_trace] = await Promise.all([

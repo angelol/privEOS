@@ -2,6 +2,19 @@ import { mongo } from '../mongo.js'
 import config from '../config'
 import assert from 'assert'
 
+async function store_data(file, data, hash, owner, dappcontract) {
+  const db = await mongo.db()
+  const data = {
+    file,
+    data,
+    owner,
+    hash,
+    dappcontract,
+    created_at: new Date(),
+   }
+  await db.collection('data').insertOne(data)
+}
+
 async function get_store_trace(dappcontract, file) {
   const db = await mongo.db()
   const items = await db.collection('store')
@@ -43,6 +56,7 @@ async function get_accessgrant_trace(dappcontract, user, file) {
 }
 
 export {
+  store_data,
   get_store_trace,
   get_accessgrant_trace,
 }

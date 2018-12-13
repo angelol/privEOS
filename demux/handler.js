@@ -50,6 +50,9 @@ async function insertStore(state, payload, blockInfo, context) {
   
   ipfs.files.stat(`/ipfs/${ipfs_hash}`, (err, stats) => {
     console.log(stats)
+    if(stats.size > 25000) {
+      console.log("File is too big! ", stats.size)
+    }
   })
 }
 
