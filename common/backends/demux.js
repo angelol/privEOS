@@ -4,7 +4,7 @@ import assert from 'assert'
 
 async function store_data(file, data, hash, owner, dappcontract) {
   const db = await mongo.db()
-  const data = {
+  const doc = {
     file,
     data,
     owner,
@@ -12,7 +12,7 @@ async function store_data(file, data, hash, owner, dappcontract) {
     dappcontract,
     created_at: new Date(),
    }
-  await db.collection('data').insertOne(data)
+  await db.collection('data').insertOne(doc)
 }
 
 async function get_store_trace(dappcontract, file) {

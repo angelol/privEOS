@@ -30,6 +30,7 @@
 
 import { mongo } from "./mongo"
 import ipfsClient from 'ipfs-http-client'
+import assert from 'assert'
 
 async function insertStore(state, payload, blockInfo, context) {
   console.log("insertStore: payload.data: ", payload.data)
@@ -37,23 +38,35 @@ async function insertStore(state, payload, blockInfo, context) {
   try {
     const db = await mongo.db()
     db.collection('store').insertOne(doc)
+    const hash = payload.data.data
+    const res = await db.collection('data').findOne({hash})
+    console.log("full data retrieved from db: ", res.data)
+    
+    const ipfs = ipfsClient('localhost', '5001', { protocol: 'http' })
+    const buffer = Buffer.from(res.data)
+    const results = await ipfs.add(buffer)
+    const ipfs_hash = results[0].hash
+    console.log("ipfs_hash: ", ipfs_hash)
+    assert.equal(hash, ipfs_hash, "Hashes differ, this should not be possible")
+    
+    
   } catch(e) {
     console.log(e)
     process.exit(1)
   }
   
-  const ipfs_hash = payload.data.data
-  console.log("IPFS HASH: ", ipfs_hash)
-  const ipfs = ipfsClient('localhost', '5001', { protocol: 'http' })
-  const res = await ipfs.pin.add(ipfs_hash)
-  console.log("IPFS res: ", res)
-  
-  ipfs.files.stat(`/ipfs/${ipfs_hash}`, (err, stats) => {
-    console.log(stats)
-    if(stats.size > 25000) {
-      console.log("File is too big! ", stats.size)
-    }
-  })
+  // const ipfs_hash = payload.data.data
+  // console.log("IPFS HASH: ", ipfs_hash)
+  // const ipfs = ipfsClient('localhost', '5001', { protocol: 'http' })
+  // const res = await ipfs.pin.add(ipfs_hash)
+  // console.log("IPFS res: ", res)
+  // 
+  // ipfs.files.stat(`/ipfs/${ipfs_hash}`, (err, stats) => {
+  //   console.log(stats)
+  //   if(stats.size > 25000) {
+  //     console.log("File is too big! ", stats.size)
+  //   }
+  // })
 }
 
 async function insertAccessgrant(state, payload, blockInfo, context) {

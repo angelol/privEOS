@@ -2,6 +2,7 @@ import Backend from '../common/backend'
 import assert from 'assert'
 import config from '../common/config'
 import encryption_service from './proxy'
+import getMultiHash from '../common/multihash'
 
 class UserNotAuthorized extends Error {}
 
@@ -11,7 +12,8 @@ export default class KMS {
   }
   
   async store(file, data, owner, dappcontract) {
-    Backend.store_data(file, data, owner, dappcontract)
+    const hash = await getMultiHash(data)
+    Backend.store_data(file, data, hash, owner, dappcontract)
   }
       
   async read(file, requester, dappcontract) {

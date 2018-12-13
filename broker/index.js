@@ -67,9 +67,10 @@ async function broker_store(req, res) {
 				dappcontract: body.dappcontract,
 			})
 	})
-	const data = await Promise.all(promises)
+	const response = await Promise.all(promises)
 	console.log('Finished Sending to all Nodes')
-	res.send(data)
+	console.log("Data: ", response.data)
+	res.send(response.data)
 }
 
 async function broker_read(req, res) {
