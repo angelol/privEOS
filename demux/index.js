@@ -26,7 +26,10 @@ async function start() {
   await create_indexes()
   await ensure_consistency()
   
-  const starting_block = await actionHandler.get_current_block() + 1
+  let starting_block = await actionHandler.get_current_block()
+  if(starting_block != 0) {
+    starting_block += 1
+  }
   console.log("starting_block: ", starting_block)
   const actionReader = new NodeosActionReader(
     config.httpEndpoint,
