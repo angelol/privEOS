@@ -67,6 +67,8 @@ async function create_indexes() {
   
   await db.collection('store').createIndex({"data.file": 1})
   await db.collection('accessgrant').createIndex({"data.file": 1})
+  await db.collection('data').createIndex({"hash": 1})
+
 }
 
 
