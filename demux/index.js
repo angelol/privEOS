@@ -45,6 +45,12 @@ async function start() {
 }
 start()
 
+/**
+  * When demux crashes or is shut down, the last block that was being indexed 
+  * will only have been partially complete. So we roll back the last block
+  * and re-index from there. That way, we can be sure to have a complete mirror
+  * of the blockchain.
+  */
 async function ensure_consistency() {
   const current_block = await actionHandler.get_current_block()
   if(current_block == 0) {

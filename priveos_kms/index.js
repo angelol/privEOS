@@ -30,8 +30,7 @@ server.post('/store/', async function(req, res, next) {
 		console.log("Ohai Store")
 		const kms = new KMS(config)
 		const data = await kms.store(body.file, body.data, body.owner, body.dappcontract)
-		console.log("Read data from kms: ", data)
-		res.send(data)
+		res.send("okay")
 	} catch(e) {
 		if(e instanceof KMS.UserNotAuthorized) {
 			console.log(e)
@@ -45,16 +44,14 @@ server.post('/store/', async function(req, res, next) {
 })
 
 server.post('/read/', async function(req, res, next) {
+	const body = req.body
 	try {
-		if(!req.body || !req.body.file || !req.body.requester || !req.body.dappcontract) {
+		if(!body || !body.file || !body.requester || !body.dappcontract || !body.payload) {
 	    return res.send(400, "Bad request")
 	  }
-		
-	  const file = req.body.file
-		const requester = req.body.requester
-		const dappcontract = req.body.dappcontract
 		const kms = new KMS(config)
-		const data = await kms.read(file, requester, dappcontract)
+		console.log("calling kms.read")
+		const data = await kms.read(body.file, body.requester, body.dappcontract, body.payload)
 		console.log("Read data from kms: ", data)
 		res.send(data)
 	} catch(e) {

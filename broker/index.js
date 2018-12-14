@@ -14,7 +14,7 @@ try {
 	console.log("../common/config.js not found. Please copy ../common/config.js-example to ../common/config.js and modify to your needs.")
 	process.exit(1)
 }
-import { get_node_urls, all_nodes, contract } from './helpers'
+import { get_node_urls, all_nodes, contract, fetch_from_ipfs } from './helpers'
 
 const server = restify.createServer()
 server.use(restify.plugins.bodyParser())
@@ -41,7 +41,7 @@ server.post('/store/', async function(req, res, next) {
 })
 
 server.post('/read/', async function(req, res, next) {
-  // console.log('Received read requests', req.body)
+  console.log('Received read requests', req.body)
 	try { 
 	  await broker_read(req, res)
 	} catch(err) {
@@ -69,11 +69,12 @@ async function broker_store(req, res) {
 	})
 	const response = await Promise.all(promises)
 	console.log('Finished Sending to all Nodes')
-	console.log("Data: ", response.data)
-	res.send(response.data)
+	// console.log("Response: ", response)
+	res.send('okay')
 }
 
 async function broker_read(req, res) {
+	console.log("broker_read")
 	if(!req.body || !req.body.file || !req.body.requester || !req.body.dappcontract) {
 		return res.send(400, "Bad request")
 	}
@@ -83,15 +84,21 @@ async function broker_read(req, res) {
 	const dappcontract = req.body.dappcontract
 	
 	const store_trace = await Backend.get_store_trace(dappcontract, file)
-	const payload = JSON.parse(store_trace.data)
+	// console.log("store_trace: ", store_trace)
+	const hash = store_trace.data
+	console.log("hash: ", hash)
+	
+	const payload = JSON.parse(await fetch_from_ipfs(hash))
+	console.log("payload: ", payload)
 	const nodes = await get_node_urls(payload, dappcontract, file)
 
 	const promises = nodes.map(node => {
-		// console.log("nodes.map: ", node)
+		console.log("nodes.map: ", node)
 		return axios.post(node.url + '/read/', {
 				file: file,
 				requester: requester,
 				dappcontract: dappcontract,
+				payload: payload,
 			})
 	})
 	console.log("payload.threshold: ", payload.threshold)
