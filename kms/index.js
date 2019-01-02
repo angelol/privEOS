@@ -1,11 +1,13 @@
 'use strict'
 const restify = require('restify')
 const assert = require('assert')
+const log = require('loglevel')
+
 var config
 try {
 	config = require('../common/config')
 } catch(e) {
-	console.log("../common/config.js not found. Please copy ../common/config.js-example to ../common/config.js and modify to your needs.")
+	log.error("../common/config.js not found. Please copy ../common/config.js-example to ../common/config.js and modify to your needs.")
 	process.exit(1)
 }
 const KMS = require('./kms')
@@ -27,16 +29,16 @@ server.post('/store/', async function(req, res, next) {
 		if(!body || !body.file || !body.data || !body.owner || !body.dappcontract) {
 	    return res.send(400, "Bad request")
 	  }
-		console.log("Ohai Store")
+		log.debug("Ohai Store")
 		const kms = new KMS(config)
 		const data = await kms.store(body.file, body.data, body.owner, body.dappcontract)
 		res.send("okay")
 	} catch(e) {
 		if(e instanceof KMS.UserNotAuthorized) {
-			console.log(e)
+			log.warn(e)
 			res.send(403, "Not authorised")
 		} else {
-			console.log(e)
+			log.warn(e)
 			res.send(500, "Generic Error")
 		}
 	}
@@ -50,25 +52,24 @@ server.post('/read/', async function(req, res, next) {
 	    return res.send(400, "Bad request")
 	  }
 		const kms = new KMS(config)
-		console.log("calling kms.read")
+		log.debug("calling kms.read")
 		const data = await kms.read(body.file, body.requester, body.dappcontract, body.payload)
-		console.log("Read data from kms: ", data)
+		log.debug("Read data from kms: ", data)
 		res.send(data)
 	} catch(e) {
 		if(e instanceof KMS.UserNotAuthorized) {
-			console.log(e)
+			log.warn(e)
 			res.send(403, "Not authorised")
 		} else {
-			console.log(e)
+			log.warn(e)
 			res.send(500, "Generic Error")
 		}
 	}
   next()
 })
 
-console.log("PORT: ", config.kmsPort)
 server.listen(config.kmsPort, "127.0.0.1", function() {
-  console.log('%s listening at %s', server.name, server.url)
+  log.info('PrivEOS KMS listening on port ', config.kmsPort)
 	process.send('ready')
 })
 

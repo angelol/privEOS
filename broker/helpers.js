@@ -2,6 +2,7 @@ const Eos = require('eosjs')
 const config = require('../common/config')
 const ipfsClient = require('ipfs-http-client')
 global.Promise = require('bluebird')
+const log = require('loglevel')
 
 const eos = Eos({httpEndpoint: config.httpEndpoint, chainId: config.chainId})
    
@@ -20,9 +21,9 @@ async function all_nodes() {
 
 async function fetch_from_ipfs(hash) {
   const ipfs = ipfsClient(config.ipfsConfig.host, config.ipfsConfig.port, {'protocol': config.ipfsConfig.protocol})
-  console.log("Ohai fetch_from_ipfs")
+  log.debug("Ohai fetch_from_ipfs")
   const result = await ipfs.get(`/ipfs/${hash}`).timeout(1000, "Retrieving from ipfs should not block if data is pinned locally")
-  console.log("ipfs result: ", result[0])
+  log.debug("ipfs result: ", result[0])
   return result[0].content.toString('utf8')
 }
 

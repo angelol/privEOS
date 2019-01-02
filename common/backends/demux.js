@@ -1,6 +1,7 @@
 const mongo = require('../mongo.js')
 const config = require('../config')
 const assert = require('assert')
+const log = require('loglevel')
 
 async function store_data(file, data, hash, owner, dappcontract) {
   const db = await mongo.db()
@@ -33,7 +34,7 @@ async function get_store_trace(dappcontract, file) {
 }
 
 async function get_accessgrant_trace(dappcontract, user, file) {
-  // console.log(`get_accessgrant_trace: ${user} ${file}`)
+  log.debug(`get_accessgrant_trace: ${user} ${file}`)
   const db = await mongo.db()
   const params = {
     "account" : config.contract, 
@@ -42,16 +43,15 @@ async function get_accessgrant_trace(dappcontract, user, file) {
     "data.user": user,
     "data.contract": dappcontract,
   }
-  // console.log("params: ", params)
   const items = await db.collection('accessgrant')
     .find(params)
 		.sort({"blockNumber": -1})
     .limit(1)
 		.toArray()
-  console.log("items: ", items)
+  log.debug("items: ", items)
   const trace = items[0]
   assert.ok(trace, "Backend Error, no accessgrant action found")
-	console.log("accessgrant check trace: ", trace.data);
+	log.debug("accessgrant check trace: ", trace.data);
   return trace.data
 }
 

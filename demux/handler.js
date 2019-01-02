@@ -31,9 +31,10 @@ const config = require("../common/config.js")
 const mongo = require("../common/mongo")
 const ipfsClient = require('ipfs-http-client')
 const assert = require('assert')
+const log = require('loglevel')
 
 async function insertStore(state, payload, blockInfo, context) {
-  console.log("insertStore: payload.data: ", payload.data)
+  log.debug("insertStore: payload.data: ", payload.data)
   const doc = Object.assign(payload, blockInfo)
   try {
     const db = await mongo.db()
@@ -50,46 +51,33 @@ async function insertStore(state, payload, blockInfo, context) {
     const hash = payload.data.data
     const res = await db.collection('data').findOne({hash})
     if(!res || !res.data) {
-      console.log("Error: Could not find store transaction payload in local database")
+      log.error("Error: Could not find store transaction payload in local database")
       return
     }
-    console.log("full data retrieved from db: ", res.data)
+    log.debug("full data retrieved from db: ", res.data)
     
     const ipfs = ipfsClient(config.ipfsConfig.host, config.ipfsConfig.port, {'protocol': config.ipfsConfig.protocol})
     const buffer = Buffer.from(res.data)
     const results = await ipfs.add(buffer)
     const ipfs_hash = results[0].hash
-    console.log("ipfs_hash: ", ipfs_hash)
+    log.debug("ipfs_hash: ", ipfs_hash)
     assert.equal(hash, ipfs_hash, "Hashes differ, this should not be possible")
     
     
   } catch(e) {
-    console.log(e)
+    log.error(e)
     process.exit(1)
   }
-  
-  // const ipfs_hash = payload.data.data
-  // console.log("IPFS HASH: ", ipfs_hash)
-  // const ipfs = ipfsClient('localhost', '5001', { protocol: 'http' })
-  // const res = await ipfs.pin.add(ipfs_hash)
-  // console.log("IPFS res: ", res)
-  // 
-  // ipfs.files.stat(`/ipfs/${ipfs_hash}`, (err, stats) => {
-  //   console.log(stats)
-  //   if(stats.size > 25000) {
-  //     console.log("File is too big! ", stats.size)
-  //   }
-  // })
 }
 
 async function insertAccessgrant(state, payload, blockInfo, context) {
-  console.log("insertAccessgrant: payload.data: ", payload.data)
+  log.debug("insertAccessgrant: payload.data: ", payload.data)
   const doc = Object.assign(payload, blockInfo)
   try {
     const db = await mongo.db()
     db.collection('accessgrant').insertOne(doc)
   } catch(e) {
-    console.log(e)
+    log.error(e)
     process.exit(1)
   }
 }

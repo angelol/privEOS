@@ -3,6 +3,7 @@ const assert = require('assert')
 const config = require('../common/config')
 const encryption_service = require('./proxy')
 const getMultiHash = require('../common/multihash')
+const log = require('loglevel')
 
 class UserNotAuthorized extends Error {}
 
@@ -17,29 +18,28 @@ class KMS {
   }
       
   async read(file, requester, dappcontract, data) {
-    console.log("Ohai read")
+    log.debug("Ohai read")
     const [store_trace, accessgrant_trace] = await Promise.all([
   		Backend.get_store_trace(dappcontract, file),
   		Backend.get_accessgrant_trace(dappcontract, requester, file),
   	])    
     if(!store_trace || !accessgrant_trace) {
-      console.log("User is not authorised")
+      log.error("User is not authorised")
 			throw new UserNotAuthorized("User is not authorised")
 		}
-    console.log("data.data: ", JSON.stringify(data))
-    console.log("store_trace.data: ", store_trace.data)
+    log.debug("data.data: ", JSON.stringify(data))
+    log.debug("store_trace.data: ", store_trace.data)
     
     const hash = await getMultiHash(JSON.stringify(data))
     assert.equal(store_trace.data, hash)
     // const data = JSON.parse(store_trace.data)
 		const nodes = data.data
-		console.log("DATA: ", JSON.stringify(data, null, 2))
-		// console.log("Original nodes: ", JSON.stringify(nodes))
+		log.debug("DATA: ", JSON.stringify(data, null, 2))
 		const my_share = nodes.filter(x => x.node == this.config.nodeAccount)[0]
-		console.log("my_share: ", JSON.stringify(my_share, null, 2))
+		log.debug("my_share: ", JSON.stringify(my_share, null, 2))
 		assert.notEqual(null, my_share, "my_share not found!")
 
-    console.log(`Decrypt for public key ${data.public_key}`)
+    log.debug(`Decrypt for public key ${data.public_key}`)
     
     const share = await encryption_service.reencrypt({
       share: my_share,

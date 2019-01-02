@@ -7,12 +7,13 @@ axios.defaults.timeout = 2500;
 
 const Promise = require('bluebird')
 const Backend = require('../common/backend')
+const log = require('loglevel')
 
 var config
 try {
 	config = require('../common/config')
 } catch(e) {
-	console.log("../common/config.js not found. Please copy ../common/config.js-example to ../common/config.js and modify to your needs.")
+	log.error("../common/config.js not found. Please copy ../common/config.js-example to ../common/config.js and modify to your needs.")
 	process.exit(1)
 }
 const { get_node_urls, all_nodes, contract, fetch_from_ipfs } = require('./helpers')
@@ -35,18 +36,18 @@ server.post('/store/', async function(req, res, next) {
 	try { 
 		await broker_store(req, res)
 	} catch(err) {
-		console.log("Error: ", err)
+		log.error("Error: ", err)
 		res.send(500, "Generic Error")
 	}
 	next()
 })
 
 server.post('/read/', async function(req, res, next) {
-  console.log('Received read requests', req.body)
+  log.debug('Received read requests', req.body)
 	try { 
 	  await broker_read(req, res)
 	} catch(err) {
-    console.log("Error: ", err)
+    log.error("Error: ", err)
     res.send(500, "Generic Error")
   }
   next()
@@ -57,10 +58,10 @@ async function broker_store(req, res) {
 	if(!body || !body.file || !body.data || !body.owner || !body.dappcontract) {
 		return res.send(400, "Bad request")
 	}
-	console.log("Ohai broker_store")
+	log.debug("Ohai broker_store")
 	const nodes = await all_nodes()
 	const promises = nodes.map(node => {
-		// console.log("nodes.map: ", node)
+		log.debug("nodes.map: ", node)
 		return axios.post(node.url + '/store/', {
 				file: body.file,
 				owner: body.owner,
@@ -69,13 +70,13 @@ async function broker_store(req, res) {
 			})
 	})
 	const response = await Promise.all(promises)
-	console.log('Finished Sending to all Nodes')
+	log.debug('Finished Sending to all Nodes')
 	// console.log("Response: ", response)
 	res.send('okay')
 }
 
 async function broker_read(req, res) {
-	console.log("broker_read")
+	log.debug("broker_read")
 	if(!req.body || !req.body.file || !req.body.requester || !req.body.dappcontract) {
 		return res.send(400, "Bad request")
 	}
@@ -85,16 +86,16 @@ async function broker_read(req, res) {
 	const dappcontract = req.body.dappcontract
 	
 	const store_trace = await Backend.get_store_trace(dappcontract, file)
-	// console.log("store_trace: ", store_trace)
+	log.debug("store_trace: ", store_trace)
 	const hash = store_trace.data
-	console.log("hash: ", hash)
+	log.debug("hash: ", hash)
 	
 	const payload = JSON.parse(await fetch_from_ipfs(hash))
-	console.log("payload: ", payload)
+	log.debug("payload: ", payload)
 	const nodes = await get_node_urls(payload, dappcontract, file)
 
 	const promises = nodes.map(node => {
-		console.log("nodes.map: ", node)
+		log.debug("nodes.map: ", node)
 		return axios.post(node.url + '/read/', {
 				file: file,
 				requester: requester,
@@ -102,15 +103,15 @@ async function broker_read(req, res) {
 				payload: payload,
 			})
 	})
-	console.log("payload.threshold: ", payload.threshold)
+	log.debug("payload.threshold: ", payload.threshold)
 	let data = await Promise.some(promises, payload.threshold)
 	data = data.map(x => x.data)
-	console.log('Finished Sending to all Nodes')
+	log.debug('Finished Sending to all Nodes')
 	res.send(data)
 }
 
 server.listen(config.brokerPort, "127.0.0.1", function() {
-  console.log('Broker %s listening at %s', server.name, server.url)
+  log.info('Broker %s listening at %s', server.name, server.url)
 	process.send('ready')
 })
 

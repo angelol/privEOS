@@ -4,6 +4,7 @@ const eosjs_ecc = require('eosjs-ecc')
 const ByteBuffer = require('bytebuffer')
 const fs = require('fs')
 const assert = require('assert')
+const log = require('loglevel')
 
 
 function main() {
@@ -22,7 +23,7 @@ function secure_permissions() {
   const stat = fs.statSync(config_path)
   if(stat.mode != 33152) {
     fs.chmod(config_path, 0o600, () => {
-      console.log("Setting permissions of config.js to 600")
+      log.info("Setting permissions of config.js to 600")
     })  
   }
 }
@@ -53,16 +54,13 @@ function start_server() {
       chunks.push(chunk)
     }).on('end', () => {
       const body = Buffer.concat(chunks).toString()
-      console.log("url: ", url)
-      console.log("Body: ", body)
-      
       const payload = JSON.parse(body)
       
       if(url == '/reencrypt/') {
         try {
           reencrypt(payload, response)
         } catch(e) {
-          console.log(e)
+          log.error(e)
           response.statusCode = 500;
           response.write("Internal Server Error")
         }
@@ -80,12 +78,13 @@ function start_server() {
 
 function reencrypt(payload, response) {
   const node_public_key = payload.share.public_key
-  console.log("node_public_key: ", node_public_key)
   const private_key = config.keys[node_public_key]
-  assert.ok(private_key, "Private Key not found")
+  if(!private_key) {
+    log.error("Private Key not found")
+    response.write(404, "Private Key not found")
+  }
   
   const plaintext = eosjs_ecc.Aes.decrypt(private_key, payload.public_key, payload.share.nonce, ByteBuffer.fromHex(payload.share.message).toBinary(), payload.share.checksum)
-  console.log(`Decrypt result" "${String(plaintext)}"`)
   
   const share = eosjs_ecc.Aes.encrypt(config.currentPrivateKey, payload.recipient_public_key, String(plaintext))	
 
@@ -94,10 +93,8 @@ function reencrypt(payload, response) {
     nonce: String(share.nonce),
     checksum: share.checksum,
   })
-  console.log(`Encrypt result: "${json}"`)
   response.setHeader('Content-Type', 'application/json')
   response.write(json)
-  
 }
 
 main()

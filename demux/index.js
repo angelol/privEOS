@@ -15,6 +15,7 @@ const { NodeosActionReader } = require("demux-eos") // eslint-disable-line
 const ObjectActionHandler = require("./ObjectActionHandler")
 const handlerVersion = require("./handler")
 const mongo = require("../common/mongo")
+const log = require('loglevel')
 
 /*
  * This ObjectActionHandler, which does not change the signature from its parent AbstractActionHandler, takes an array
@@ -31,7 +32,7 @@ async function start() {
   if(starting_block != 0) {
     starting_block += 1
   }
-  console.log("starting_block: ", starting_block)
+  log.info("starting_block: ", starting_block)
   const actionReader = new NodeosActionReader(
     config.httpEndpoint,
     starting_block,

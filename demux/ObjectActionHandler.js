@@ -29,6 +29,7 @@
 const assert = require('assert')
 const { AbstractActionHandler } = require("demux")
 const mongo = require("../common/mongo")
+const log = require('loglevel')
 
 class ObjectActionHandler extends AbstractActionHandler {
 
@@ -52,7 +53,7 @@ class ObjectActionHandler extends AbstractActionHandler {
         }
       }
     } catch(e) {
-      console.log(e)
+      log.error(e)
       process.exit(1)
     }
     
@@ -71,20 +72,20 @@ class ObjectActionHandler extends AbstractActionHandler {
         handlerVersionName: handlerVersionName,
       }, { upsert: true})
     } catch(e) {
-      console.log(e)
+      log.error(e)
       process.exit(1)
     }
   }
 
   async rollbackTo(blockNumber) {
-    console.log("rollbackTo ", blockNumber)
+    log.info("rollbackTo ", blockNumber)
     try {
       const db = await mongo.db()
-      console.log("Deleteing all txs with block number > ", blockNumber)
+      log.debug("Deleteing all txs with block number > ", blockNumber)
       db.collection('accessgrant').deleteMany({"blockNumber": { $gt: blockNumber }})
       db.collection('store').deleteMany({"blockNumber": { $gt: blockNumber }})
     } catch(e) {
-      console.log(e)
+      log.error(e)
       process.exit(1)
     }
   }
@@ -101,7 +102,7 @@ class ObjectActionHandler extends AbstractActionHandler {
         return 0
       }
     } catch(e) {
-      console.log(e)
+      log.error(e)
       process.exit(1)
     }
   }

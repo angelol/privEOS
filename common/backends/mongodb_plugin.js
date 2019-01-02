@@ -1,5 +1,6 @@
 const mongo = require('../mongo.js')
 const config = require('../config')
+const log = require('loglevel')
 
 async function get_store_trace(dappcontract, file) {
   const db = await mongo.db()
@@ -32,7 +33,7 @@ async function get_accessgrant_trace(user, file) {
     .limit(1)
 		.toArray()
   const trace = items[0]
-	console.log("accessgrant check trace: ", trace);
+	log.debug("accessgrant check trace: ", trace);
   return trace
 }
 

@@ -1,6 +1,7 @@
 const MongoClient = require('mongodb')
 const config = require('./config')
 const assert = require("assert")
+const log = require('loglevel')
 
 /**
   * MongoDB convenience class
@@ -22,10 +23,9 @@ class Mongo {
     */
   async db() {
     if(this._db) {
-      // console.log("Already connected, returning this.db")
+      log.debug("Already connected, returning this.db")
       return this._db
     }
-    // console.log("this.url: ", this.url)
     const conn = await MongoClient.connect(this.url, { 
       useNewUrlParser: true,
       autoReconnect: true,
@@ -33,7 +33,7 @@ class Mongo {
       bufferMaxEntries: 0,
     })
     assert.ok(conn, "Could not establish connection to MongoDB")
-    // console.log("Mongodb connection established")
+    log.debug("Mongodb connection established")
     this._db = conn.db(this.dbName)
     return this._db
   }
