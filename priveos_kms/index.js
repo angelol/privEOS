@@ -1,6 +1,6 @@
 'use strict'
-import restify from 'restify'
-import assert from 'assert'
+const restify = require('restify')
+const assert = require('assert')
 var config
 try {
 	config = require('../common/config')
@@ -8,7 +8,7 @@ try {
 	console.log("../common/config.js not found. Please copy ../common/config.js-example to ../common/config.js and modify to your needs.")
 	process.exit(1)
 }
-import KMS from './kms'
+const KMS = require('./kms')
 
 if(process.argv[2]) {
 	config.KMS_PORT = process.argv[2]

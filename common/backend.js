@@ -1,4 +1,4 @@
-import config from './config'
+const config = require('./config')
 
 var db_module
 
@@ -11,4 +11,4 @@ else if(config.backend == 'mongodb_plugin') {
   throw 'Please select a valid database backend'
 }
 
-export default db_module
+module.exports = db_module

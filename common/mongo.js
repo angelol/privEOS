@@ -1,6 +1,6 @@
-import MongoClient from 'mongodb'
-import config from './config'
-import assert from "assert"
+const MongoClient = require('mongodb')
+const config = require('./config')
+const assert = require("assert")
 
 /**
   * MongoDB convenience class
@@ -10,7 +10,7 @@ import assert from "assert"
   * const mongo = new Mongo(mongoUrl, dbName)
   * const db = await mongo.db()
   */
-export class Mongo {
+class Mongo {
   constructor(url, dbName) {
     this.url = url
     this.dbName = dbName
@@ -38,7 +38,10 @@ export class Mongo {
     return this._db
   }
 }
-export const mongo = new Mongo(config.mongoUrl, config.dbName)
-
+const mongo = new Mongo(config.mongoUrl, config.dbName)
+module.exports = {
+  mongo,
+  Mongo,
+}
 
 

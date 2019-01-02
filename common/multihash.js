@@ -1,7 +1,7 @@
-import Unixfs from 'ipfs-unixfs'
-import { DAGNode, util } from 'ipld-dag-pb'
+const Unixfs = require('ipfs-unixfs')
+const { DAGNode, util } = require('ipld-dag-pb')
 
-export default function getMultiHash(buffer) {
+function getMultiHash(buffer) {
     const unixFs = new Unixfs("file", buffer)
     return new Promise((resolve, reject) => {
         DAGNode.create(unixFs.marshal(), (err, node) => {
@@ -19,3 +19,5 @@ export default function getMultiHash(buffer) {
         })
     })
 }
+
+module.exports = getMultiHash

@@ -28,7 +28,7 @@
 
 const assert = require('assert')
 const { AbstractActionHandler } = require("demux")
-const { mongo } = require("./mongo")
+const mongo = require("./mongo")
 
 class ObjectActionHandler extends AbstractActionHandler {
 

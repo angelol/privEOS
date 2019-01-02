@@ -1,12 +1,13 @@
 'use strict'
-import restify from 'restify'
-import corsMiddleware from 'restify-cors-middleware'
+const restify = require('restify')
+const corsMiddleware = require('restify-cors-middleware')
 
-import axios from 'axios'
+const axios = require('axios')
 axios.defaults.timeout = 2500;
 
-import Promise from 'bluebird'
-import Backend from '../common/backend'
+const Promise = require('bluebird')
+const Backend = require('../common/backend')
+
 var config
 try {
 	config = require('../common/config')
@@ -14,7 +15,7 @@ try {
 	console.log("../common/config.js not found. Please copy ../common/config.js-example to ../common/config.js and modify to your needs.")
 	process.exit(1)
 }
-import { get_node_urls, all_nodes, contract, fetch_from_ipfs } from './helpers'
+const { get_node_urls, all_nodes, contract, fetch_from_ipfs } = require('./helpers')
 
 const server = restify.createServer()
 server.use(restify.plugins.bodyParser())

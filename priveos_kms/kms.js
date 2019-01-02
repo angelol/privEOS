@@ -1,12 +1,12 @@
-import Backend from '../common/backend'
-import assert from 'assert'
-import config from '../common/config'
-import encryption_service from './proxy'
-import getMultiHash from '../common/multihash'
+const Backend = require('../common/backend')
+const assert = require('assert')
+const config = require('../common/config')
+const encryption_service = require('./proxy')
+const getMultiHash = require('../common/multihash')
 
 class UserNotAuthorized extends Error {}
 
-export default class KMS {
+class KMS {
   constructor(config) {
     this.config = config
   }
@@ -55,3 +55,5 @@ export default class KMS {
   }
 }
 KMS.UserNotAuthorized = UserNotAuthorized
+
+module.exports = KMS

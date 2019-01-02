@@ -28,9 +28,9 @@
  * https://github.com/EOSIO/demux-js/blob/develop/examples/eos-transfers/ObjectActionHandler.js
 */
 
-import { mongo } from "./mongo"
-import ipfsClient from 'ipfs-http-client'
-import assert from 'assert'
+const mongo = require("./mongo")
+const ipfsClient = require('ipfs-http-client')
+const assert = require('assert')
 
 async function insertStore(state, payload, blockInfo, context) {
   console.log("insertStore: payload.data: ", payload.data)

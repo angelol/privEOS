@@ -1,5 +1,5 @@
-import { mongo } from '../mongo.js'
-import config from '../config'
+const { mongo } = require('../mongo.js')
+const config = require('../config')
 
 async function get_store_trace(dappcontract, file) {
   const db = await mongo.db()

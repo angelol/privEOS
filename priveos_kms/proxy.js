@@ -1,5 +1,5 @@
-import axios from 'axios'
-import { encryptionServiceUrl } from '../common/config'
+const axios = require('axios')
+const { encryptionServiceUrl } = require('../common/config')
 
 class Proxy {
   async reencrypt(payload) {
@@ -8,4 +8,4 @@ class Proxy {
   }
 }
 
-export default new Proxy()
+module.exports = new Proxy()

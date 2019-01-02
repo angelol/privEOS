@@ -13,7 +13,7 @@ const { BaseActionWatcher } = require("demux")
 const { NodeosActionReader } = require("demux-eos") // eslint-disable-line
 const ObjectActionHandler = require("./ObjectActionHandler")
 const handlerVersion = require("./handler")
-const { mongo } = require("./mongo")
+const mongo = require("./mongo")
 
 /*
  * This ObjectActionHandler, which does not change the signature from its parent AbstractActionHandler, takes an array

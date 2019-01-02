@@ -1,6 +1,6 @@
-import { mongo } from '../mongo.js'
-import config from '../config'
-import assert from 'assert'
+const { mongo } = require('../mongo.js')
+const config = require('../config')
+const assert = require('assert')
 
 async function store_data(file, data, hash, owner, dappcontract) {
   const db = await mongo.db()
@@ -55,7 +55,7 @@ async function get_accessgrant_trace(dappcontract, user, file) {
   return trace.data
 }
 
-export {
+module.exports = {
   store_data,
   get_store_trace,
   get_accessgrant_trace,
