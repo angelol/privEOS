@@ -1,0 +1,33 @@
+apps:
+  - script : index.js
+    cwd    : broker
+    name: broker
+  - script : index.js
+    cwd    : encryption_service
+    name   : encryption_service
+  - script : index.js
+    cwd    : demux
+    name   : demux
+    
+    
+  - script : index.js
+    cwd    : kms
+    name   : kms
+    args   : 3001 testnodexxx1
+  - script : index.js
+    cwd    : kms
+    name   : kms
+    args   : 3002 testnodexxx2
+  - script : index.js
+    cwd    : kms
+    name   : kms
+    args   : 3003 testnodexxx3
+  - script : index.js
+    cwd    : kms
+    name   : kms
+    args   : 3004 testnodexxx4
+  - script : index.js
+    cwd    : kms
+    name   : kms
+    args   : 3005 testnodexxx5
+ 
