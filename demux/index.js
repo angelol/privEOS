@@ -44,7 +44,9 @@ async function start() {
     100,
   )
 
-  process.send('ready')
+  if(process.send) {
+    process.send('ready')    
+  }
   actionWatcher.watch()
 }
 start()

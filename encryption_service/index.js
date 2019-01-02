@@ -72,7 +72,9 @@ function start_server() {
       response.end()
     })
   }).listen(config.listenPort, "127.0.0.1", () => {
-    process.send('ready')
+    if(process.send) {
+      process.send('ready')
+    }
   })
 }
 

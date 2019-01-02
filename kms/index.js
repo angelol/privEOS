@@ -70,7 +70,9 @@ server.post('/read/', async function(req, res, next) {
 
 server.listen(config.kmsPort, "127.0.0.1", function() {
   log.info('PrivEOS KMS listening on port ', config.kmsPort)
-	process.send('ready')
+	if(process.send) {
+		process.send('ready')		
+	}
 })
 
 
