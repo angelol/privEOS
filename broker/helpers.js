@@ -18,7 +18,7 @@ async function all_nodes() {
 }
 
 async function fetch_from_ipfs(hash) {
-  const ipfs = ipfsClient('localhost', '5001', { protocol: 'http' })
+  const ipfs = ipfsClient(config.ipfsConfig.host, config.ipfsConfig.port, {'protocol': config.ipfsConfig.protocol})
   const result = await ipfs.get(`/ipfs/${hash}`)
   console.log("ipfs result: ", result[0])
   return result[0].content.toString('utf8')

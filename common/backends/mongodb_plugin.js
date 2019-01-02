@@ -1,4 +1,4 @@
-const { mongo } = require('../mongo.js')
+const mongo = require('../mongo.js')
 const config = require('../config')
 
 async function get_store_trace(dappcontract, file) {

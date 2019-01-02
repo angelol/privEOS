@@ -27,8 +27,8 @@
  * provided `state` object. Refer to the ObjectActionHandler implementation for `state`:
  * https://github.com/EOSIO/demux-js/blob/develop/examples/eos-transfers/ObjectActionHandler.js
 */
-
-const mongo = require("./mongo")
+const config = require("../common/config.js")
+const mongo = require("../common/mongo")
 const ipfsClient = require('ipfs-http-client')
 const assert = require('assert')
 
@@ -40,9 +40,13 @@ async function insertStore(state, payload, blockInfo, context) {
     db.collection('store').insertOne(doc)
     const hash = payload.data.data
     const res = await db.collection('data').findOne({hash})
+    if(!res || !res.data) {
+      console.log("Error: Could not find store transaction payload in local database")
+      return
+    }
     console.log("full data retrieved from db: ", res.data)
     
-    const ipfs = ipfsClient('localhost', '5001', { protocol: 'http' })
+    const ipfs = ipfsClient(config.ipfsConfig.host, config.ipfsConfig.port, {'protocol': config.ipfsConfig.protocol})
     const buffer = Buffer.from(res.data)
     const results = await ipfs.add(buffer)
     const ipfs_hash = results[0].hash

@@ -38,10 +38,7 @@ class Mongo {
     return this._db
   }
 }
-const mongo = new Mongo(config.mongoUrl, config.dbName)
-module.exports = {
-  mongo,
-  Mongo,
-}
+
+module.exports = new Mongo(config.mongoUrl, config.dbName)
 
 

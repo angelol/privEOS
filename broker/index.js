@@ -109,7 +109,7 @@ async function broker_read(req, res) {
 	res.send(data)
 }
 
-server.listen(config.BROKER_PORT, "127.0.0.1", function() {
+server.listen(config.brokerPort, "127.0.0.1", function() {
   console.log('Broker %s listening at %s', server.name, server.url)
 })
 

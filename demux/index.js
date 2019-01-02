@@ -4,16 +4,17 @@
  */
  var config
  try {
-   config = require("./config.js")  
+   config = require("../common/config.js")  
  } catch(e) {
    console.log("config.js not found. Please copy config.js-example to config.js and modify to your needs.")
+   console.log(e)
    process.exit(1)
  }
 const { BaseActionWatcher } = require("demux")
 const { NodeosActionReader } = require("demux-eos") // eslint-disable-line
 const ObjectActionHandler = require("./ObjectActionHandler")
 const handlerVersion = require("./handler")
-const mongo = require("./mongo")
+const mongo = require("../common/mongo")
 
 /*
  * This ObjectActionHandler, which does not change the signature from its parent AbstractActionHandler, takes an array
@@ -38,7 +39,7 @@ async function start() {
   const actionWatcher = new BaseActionWatcher(
     actionReader,
     actionHandler,
-    config.pollInterval,
+    100,
   )
 
   actionWatcher.watch()

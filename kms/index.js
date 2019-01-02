@@ -11,7 +11,7 @@ try {
 const KMS = require('./kms')
 
 if(process.argv[2]) {
-	config.KMS_PORT = process.argv[2]
+	config.kmsPort = process.argv[2]
 }
 
 if(process.argv[3]) {
@@ -66,8 +66,8 @@ server.post('/read/', async function(req, res, next) {
   next()
 })
 
-console.log("PORT: ", config.KMS_PORT)
-server.listen(config.KMS_PORT, "127.0.0.1", function() {
+console.log("PORT: ", config.kmsPort)
+server.listen(config.kmsPort, "127.0.0.1", function() {
   console.log('%s listening at %s', server.name, server.url)
 })
 
