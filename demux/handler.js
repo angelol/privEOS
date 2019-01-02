@@ -38,6 +38,15 @@ async function insertStore(state, payload, blockInfo, context) {
   try {
     const db = await mongo.db()
     db.collection('store').insertOne(doc)
+
+    /**
+      * The store transaction in the blockchain only contains a multihash
+      * of the privEOS data. Use this hash to retrieve the full data from
+      * the temporary database and store it in IPFS.
+      *
+      * As is common practive, we are using IPFS to not unnecessarily 
+      * bloat the on-chain transactions with binary data. 
+      */
     const hash = payload.data.data
     const res = await db.collection('data').findOne({hash})
     if(!res || !res.data) {
