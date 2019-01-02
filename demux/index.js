@@ -16,6 +16,7 @@ const ObjectActionHandler = require("./ObjectActionHandler")
 const handlerVersion = require("./handler")
 const mongo = require("../common/mongo")
 const log = require('loglevel')
+log.setDefaultLevel(config.logLevel)
 
 /*
  * This ObjectActionHandler, which does not change the signature from its parent AbstractActionHandler, takes an array

@@ -27,9 +27,11 @@
 
 
 const assert = require('assert')
+const config = require("../common/config.js")
 const { AbstractActionHandler } = require("demux")
 const mongo = require("../common/mongo")
 const log = require('loglevel')
+log.setDefaultLevel(config.logLevel)
 
 class ObjectActionHandler extends AbstractActionHandler {
 

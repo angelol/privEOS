@@ -3,6 +3,7 @@ const config = require('../common/config')
 const ipfsClient = require('ipfs-http-client')
 global.Promise = require('bluebird')
 const log = require('loglevel')
+log.setDefaultLevel(config.logLevel)
 
 const eos = Eos({httpEndpoint: config.httpEndpoint, chainId: config.chainId})
    

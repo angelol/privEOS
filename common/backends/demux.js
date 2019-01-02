@@ -2,6 +2,7 @@ const mongo = require('../mongo.js')
 const config = require('../config')
 const assert = require('assert')
 const log = require('loglevel')
+log.setDefaultLevel(config.logLevel)
 
 async function store_data(file, data, hash, owner, dappcontract) {
   const db = await mongo.db()

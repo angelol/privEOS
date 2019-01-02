@@ -5,7 +5,7 @@ const ByteBuffer = require('bytebuffer')
 const fs = require('fs')
 const assert = require('assert')
 const log = require('loglevel')
-
+log.setDefaultLevel(config.logLevel || 'info')
 
 function main() {
   secure_permissions()

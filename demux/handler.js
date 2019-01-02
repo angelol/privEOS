@@ -32,6 +32,7 @@ const mongo = require("../common/mongo")
 const ipfsClient = require('ipfs-http-client')
 const assert = require('assert')
 const log = require('loglevel')
+log.setDefaultLevel(config.logLevel)
 
 async function insertStore(state, payload, blockInfo, context) {
   log.debug("insertStore: payload.data: ", payload.data)

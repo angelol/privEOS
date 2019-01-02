@@ -2,6 +2,7 @@ const MongoClient = require('mongodb')
 const config = require('./config')
 const assert = require("assert")
 const log = require('loglevel')
+log.setDefaultLevel(config.logLevel)
 
 /**
   * MongoDB convenience class
