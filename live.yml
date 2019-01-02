@@ -1,0 +1,15 @@
+apps:
+  - script : index.js
+    cwd    : broker
+    name: broker
+  - script : index.js
+    cwd    : encryption_service
+    name   : encryption_service
+  - script : index.js
+    cwd    : demux
+    name   : demux
+  - script : index.js
+    cwd    : kms
+    name   : kms
+
+ 
