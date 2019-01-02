@@ -53,20 +53,20 @@ function start_server() {
     }).on('data', (chunk) => {
       chunks.push(chunk)
     }).on('end', () => {
-      const body = Buffer.concat(chunks).toString()
-      const payload = JSON.parse(body)
       
       if(url == '/reencrypt/') {
         try {
+          const body = Buffer.concat(chunks).toString()
+          const payload = JSON.parse(body)
           reencrypt(payload, response)
         } catch(e) {
           log.error(e)
-          response.statusCode = 500;
+          response.statusCode = 500
           response.write("Internal Server Error")
         }
       } 
       else {
-        response.statusCode = 404;
+        response.statusCode = 404
         response.write("Not found")
       }
       response.end()
@@ -81,10 +81,7 @@ function start_server() {
 function reencrypt(payload, response) {
   const node_public_key = payload.share.public_key
   const private_key = config.keys[node_public_key]
-  if(!private_key) {
-    log.error("Private Key not found")
-    response.write(404, "Private Key not found")
-  }
+  assert.ok(private_key, "Private Key not found")
   
   const plaintext = eosjs_ecc.Aes.decrypt(private_key, payload.public_key, payload.share.nonce, ByteBuffer.fromHex(payload.share.message).toBinary(), payload.share.checksum)
   
