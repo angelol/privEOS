@@ -3,14 +3,17 @@ apps:
     cwd    : broker
     name   : broker
     watch  : ['.', '../common']
+    wait_ready: true
   - script : index.js
     cwd    : encryption_service
     name   : encryption_service
     watch  : '..'
+    wait_ready: true
   - script : index.js
     cwd    : demux
     name   : demux
     watch  : ['.', '../common']
+    wait_ready: true
     
 # start 5 instances of the KMS for testing
   - script : index.js
@@ -18,24 +21,29 @@ apps:
     name   : kms_1
     args   : 3001 testnodexxx1
     watch  : ['.', '../common']
+    wait_ready: true
   - script : index.js
     cwd    : kms
     name   : kms_2
     args   : 3002 testnodexxx2
     watch  : ['.', '../common']
+    wait_ready: true
   - script : index.js
     cwd    : kms
     name   : kms_3
     args   : 3003 testnodexxx3
     watch  : ['.', '../common']
+    wait_ready: true
   - script : index.js
     cwd    : kms
     name   : kms_4
     args   : 3004 testnodexxx4
     watch  : ['.', '../common']
+    wait_ready: true
   - script : index.js
     cwd    : kms
     name   : kms_5
     args   : 3005 testnodexxx5
     watch  : ['.', '../common']
+    wait_ready: true
  

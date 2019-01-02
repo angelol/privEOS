@@ -73,7 +73,9 @@ function start_server() {
       }
       response.end()
     })
-  }).listen(config.listenPort, "127.0.0.1")
+  }).listen(config.listenPort, "127.0.0.1", () => {
+    process.send('ready')
+  })
 }
 
 function reencrypt(payload, response) {
