@@ -1,6 +1,5 @@
 'use strict'
 const restify = require('restify')
-const assert = require('assert')
 const log = require('loglevel')
 
 var config
@@ -61,7 +60,7 @@ server.post('/read/', async function(req, res, next) {
 			log.warn(e)
 			res.send(403, "Not authorised")
 		} else {
-			log.warn(e)
+			log.error(e)
 			res.send(500, "Generic Error")
 		}
 	}
