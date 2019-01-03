@@ -5,11 +5,6 @@ apps:
     watch  : ['.', '../common']
     wait_ready: true
   - script : index.js
-    cwd    : encryption_service
-    name   : encryption_service
-    watch  : '..'
-    wait_ready: true
-  - script : index.js
     cwd    : demux
     name   : demux
     watch  : ['.', '../common']
