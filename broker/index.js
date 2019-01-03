@@ -33,7 +33,7 @@ const cors = corsMiddleware({
 server.pre(cors.preflight)
 server.use(cors.actual)
 
-server.post('/store/', async function(req, res, next) {
+server.post('/broker/store/', async function(req, res, next) {
 	try { 
 		await broker_store(req, res)
 	} catch(err) {
@@ -43,7 +43,7 @@ server.post('/store/', async function(req, res, next) {
 	next()
 })
 
-server.post('/read/', async function(req, res, next) {
+server.post('/broker/read/', async function(req, res, next) {
   log.debug('Received read requests', req.body)
 	try { 
 	  await broker_read(req, res)
@@ -63,7 +63,7 @@ async function broker_store(req, res) {
 	const nodes = await all_nodes()
 	const promises = nodes.map(node => {
 		log.debug("nodes.map: ", node)
-		return axios.post(node.url + '/store/', {
+		return axios.post(node.url + '/kms/store/', {
 				file: body.file,
 				owner: body.owner,
 				data: body.data,
@@ -97,7 +97,7 @@ async function broker_read(req, res) {
 
 	const promises = nodes.map(node => {
 		log.debug("nodes.map: ", node)
-		return axios.post(node.url + '/read/', {
+		return axios.post(node.url + '/kms/read/', {
 				file: file,
 				requester: requester,
 				dappcontract: dappcontract,

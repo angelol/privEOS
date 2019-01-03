@@ -23,7 +23,7 @@ if(process.argv[3]) {
 var server = restify.createServer()
 server.use(restify.plugins.bodyParser())
 
-server.post('/store/', async function(req, res, next) {
+server.post('/kms/store/', async function(req, res, next) {
 	try {
 		const body = req.body
 		if(!body || !body.file || !body.data || !body.owner || !body.dappcontract) {
@@ -45,7 +45,7 @@ server.post('/store/', async function(req, res, next) {
   next()
 })
 
-server.post('/read/', async function(req, res, next) {
+server.post('/kms/read/', async function(req, res, next) {
 	const body = req.body
 	try {
 		if(!body || !body.file || !body.requester || !body.dappcontract || !body.payload) {
