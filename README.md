@@ -89,44 +89,49 @@ Start service and check log output for potential error messages:
 
     pm2 start live.yml
     pm2 log
-
-### Nginx setup
-The privEOS services are now running but for security reasons, they are only listening on localhost. We are using an Nginx reverse proxy to serve actual user requests.
-
-We are going to configure the broker to run on port 443 to make sure users will see a nice URL. The KMS service is only used internally and communicates only with the brokers, so we can leave that on a higher port.
     
-    server {
-      listen 443;
-      server_name my.server.name;
-      
-      upstream broker {
-        server 127.0.0.1:4000;
-      }
-      
-      location / {
-        proxy_pass http://broker/;
-      }
-    }
-    server {
-      listen 3000;
-      server_name my.server.name;
-      
-      upstream kms {
-        server 127.0.0.1:3000;
-      }
-      
-      location / {
-        proxy_pass http://broker/;
-      }
-    }
-    
-### Register your Node
-
 To install pm2 startup script, run
 
     pm2 save
     pm2 startup
-And execute the suggested command in the output as root.
+And execute the suggested command in the output as root. We should now have two PM2 processes running under different users.
+
+Now it would be a good idea to restart the server to make sure all the services will be started automatically.
+
+### Nginx setup
+The privEOS services are now running but for security reasons, they are only listening on localhost. We are using an Nginx reverse proxy to serve actual user requests. 
+
+Edit your `/etc/nginx/sites-enabled/default` config file to look like this (replace my.server.name with your actual hostname):  
+    
+    upstream broker {
+      server 127.0.0.1:4000;
+    }
+    upstream kms {
+      server 127.0.0.1:3000;
+    }
+    server {
+      listen 443 ssl;
+      server_name my.server.name;
+
+      location /broker/ {
+        proxy_pass http://broker/;
+      }
+      location /kms/ {
+        proxy_pass http://kms/;
+      }
+      location / {
+        deny all;
+      }
+    }
+Install SSL certificate:
+
+    certbot --nginx
+  
+Congratulations! You should now have a working privEOS node.
+    
+### Register your Node
+
+
     
 
 Registering with the Smart Contract
