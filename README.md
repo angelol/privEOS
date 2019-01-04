@@ -64,18 +64,28 @@ Make sure IPFS is automatically started:
     
 When editing the config file, make sure to enter a valid `httpEndpoint` of the chain you want to connect to and a matching `chainId`. Under `nodeAccount`, enter your EOS BP account that you will use to `regnode` with the privEOS contract. If you're following this guide, you don't need to touch the rest of the values.
 
-Start service and check log output:
+Start service and check log output for potential errors:
 
     pm2 start live.yml
     pm2 log
-        
+    
+You can verify that the chain is being indexed by checking mongodb:
 
+    mongo
+    use priveos
+    db.index_state.find()
+
+You should see output like:
+```
+{ "_id" : ObjectId("5c2e8953f62fc5fddc6ecaac"), "blockNumber" : 6939003, "blockHash" : "0069e17b1b722b15d0494a65ed6e845e45a4332f8a71d971a8928a80e768a5da", "isReplay" : false, "handlerVersionName" : "v1" }
+```
 To install pm2 startup script, run
 
     pm2 save
     pm2 startup
 And execute the suggested command in the output as root.
 
+Now let's install the encryption service under a different user.
 
     su - encryptionservice 
     git clone https://github.com/rawrat/priveos-encryption-service.git
@@ -129,14 +139,10 @@ Install SSL certificate:
   
 Congratulations! You should now have a working privEOS node.
     
-### Register your Node
+### Register your Node with the Smart Contract
+Now it's time to `regnode` your node.
 
-
-    
-
-Registering with the Smart Contract
-
-    cleos -u https://jungle2.cryptolions.io push action priveosrules regnode '["slantagnode1", "EOS5aQ2K8Qwgy4XwqQaZV7WuJuNHnmGrXe5RX4ukMtF1FBSJwfAUv", "http://88.99.174.227:3000"]' -p slantagnode1
+    cleos -u https://jungle2.cryptolions.io push action priveosrules regnode '["slantagnode1", "EOS5aQ2K8Qwgy4XwqQaZV7WuJuNHnmGrXe5RX4ukMtF1FBSJwfAUv", "https://slantagnode1.priveos.io"]' -p slantagnode1
     cleos -u https://jungle2.cryptolions.io push action priveosrules setprice '["slantagnode1", "0.0100 EOS", "accessgrant"]' -p slantagnode1
     cleos -u https://jungle2.cryptolions.io push action priveosrules setprice '["slantagnode1", "0.0000 EOS", "store"]' -p slantagnode1
 
