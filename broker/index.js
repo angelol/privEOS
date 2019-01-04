@@ -8,6 +8,7 @@ axios.defaults.timeout = 2500;
 const Promise = require('bluebird')
 const Backend = require('../common/backend')
 const log = require('loglevel')
+const { URL } = require('url')
 
 var config
 try {
@@ -63,7 +64,8 @@ async function broker_store(req, res) {
 	const nodes = await all_nodes()
 	const promises = nodes.map(node => {
 		log.debug("nodes.map: ", node)
-		return axios.post(node.url + '/kms/store/', {
+		const url = new URL('/kms/store/', node.url).href
+		return axios.post(url, {
 				file: body.file,
 				owner: body.owner,
 				data: body.data,
@@ -97,7 +99,8 @@ async function broker_read(req, res) {
 
 	const promises = nodes.map(node => {
 		log.debug("nodes.map: ", node)
-		return axios.post(node.url + '/kms/read/', {
+		const url = new URL('/kms/read/', node.url).href
+		return axios.post(url, {
 				file: file,
 				requester: requester,
 				dappcontract: dappcontract,
