@@ -17,7 +17,7 @@ try {
 	log.error("../common/config.js not found. Please copy ../common/config.js-example to ../common/config.js and modify to your needs.")
 	process.exit(1)
 }
-const { get_node_urls, all_nodes, contract, fetch_from_ipfs } = require('./helpers')
+const { get_nodes, all_nodes, contract, fetch_from_ipfs } = require('./helpers')
 
 const server = restify.createServer()
 server.use(restify.plugins.bodyParser())
@@ -93,7 +93,7 @@ async function broker_read(req, res) {
 	
 	const payload = JSON.parse(await fetch_from_ipfs(hash))
 	log.debug("payload: ", payload)
-	const nodes = await get_node_urls(payload, dappcontract, file)
+	const nodes = await get_nodes(payload, dappcontract, file)
 
 	const promises = nodes.map(node => {
 		log.debug("nodes.map: ", node)

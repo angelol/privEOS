@@ -7,17 +7,16 @@ log.setDefaultLevel(config.logLevel)
 
 const eos = Eos({httpEndpoint: config.httpEndpoint, chainId: config.chainId})
    
-
-async function get_node_urls(payload, dappcontract, file) {
-  const nodes = payload.data
-  const owners = nodes.map(value => value.node)
-  const res = await eos.getTableRows({json:true, scope: config.contract, code: config.contract,  table: 'nodes', limit:100})
-  return res.rows.filter(x => owners.includes(x.owner))
-}
-
 async function all_nodes() {
   const res = await eos.getTableRows({json:true, scope: config.contract, code: config.contract,  table: 'nodes', limit:100})
   return res.rows.filter(x => x.is_active)
+}
+
+async function get_nodes(payload, dappcontract, file) {
+  const nodes = payload.data
+  const owners = nodes.map(value => value.node)
+  const active_nodes = await all_nodes()
+  return active_nodes.filter(x => owners.includes(x.owner))
 }
 
 async function fetch_from_ipfs(hash) {
@@ -29,7 +28,7 @@ async function fetch_from_ipfs(hash) {
 }
 
 module.exports = {
-  get_node_urls,
+  get_nodes,
   all_nodes,
   fetch_from_ipfs,
 }
