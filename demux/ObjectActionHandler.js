@@ -85,8 +85,8 @@ class ObjectActionHandler extends AbstractActionHandler {
     try {
       const db = await mongo.db()
       log.info("Deleteing all txs with block number > ", blockNumber)
-      db.collection('accessgrant').deleteMany({"blockNumber": { $gt: blockNumber }}).timeout(10000, "Timeout while deleteMany accessgrant")
-      db.collection('store').deleteMany({"blockNumber": { $gt: blockNumber }}).timeout(10000, "Timeout while deleteMany store")
+      await db.collection('accessgrant').deleteMany({"blockNumber": { $gt: blockNumber }}).timeout(10000, "Timeout while deleteMany accessgrant")
+      await db.collection('store').deleteMany({"blockNumber": { $gt: blockNumber }}).timeout(10000, "Timeout while deleteMany store")
       log.info("Done deleting")
     } catch(e) {
       log.error(e)
