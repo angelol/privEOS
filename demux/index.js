@@ -63,7 +63,7 @@ async function ensure_consistency() {
     return
   }
   await actionHandler.rollbackTo(current_block - 1)
-  actionHandler.updateIndexState(null, {
+  await actionHandler.updateIndexState(null, {
     blockInfo: {
       blockNumber: current_block - 1,
       blockHash: "",
