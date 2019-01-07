@@ -25,7 +25,6 @@ class Mongo {
     */
   async db() {
     if(this._db) {
-      log.debug("Already connected, returning this.db")
       return this._db
     }
     const conn = await MongoClient.connect(this.url, { 
