@@ -62,7 +62,7 @@ async function ensure_consistency() {
   if(current_block == 0) {
     return
   }
-  actionHandler.rollbackTo(current_block - 1)
+  await actionHandler.rollbackTo(current_block - 1)
   actionHandler.updateIndexState(null, {
     blockInfo: {
       blockNumber: current_block - 1,
