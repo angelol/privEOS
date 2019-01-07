@@ -30,6 +30,7 @@ const assert = require('assert')
 const config = require("../common/config.js")
 const { AbstractActionHandler } = require("demux")
 const mongo = require("../common/mongo")
+global.Promise = require('bluebird')
 const log = require('loglevel')
 log.setDefaultLevel(config.logLevel)
 
@@ -83,9 +84,10 @@ class ObjectActionHandler extends AbstractActionHandler {
     log.info("rollbackTo ", blockNumber)
     try {
       const db = await mongo.db()
-      log.debug("Deleteing all txs with block number > ", blockNumber)
-      db.collection('accessgrant').deleteMany({"blockNumber": { $gt: blockNumber }})
-      db.collection('store').deleteMany({"blockNumber": { $gt: blockNumber }})
+      log.info("Deleteing all txs with block number > ", blockNumber)
+      db.collection('accessgrant').deleteMany({"blockNumber": { $gt: blockNumber }}).timeout(10000, "Timeout while deleteMany accessgrant")
+      db.collection('store').deleteMany({"blockNumber": { $gt: blockNumber }}).timeout(10000, "Timeout while deleteMany store")
+      log.info("Done deleting")
     } catch(e) {
       log.error(e)
       process.exit(1)

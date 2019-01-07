@@ -433,25 +433,21 @@ delimit-stream@0.1.0:
   resolved "https://registry.yarnpkg.com/delimit-stream/-/delimit-stream-0.1.0.tgz#9b8319477c0e5f8aeb3ce357ae305fc25ea1cd2b"
   integrity sha1-m4MZR3wOX4rrPONXrjBfwl6hzSs=
 
-demux-eos@2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/demux-eos/-/demux-eos-2.0.0.tgz#e68c738410b6e101b2d14bc20061022954737683"
-  integrity sha512-pFsFo/Xs+28lt3e57SxFoMgjXff1p4CnK3yTAsXQCRtDljyNYE5YsQtKjNH0RICuKxV9BFP0raIPWheuP3U1Qw==
+demux-eos@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/demux-eos/-/demux-eos-3.1.0.tgz#a89d6f719f24abf4398b37c40c19050a918eae75"
+  integrity sha512-iQ50CC3Zat86Z6FM40XejBMa8WUVlJreVTMZ5ELm6vm5zy7XO5sAvEAu4yEclGA2yvL6fbNewyIYxcVTe+H9lQ==
   dependencies:
-    demux "^2.0.0"
+    bunyan "^1.8.12"
+    demux "^3.1.3"
     mongodb "^3.1.3"
     request "^2.87.0"
     request-promise-native "^1.0.5"
 
-demux@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/demux/-/demux-2.0.0.tgz#a5060bb1aac614a498ebe5ea181e9aa65e533ec1"
-  integrity sha512-zFXuTuvsBkcdHJn22Uc5T0wXnMxTv/auIDjNndhzXm2MLIdnXquE49G5i2davNifNCh+/kMnrWdzT9bKkjksRg==
-
-demux@^3.0.0:
-  version "3.1.2"
-  resolved "https://registry.yarnpkg.com/demux/-/demux-3.1.2.tgz#7447acfabf73a3f01f73414f6a3c4e915781eefb"
-  integrity sha512-ZBdE3lQeiDBdkVX9xUhPbi6jemVXhKua3ZE8si9Zzs7wrfyTzSVKpwlV3Q1gZgnuHJ6olFHVKrZe2s8iW/LrZA==
+demux@^3.1.3:
+  version "3.1.3"
+  resolved "https://registry.yarnpkg.com/demux/-/demux-3.1.3.tgz#b72665ae469c309722d17e3ef5bb988018e712e2"
+  integrity sha512-hbillSK87rDhpN3A0ZRnw5vo2d1HnG1BbS/ud7W+dMsGSGbRKbg9gutpfPTqTQQrcqX4sNfLnWIpOTVfs808mw==
   dependencies:
     bunyan "^1.8.12"
 

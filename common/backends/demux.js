@@ -2,6 +2,7 @@ const mongo = require('../mongo.js')
 const config = require('../config')
 const assert = require('assert')
 const log = require('loglevel')
+global.Promise = require('bluebird')
 log.setDefaultLevel(config.logLevel)
 
 async function store_data(file, data, hash, owner, dappcontract) {
@@ -14,7 +15,7 @@ async function store_data(file, data, hash, owner, dappcontract) {
     dappcontract,
     created_at: new Date(),
    }
-  await db.collection('data').insertOne(doc)
+  await db.collection('data').insertOne(doc).timeout(100, "Timeout while Backend.store_data")
 }
 
 async function get_store_trace(dappcontract, file) {
@@ -28,7 +29,7 @@ async function get_store_trace(dappcontract, file) {
     })
     .sort({"blockNumber": -1})
     .limit(1)
-    .toArray()
+    .toArray().timeout(100, "Timeout while Backend.get_store_trace")
   const trace = items[0]
   assert.ok(trace, "Backend Error, no store action found")
   return trace.data
@@ -48,7 +49,7 @@ async function get_accessgrant_trace(dappcontract, user, file) {
     .find(params)
 		.sort({"blockNumber": -1})
     .limit(1)
-		.toArray()
+		.toArray().timeout(100, "Timeout while Backend.get_accessgrant_trace")
   log.debug("items: ", items)
   const trace = items[0]
   assert.ok(trace, "Backend Error, no accessgrant action found")

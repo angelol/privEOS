@@ -31,6 +31,7 @@ const config = require("../common/config.js")
 const mongo = require("../common/mongo")
 const ipfsClient = require('ipfs-http-client')
 const assert = require('assert')
+global.Promise = require('bluebird')
 const log = require('loglevel')
 log.setDefaultLevel(config.logLevel)
 
@@ -59,7 +60,7 @@ async function insertStore(state, payload, blockInfo, context) {
     
     const ipfs = ipfsClient(config.ipfsConfig.host, config.ipfsConfig.port, {'protocol': config.ipfsConfig.protocol})
     const buffer = Buffer.from(res.data)
-    const results = await ipfs.add(buffer)
+    const results = await ipfs.add(buffer).timeout(1000, "Timeout while ipfs.add")
     const ipfs_hash = results[0].hash
     log.debug("ipfs_hash: ", ipfs_hash)
     assert.equal(hash, ipfs_hash, "Hashes differ, this should not be possible")

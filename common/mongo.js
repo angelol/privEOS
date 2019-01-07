@@ -1,6 +1,7 @@
 const MongoClient = require('mongodb')
 const config = require('./config')
 const assert = require("assert")
+global.Promise = require('bluebird')
 const log = require('loglevel')
 log.setDefaultLevel(config.logLevel)
 
@@ -32,7 +33,7 @@ class Mongo {
       autoReconnect: true,
       reconnectTries: Number.MAX_VALUE,
       bufferMaxEntries: 0,
-    })
+    }).timeout(100, "Timeout while Mongo.db()")
     assert.ok(conn, "Could not establish connection to MongoDB")
     log.debug("Mongodb connection established")
     this._db = conn.db(this.dbName)
