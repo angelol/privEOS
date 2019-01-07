@@ -7,13 +7,15 @@ ACTION priveos::store(const name owner, const name contract, const std::string f
   const auto fee = get_store_fee(token);
   print("Fee is ", fee);
   
-  sub_balance(owner, fee);
-  action(
-    permission_level{_self, "active"_n},
-    curr.contract,
-    "transfer"_n,
-    std::make_tuple(_self, fee_account, fee, std::string("Fee"))
-  ).send();
+  if(fee.amount > 0) {
+    sub_balance(owner, fee);
+    action(
+      permission_level{_self, "active"_n},
+      curr.contract,
+      "transfer"_n,
+      std::make_tuple(_self, fee_account, fee, std::string("Fee"))
+    ).send();
+  }
 }
     
 ACTION priveos::accessgrant(const name user, const name contract, const std::string file, const public_key public_key, const symbol token) {
@@ -23,19 +25,22 @@ ACTION priveos::accessgrant(const name user, const name contract, const std::str
   auto& curr = currencies.get(token.code().raw(), "Token not accepted");
   const auto fee = get_read_fee(token);
   
-  sub_balance(user, fee);
-  action(
-    permission_level{_self, "active"_n},
-    curr.contract,
-    "transfer"_n,
-    std::make_tuple(_self, fee_account, fee, std::string("Fee"))
-  ).send();
+  if(fee.amount > 0) {
+    sub_balance(user, fee);
+    action(
+      permission_level{_self, "active"_n},
+      curr.contract,
+      "transfer"_n,
+      std::make_tuple(_self, fee_account, fee, std::string("Fee"))
+    ).send();
+  }
 }
     
 ACTION priveos::regnode(const name owner, const public_key node_key, const std::string url) {
-  eosio_assert(node_key != public_key(), "public key should not be the default value");
-  
   require_auth(owner);
+
+  eosio_assert(node_key != public_key(), "public key should not be the default value");
+  eosio_assert(url.substr(0, 8) == std::string("https://"), "URL parameter must be a valid https URL");
   
   auto node_idx = nodes.find(owner.value);
   if(node_idx != nodes.end()) {

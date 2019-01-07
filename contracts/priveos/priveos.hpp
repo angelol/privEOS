@@ -196,6 +196,9 @@ CONTRACT priveos : public eosio::contract {
     }
     
     void sub_balance(name user, asset value) {
+      if(value.amount == 0) {
+        return;
+      }
       balances_table balances(_self, user.value);
       const auto& user_balance = balances.get(value.symbol.code().raw(), "User has no balance");
       eosio_assert(user_balance.funds >= value, "Overdrawn balance");
