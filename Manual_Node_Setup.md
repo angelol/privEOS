@@ -47,6 +47,7 @@ Make sure IPFS is automatically started:
     EOF
     
     systemctl enable ipfs
+    systemctl start ipfs
     
 ### Install privEOS Services
 
@@ -122,10 +123,10 @@ Edit your `/etc/nginx/sites-enabled/default` config file to look like this (repl
       server_name my.server.name;
 
       location /broker/ {
-        proxy_pass http://broker/;
+        proxy_pass http://broker;
       }
       location /kms/ {
-        proxy_pass http://kms/;
+        proxy_pass http://kms;
       }
       location / {
         deny all;
