@@ -15,4 +15,18 @@ Example command:
 
     cleos -u https://jungle2.cryptolions.io  push action priveosrules regnode '["YOUR_EOS_ACCOUNT", "YOUR_NODE_PUBLIC_KEY", "https://YOUR_SERVER_NAME"]' -p YOUR_EOS_ACCOUNT
     
+The privEOS contract has a consensus mechanism to set the fees charged for the usage of privEOS. In order to check the current prices:
+
+    # This is the price for storing files on privEOS:
+    cleos -u https://jungle2.cryptolions.io get table priveosrules priveosrules storeprice
     
+    # This is the price for reading from privEOS:
+    cleos -u https://jungle2.cryptolions.io get table priveosrules priveosrules readprice
+
+In order to set your price:
+    
+    cleos -u https://jungle2.cryptolions.io push action priveosrules setprice '["YOUR_EOS_ACCOUNT", "0.0000 EOS", "store"]' -p YOUR_EOS_ACCOUNT
+    cleos -u https://jungle2.cryptolions.io push action priveosrules setprice '["YOUR_EOS_ACCOUNT", "0.0100 EOS", "accessgrant"]' -p YOUR_EOS_ACCOUNT
+
+The price charged for reading and writing to privEOS will be the median of all prices set by the BPs. At the moment, these fees will be collected on a separate account ```priveosxfees```.
+
