@@ -2,7 +2,17 @@
 
 This is the main privEOS repository containing the server-side software that all nodes in the privEOS network must run.
 
+## Server Specs
+You need a server with the following hardware specs:
+
+* 4 GB of RAM
+* 20 GB of Storage
+* Bare metal or Cloud Server is both fine
+
+These specs are valid for the testnet and might be increased over time as usage increases or as new functionality is introduced.
+
 ## Setting up a PrivEOS Node
+
 Please use the [automated node setup](https://github.com/rawrat/priveos-automation). It's the recommended way to set up privEOS nodes as it's easy and fast and creates a deterministic and reproducible setup.
 
 If you don't want to use the automated setup, you can also [install a node manually](https://github.com/rawrat/privEOS/blob/master/Manual_Node_Setup.md).
