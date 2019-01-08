@@ -30,3 +30,6 @@ In order to set your price:
 
 The price charged for reading and writing to privEOS will be the median of all prices set by the BPs. At the moment, these fees will be collected on a separate account ```priveosxfees```.
 
+## Testing
+For testing, you can use the [privEOS client library](https://github.com/rawrat/priveos-client)
+
