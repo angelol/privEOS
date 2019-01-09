@@ -81,13 +81,23 @@ class ObjectActionHandler extends AbstractActionHandler {
   }
 
   async rollbackTo(blockNumber) {
-    log.info("rollbackTo ", blockNumber)
+    const latestBlockNumber = self.loadIndexState().blockNumber
+    log.info(`Rollback from ${latestBlockNumber} to ${blockNumber}`)
     try {
       const db = await mongo.db()
       log.info("Deleteing all txs with block number > ", blockNumber)
       await db.collection('accessgrant').deleteMany({"blockNumber": { $gt: blockNumber }}).timeout(10000, "Timeout while deleteMany accessgrant")
       await db.collection('store').deleteMany({"blockNumber": { $gt: blockNumber }}).timeout(10000, "Timeout while deleteMany store")
       log.info("Done deleting")
+      
+      const db = await mongo.db()
+      await db.collection('index_state').replaceOne({}, {
+        blockNumber: blockNumber,
+        blockHash: "",
+        isReplay: false,
+        handlerVersionName: "v1",
+      })
+      
     } catch(e) {
       log.error(e)
       process.exit(1)
