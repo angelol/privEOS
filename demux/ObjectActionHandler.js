@@ -94,6 +94,8 @@ class ObjectActionHandler extends AbstractActionHandler {
       await db.collection('store').deleteMany({"blockNumber": { $gt: blockNumber }}).timeout(10000, "Timeout while deleteMany store")
       log.info("Done deleting")
       
+      await db.collection('state_history').deleteMany({"blockNumber": { $gt: blockNumber }})
+      
       // get block from the history
       const block = await db.collection('state_history').findOne({blockNumber: blockNumber})
       if(block) {
