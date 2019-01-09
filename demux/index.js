@@ -26,7 +26,7 @@ const actionHandler = new ObjectActionHandler([handlerVersion])
 
 
 async function start() { 
-  await create_indexes()
+  await setup_mongodb()
   await ensure_consistency()
   
   let starting_block = await actionHandler.get_current_block()
@@ -71,7 +71,7 @@ async function ensure_consistency() {
   }, false, 'v1')
 }
 
-async function create_indexes() {
+async function setup_mongodb() {
   // createIndex does nothing if index already exists, so it's safe to call this at every start
   const db = await mongo.db()
   await db.collection('store').createIndex({"blockNumber": 1})
@@ -80,6 +80,14 @@ async function create_indexes() {
   await db.collection('store').createIndex({"data.file": 1})
   await db.collection('accessgrant').createIndex({"data.file": 1})
   await db.collection('data').createIndex({"hash": 1})
+  
+  const collections = await db.listCollections().toArray()
+  const collection_names = collections.map(x => x.name)
+  if(!collection_names.includes('state_history')) {
+    log.info("Creating state_history capped collection")
+    await db.createCollection("state_history", {"capped": true, "size": 1*1024*1024})
+  }
+    
 
 }
 

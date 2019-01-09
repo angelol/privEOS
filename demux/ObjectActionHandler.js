@@ -74,6 +74,13 @@ class ObjectActionHandler extends AbstractActionHandler {
         isReplay: isReplay,
         handlerVersionName: handlerVersionName,
       }, { upsert: true})
+      
+      await db.collection('state_history').insertOne({
+        blockNumber: block.blockInfo.blockNumber,
+        blockHash: block.blockInfo.blockHash,
+        isReplay: isReplay,
+        handlerVersionName: handlerVersionName,
+      })
     } catch(e) {
       log.error(e)
       process.exit(1)
@@ -89,14 +96,14 @@ class ObjectActionHandler extends AbstractActionHandler {
       await db.collection('store').deleteMany({"blockNumber": { $gt: blockNumber }}).timeout(10000, "Timeout while deleteMany store")
       log.info("Done deleting")
       
-      const db = await mongo.db()
+      // get block from the history
+      const block = await db.collection('state_history').findOne({blockNumber: blockNumber})
       await db.collection('index_state').replaceOne({}, {
-        blockNumber: blockNumber,
-        blockHash: "",
-        isReplay: false,
-        handlerVersionName: "v1",
+        blockNumber: block.blockNumber,
+        blockHash: block.blockHash,
+        isReplay: block.isReplay,
+        handlerVersionName: block.handlerVersionName,
       })
-      
     } catch(e) {
       log.error(e)
       process.exit(1)
