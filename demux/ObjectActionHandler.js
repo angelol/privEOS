@@ -62,9 +62,7 @@ class ObjectActionHandler extends AbstractActionHandler {
     
   }
 
-  async updateIndexState(stateObj, block, isReplay, handlerVersionName) {
-    console.log("updateIndexState: ", block.blockInfo)
-    
+  async updateIndexState(stateObj, block, isReplay, handlerVersionName) {    
     assert.ok(handlerVersionName, "handlerVersionName not set!!!")
     try {
       const db = await mongo.db()
