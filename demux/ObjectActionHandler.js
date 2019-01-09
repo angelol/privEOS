@@ -104,13 +104,19 @@ class ObjectActionHandler extends AbstractActionHandler {
           handlerVersionName: block.handlerVersionName,
         })        
       }
-      const blocks_to_keep = await db.collection('state_history').find({"blockNumber": { $lte: blockNumber }}).project({blockNumber: 1, blockHash: 1, isReplay: 1, handlerVersionName: 1})
-      log.info(`blocks_to_keep: ${blocks_to_keep.map(x => x.blockNumber)}`)
+      const blocks_to_keep = await db.collection('state_history').find({"blockNumber": { $lte: blockNumber }}).project({_id: 0}).toArray()
+
+      log.info(`blocks_to_keep: ${JSON.stringify(blocks_to_keep)}`)
       log.info("Dropping state_history")
-      await db.collection('state_history').drop()
-      await db.createCollection("state_history", {"capped": true, "size": 1*1024*1024})
-      log.info("Insert blocks_to_keep")
-      await db.collection('state_history').insertMany(blocks_to_keep)
+      
+      await this.recreate_history_collection()
+      
+      if(blocks_to_keep[0]) {
+        log.info("Insert blocks_to_keep")
+        await db.collection('state_history').insertMany(blocks_to_keep)        
+      } else {
+        log.info("No Blocks to keep")
+      }
       
       
     } catch(e) {
@@ -134,6 +140,17 @@ class ObjectActionHandler extends AbstractActionHandler {
       log.error(e)
       process.exit(1)
     }
+  }
+  
+  async recreate_history_collection() {
+    const db = await mongo.db()
+    const collections = await db.listCollections().toArray()
+    const collection_names = collections.map(x => x.name)
+    if(collection_names.includes('state_history')) {
+      await db.collection('state_history').drop()
+    }     
+    log.info("Creating state_history capped collection")
+    await db.createCollection("state_history", {"capped": true, "size": 1*1024*1024})
   }
   
 }
