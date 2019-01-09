@@ -63,7 +63,7 @@ class ObjectActionHandler extends AbstractActionHandler {
   }
 
   async updateIndexState(stateObj, block, isReplay, handlerVersionName) {
-    // console.log("updateIndexState: ", block.blockInfo)
+    console.log("updateIndexState: ", block.blockInfo)
     
     assert.ok(handlerVersionName, "handlerVersionName not set!!!")
     try {
@@ -98,12 +98,14 @@ class ObjectActionHandler extends AbstractActionHandler {
       
       // get block from the history
       const block = await db.collection('state_history').findOne({blockNumber: blockNumber})
-      await db.collection('index_state').replaceOne({}, {
-        blockNumber: block.blockNumber,
-        blockHash: block.blockHash,
-        isReplay: block.isReplay,
-        handlerVersionName: block.handlerVersionName,
-      })
+      if(block) {
+        await db.collection('index_state').replaceOne({}, {
+          blockNumber: block.blockNumber,
+          blockHash: block.blockHash,
+          isReplay: block.isReplay,
+          handlerVersionName: block.handlerVersionName,
+        })        
+      }
     } catch(e) {
       log.error(e)
       process.exit(1)
