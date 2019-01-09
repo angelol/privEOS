@@ -83,7 +83,9 @@ async function setup_mongodb() {
   
   const collections = await db.listCollections().toArray()
   const collection_names = collections.map(x => x.name)
-  if(!collection_names.includes('state_history')) {
+  if(collection_names.includes('state_history')) {
+    await db.collection('state_history').drop()
+  } else {
     log.info("Creating state_history capped collection")
     await db.createCollection("state_history", {"capped": true, "size": 1*1024*1024})
   }
