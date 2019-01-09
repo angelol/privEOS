@@ -81,8 +81,7 @@ class ObjectActionHandler extends AbstractActionHandler {
   }
 
   async rollbackTo(blockNumber) {
-    const latestBlockNumber = self.loadIndexState().blockNumber
-    log.info(`Rollback from ${latestBlockNumber} to ${blockNumber}`)
+    log.info(`Rollback from to ${blockNumber}`)
     try {
       const db = await mongo.db()
       log.info("Deleteing all txs with block number > ", blockNumber)
