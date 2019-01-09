@@ -106,7 +106,6 @@ class ObjectActionHandler extends AbstractActionHandler {
       }
       const blocks_to_keep = await db.collection('state_history').find({"blockNumber": { $lte: blockNumber }}).project({_id: 0}).toArray()
 
-      log.info(`blocks_to_keep: ${JSON.stringify(blocks_to_keep)}`)
       log.info("Dropping state_history")
       
       await this.recreate_history_collection()
