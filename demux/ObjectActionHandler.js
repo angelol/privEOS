@@ -38,7 +38,7 @@ class ObjectActionHandler extends AbstractActionHandler {
 
   
   async handleWithState(handle) {
-    await handle()
+    await handle(1)
   }
 
   async loadIndexState() {
@@ -62,7 +62,8 @@ class ObjectActionHandler extends AbstractActionHandler {
     
   }
 
-  async updateIndexState(stateObj, block, isReplay, handlerVersionName) {    
+  async updateIndexState(stateObj, block, isReplay, handlerVersionName) { 
+    assert.ok(stateObj, "stateObj is not okay")
     assert.ok(handlerVersionName, "handlerVersionName not set!!!")
     try {
       const db = await mongo.db()

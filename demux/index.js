@@ -63,7 +63,7 @@ async function ensure_consistency() {
     return
   }
   await actionHandler.rollbackTo(current_block - 1)
-  await actionHandler.updateIndexState(null, {
+  await actionHandler.updateIndexState(1, {
     blockInfo: {
       blockNumber: current_block - 1,
       blockHash: "",
@@ -91,4 +91,8 @@ async function setup_mongodb() {
 
 }
 
+process.on('unhandledRejection', (reason, p) => {
+  console.log('Unhandled Rejection at:', p, 'reason:', reason);
+  process.exit(1)
+});
 
