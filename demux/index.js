@@ -104,11 +104,10 @@ async function detect_stalling() {
     }
     last_block_number = current_block_number
   } 
-  setTimeout(detect_stalling, 5000)
+  setTimeout(detect_stalling, 2000)
 }
 
 process.on('unhandledRejection', (reason, p) => {
-  log.error('Unhandled Rejection at:', p, 'reason:', reason);
+  log.error('Unhandled Rejection at:', p, 'reason:', reason)
   process.exit(1)
-});
-
+})
