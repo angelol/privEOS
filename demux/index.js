@@ -42,7 +42,7 @@ async function start() {
   const actionWatcher = new BaseActionWatcher(
     actionReader,
     actionHandler,
-    100,
+    500,
   )
 
   if(process.send) {
