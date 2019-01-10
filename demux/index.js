@@ -99,7 +99,7 @@ async function detect_stalling() {
   if(index) {
     const current_block_number = index.blockNumber
     if(last_block_number == current_block_number) {
-      console.error(`Demux has stalled at block ${last_block_number}. Exiting.`)
+      log.error(`Demux has stalled at block ${last_block_number}. Exiting.`)
       process.exit(1)
     }
     last_block_number = current_block_number
@@ -108,7 +108,7 @@ async function detect_stalling() {
 }
 
 process.on('unhandledRejection', (reason, p) => {
-  console.log('Unhandled Rejection at:', p, 'reason:', reason);
+  log.error('Unhandled Rejection at:', p, 'reason:', reason);
   process.exit(1)
 });
 
