@@ -34,12 +34,15 @@ async function broker_status(req, res) {
   } catch(e) {
     errors.push(`Encryption Service challenge failed`)
   }
-  
   const status = errors.length ? "error" : "ok"
-  res.send({
+
+  let response = {
     status,
-    errors,
-  })
+  }
+  if(status == 'error') {
+    response['errors'] = errors
+  }
+  res.send(response)
 }
 
 async function get_blocks_behind() {
