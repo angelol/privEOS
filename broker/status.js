@@ -16,7 +16,7 @@ async function broker_status(req, res) {
   let errors = []
   
   const blocks_behind = await get_blocks_behind()
-  if(blocks_behind > 10) {
+  if(blocks_behind > 15) {
     errors.push(`Demux index is ${blocks_behind} blocks behind`)
   }
   
