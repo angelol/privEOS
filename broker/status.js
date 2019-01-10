@@ -7,6 +7,8 @@ const axios = require('axios')
 const encryption_service = require('../kms/proxy')
 const ByteBuffer = require('bytebuffer')
 const assert = require('assert')
+const log = require('loglevel')
+log.setDefaultLevel(config.logLevel)
 
 const eos = Eos({httpEndpoint: config.httpEndpoint, chainId: config.chainId})
 
@@ -64,7 +66,7 @@ async function test_encryption_service() {
   
   const res = await eos.getTableRows({json:true, scope: config.contract, code: config.contract,  table: 'nodes', limit:100})
   const myself = res.rows.filter(x => x.owner == config.nodeAccount)[0]
-  console.log('res.rows: ' + JSON.stringify(myself, null, 2))
+  log.debug('res.rows: ' + JSON.stringify(myself, null, 2))
   if(!myself) {
     console.info("This node has not been registered, skipping test_encryption_service")
     return
@@ -82,7 +84,7 @@ async function test_encryption_service() {
     recipient_public_key: test_key.public,
   })
   
-  console.log("payload: ", JSON.stringify(payload))
+  log.debug("payload: ", JSON.stringify(payload))
   
   const decrypted = eosjs_ecc.Aes.decrypt(
     test_key.private, 
@@ -91,7 +93,7 @@ async function test_encryption_service() {
     ByteBuffer.fromHex(payload.message).toBinary(), 
     payload.checksum
   )	
-  console.log("Decrypted message is: ", String(decrypted))
+  log.debug("Decrypted message is: ", String(decrypted))
   assert.equal(test_message, String(decrypted), "Decrypted message does not match")
 }
 module.exports = { broker_status }
