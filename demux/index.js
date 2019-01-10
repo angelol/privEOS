@@ -28,6 +28,7 @@ const actionHandler = new ObjectActionHandler([handlerVersion])
 async function start() { 
   await setup_mongodb()
   await ensure_consistency()
+  detect_stalling()
   
   let starting_block = await actionHandler.get_current_block()
   if(starting_block != 0) {
@@ -89,6 +90,20 @@ async function setup_mongodb() {
   }
     
 
+}
+
+let last_block_number
+async function detect_stalling() {
+  const db = await mongo.db()  
+  const index = await db.collection('index_state').findOne()
+  const current_block_number = index.blockNumber
+  if(last_block_number == current_block_number) {
+    console.error(`Demux has stalled at block ${last_block_number}. Exiting.`)
+    process.exit(1)
+  }
+  
+  last_block_number = index.blockNumber
+  setTimeout(detect_stalling, 5000)
 }
 
 process.on('unhandledRejection', (reason, p) => {
