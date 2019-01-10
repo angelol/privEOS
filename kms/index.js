@@ -23,6 +23,18 @@ if(process.argv[3]) {
 var server = restify.createServer()
 server.use(restify.plugins.bodyParser())
 
+server.get('/kms/status/', async function(req, res, next) {
+	try { 
+		res.send({
+	    status: 'ok',
+		})
+	} catch(err) {
+		log.error("Error: ", err)
+		res.send(500, "Generic Error")
+	}
+	next()
+})
+
 server.post('/kms/store/', async function(req, res, next) {
 	try {
 		const body = req.body

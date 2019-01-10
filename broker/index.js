@@ -9,6 +9,7 @@ const Promise = require('bluebird')
 const Backend = require('../common/backend')
 const log = require('loglevel')
 const { URL } = require('url')
+const { broker_status } = require('./status')
 
 var config
 try {
@@ -33,6 +34,16 @@ const cors = corsMiddleware({
  
 server.pre(cors.preflight)
 server.use(cors.actual)
+
+server.get('/broker/status/', async function(req, res, next) {
+	try { 
+		await broker_status(req, res)
+	} catch(err) {
+		log.error("Error: ", err)
+		res.send(500, "Generic Error")
+	}
+	next()
+})
 
 server.post('/broker/store/', async function(req, res, next) {
 	try { 
@@ -113,6 +124,7 @@ async function broker_read(req, res) {
 	log.debug('Finished Sending to all Nodes')
 	res.send(data)
 }
+
 
 server.listen(config.brokerPort, "127.0.0.1", function() {
   log.info('Broker %s listening at %s', server.name, server.url)
