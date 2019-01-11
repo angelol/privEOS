@@ -18,9 +18,12 @@ Please use the [automated node setup](https://github.com/rawrat/priveos-automati
 If you don't want to use the automated setup, you can also [install a node manually](https://github.com/rawrat/privEOS/blob/master/Manual_Node_Setup.md).
 
 ## Firewall Configuration
-Please make sure that the firewall is stateful. The following ports need to be reachable from the outside:
+The privEOS software itself only listens on localhost, so there is no danger that services could inadvertently be exposed to the outside. Other services like MongoDB are configured to only listen on localhost as well by default. 
+
+If you are using a firewall, please make sure that it allows stateful connections from the server to the outside. Additionally, the following ports need to be reachable from the outside:
+* `22` or your custom OpenSSH port if you use non-standard port
 * `80` We are running an SSL-only service, however the Let's Encrypt cronjob which automatically renews the certificate needs this port.
-* `443` This is the standard SSL port.
+* `443` This is the standard SSL port that Nginx is listening on.
 * `4001` We recommend opening this up for IPFS so other Swarm nodes can connect to us. This also makes our setup future-proof as there are ideas to build a private IPFS subnet consisting of privEOS nodes.
 
 ## Registering your Node
