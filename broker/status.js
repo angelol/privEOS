@@ -7,6 +7,7 @@ const axios = require('axios')
 const encryption_service = require('../kms/proxy')
 const ByteBuffer = require('bytebuffer')
 const assert = require('assert')
+const ipfsClient = require('ipfs-http-client')
 const log = require('loglevel')
 log.setDefaultLevel(config.logLevel)
 
@@ -26,13 +27,22 @@ async function broker_status(req, res) {
       errors.push(`KMS Server returns status ${kms_status}`)
     }  
   } catch(e) {
+    console.error(`Error while trying to connect to KMS Server: ${e}`)
     errors.push(`Error while trying to connect to KMS Server`)
   }
   
   try { 
     await test_encryption_service()  
   } catch(e) {
+    console.error(`Encryption Service challenge failed with error ${e}`)
     errors.push(`Encryption Service challenge failed`)
+  }
+  
+  try {
+    await check_ipfs()
+  } catch(e) {
+    console.error(`IPFS error ${e}`)
+    errors.push(`IPFS challenge failed`)
   }
   
   const status = errors.length ? "error" : "ok"
@@ -96,4 +106,10 @@ async function test_encryption_service() {
   log.debug("Decrypted message is: ", String(decrypted))
   assert.equal(test_message, String(decrypted), "Decrypted message does not match")
 }
+
+async function check_ipfs() {
+  const ipfs = ipfsClient(config.ipfsConfig.host, config.ipfsConfig.port, {'protocol': config.ipfsConfig.protocol})
+  await ipfs.get('/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG/quick-start').timeout(1000, "Timeout while ipfs.get")
+}
+
 module.exports = { broker_status }
