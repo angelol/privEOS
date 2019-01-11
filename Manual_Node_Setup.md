@@ -138,11 +138,7 @@ Install SSL certificate:
   
 Congratulations! You should now have a working privEOS node.
     
-### Register your Node with the Smart Contract
-Now it's time to `regnode` your node.
-
-    cleos -u https://jungle2.cryptolions.io push action priveosrules regnode '["slantagnode1", "EOS5aQ2K8Qwgy4XwqQaZV7WuJuNHnmGrXe5RX4ukMtF1FBSJwfAUv", "https://slantagnode1.priveos.io"]' -p slantagnode1
-    cleos -u https://jungle2.cryptolions.io push action priveosrules setprice '["slantagnode1", "0.0100 EOS", "accessgrant"]' -p slantagnode1
-    cleos -u https://jungle2.cryptolions.io push action priveosrules setprice '["slantagnode1", "0.0000 EOS", "store"]' -p slantagnode1
+### What's next?
+Please continue [here](https://github.com/rawrat/privEOS#registering-your-node)
 
 
