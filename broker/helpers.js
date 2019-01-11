@@ -22,7 +22,7 @@ async function get_nodes(payload, dappcontract, file) {
 async function fetch_from_ipfs(hash) {
   const ipfs = ipfsClient(config.ipfsConfig.host, config.ipfsConfig.port, {'protocol': config.ipfsConfig.protocol})
   log.debug("Ohai fetch_from_ipfs")
-  const result = await ipfs.get(`/ipfs/${hash}`).timeout(1000, "Retrieving from ipfs should not block if data is pinned locally")
+  const result = await ipfs.get(`/ipfs/${hash}`).timeout(1000, `Retrieving from ipfs should not block if data is pinned locally. Hash: ${hash}`)
   log.debug("ipfs result: ", result[0])
   return result[0].content.toString('utf8')
 }
