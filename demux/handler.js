@@ -53,7 +53,7 @@ async function insertStore(state, payload, blockInfo, context) {
     const hash = payload.data.data
     const res = await db.collection('data').findOne({hash})
     if(!res || !res.data) {
-      log.info(`Hash ${hash} in local database, ignoring`)
+      log.info(`Hash ${hash} not in local database, ignoring`)
       return
     }
     log.debug("full data retrieved from db: ", res.data)

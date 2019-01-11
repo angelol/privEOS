@@ -15,6 +15,7 @@ class KMS {
   
   async store(file, data, owner, dappcontract) {
     const hash = await getMultiHash(data)
+    log.debug(`Storing hash ${hash} in local mongo`)
     Backend.store_data(file, data, hash, owner, dappcontract)
   }
       
