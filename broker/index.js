@@ -73,15 +73,20 @@ async function broker_store(req, res) {
 	}
 	log.debug("Ohai broker_store")
 	const nodes = await all_nodes()
-	const promises = nodes.map(node => {
+	const promises = nodes.map(async node => {
 		log.debug("nodes.map: ", node)
 		const url = new URL('/kms/store/', node.url).href
-		return axios.post(url, {
-				file: body.file,
-				owner: body.owner,
-				data: body.data,
-				dappcontract: body.dappcontract,
-			})
+		try {
+			const res = await axios.post(url, {
+					file: body.file,
+					owner: body.owner,
+					data: body.data,
+					dappcontract: body.dappcontract,
+				})
+			return res
+		} catch(e) {
+			log.debug(`Connection to ${url} failed`)
+		}
 	})
 	const response = await Promise.all(promises)
 	log.debug('Finished Sending to all Nodes')
