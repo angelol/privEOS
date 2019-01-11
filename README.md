@@ -17,6 +17,11 @@ Please use the [automated node setup](https://github.com/rawrat/priveos-automati
 
 If you don't want to use the automated setup, you can also [install a node manually](https://github.com/rawrat/privEOS/blob/master/Manual_Node_Setup.md).
 
+## Firewall Configuration
+Please make sure that the firewall is stateful. The following ports need to be reachable from the outside:
+* `80` We are running an SSL-only service, however the Let's Encrypt cronjob which automatically renews the certificate needs this port.
+* `443` This is the standard SSL port.
+* `4001` We recommend opening this up for IPFS so other Swarm nodes can connect to us. This also makes our setup future-proof as there are ideas to build a private IPFS subnet consisting of privEOS nodes.
 
 ## Registering your Node
 Once your node is all set up, you can call ```priveosrules:regnode```, it's the privEOS equivalent of ```eosio:regproduce``` 🙂
