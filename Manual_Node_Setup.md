@@ -119,7 +119,7 @@ Edit your `/etc/nginx/sites-enabled/default` config file to look like this (repl
       server 127.0.0.1:3000;
     }
     server {
-      listen 443 ssl;
+      listen 80;
       server_name my.server.name;
 
       location /broker/ {
@@ -132,9 +132,11 @@ Edit your `/etc/nginx/sites-enabled/default` config file to look like this (repl
         deny all;
       }
     }
-Install SSL certificate:
+Install SSL certificate and reconfigure Nginx:
 
     certbot --nginx
+    
+In the certbot interactive setup, you can either choose to redirect port 80 traffic to 443 or manually disable port 80 afterwards. We should be running an SSL-only service.
   
 Congratulations! You should now have a working privEOS node.
     
