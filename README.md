@@ -13,9 +13,9 @@ These specs are valid for the testnet and might be increased over time as usage 
 
 ## Setting up a PrivEOS Node
 
-Please use the [automated node setup](https://github.com/rawrat/priveos-automation). It's the recommended way to set up privEOS nodes as it's easy and fast and creates a deterministic and reproducible setup.
+You can choose between the [automated node setup](https://github.com/rawrat/priveos-automation) using Ansible or the [manual installation instructions](https://github.com/rawrat/privEOS/blob/master/Manual_Node_Setup.md). 
 
-If you don't want to use the automated setup, you can also [install a node manually](https://github.com/rawrat/privEOS/blob/master/Manual_Node_Setup.md).
+Using the automation setup is a great way to start up quickly. It will help in having a homogenous environment on all nodes. If you need deeper integration into the rest of your infrastructure or just prefer to do it yourself, the manual setup is right for you.
 
 ## Firewall Configuration
 The privEOS software itself only listens on localhost, so there is no danger that services could inadvertently be exposed to the outside. Other services like MongoDB are configured to only listen on localhost as well by default. 
