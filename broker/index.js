@@ -103,8 +103,9 @@ async function broker_read(req, res) {
 	const file = req.body.file
 	const requester = req.body.requester
 	const dappcontract = req.body.dappcontract
+	const timeout_seconds = req.body.timeout_seconds || 0
 	
-	const store_trace = await Backend.get_store_trace(dappcontract, file)
+	const store_trace = await Backend.get_store_trace(dappcontract, file, timeout_seconds)
 	log.debug("store_trace: ", store_trace)
 	const hash = store_trace.data
 	log.debug("hash: ", hash)
@@ -121,6 +122,7 @@ async function broker_read(req, res) {
 				requester: requester,
 				dappcontract: dappcontract,
 				payload: payload,
+				timeout_seconds: timeout_seconds,
 			})
 	})
 	log.debug("payload.threshold: ", payload.threshold)

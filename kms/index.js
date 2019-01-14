@@ -62,10 +62,12 @@ server.post('/kms/read/', async function(req, res, next) {
 	try {
 		if(!body || !body.file || !body.requester || !body.dappcontract || !body.payload) {
 	    return res.send(400, "Bad request")
-	  }
+	  }		
+		const timeout_seconds = body.timeout_seconds || 0
+
 		const kms = new KMS(config)
 		log.debug("calling kms.read")
-		const data = await kms.read(body.file, body.requester, body.dappcontract, body.payload)
+		const data = await kms.read(body.file, body.requester, body.dappcontract, body.payload, timeout_seconds)
 		log.debug("Read data from kms: ", data)
 		res.send(data)
 	} catch(e) {
