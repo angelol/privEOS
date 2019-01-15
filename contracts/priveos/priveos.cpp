@@ -40,22 +40,33 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
   require_auth(owner);
 
   eosio_assert(node_key != public_key(), "public key should not be the default value");
-  eosio_assert(url.substr(0, 8) == std::string("https://"), "URL parameter must be a valid https URL");
+  // eosio_assert(url.substr(0, 8) == std::string("https://"), "URL parameter must be a valid https URL");
   
   auto node_idx = nodes.find(owner.value);
   if(node_idx != nodes.end()) {
     nodes.modify(node_idx, owner, [&](nodeinfo& info) {
       info.node_key = node_key;
       info.url = url;
-      info.is_active = true;
     });
+    if(!node_idx->is_active) {
+      needs_approval(owner);
+    }
   } else {
     nodes.emplace(owner, [&](nodeinfo& info) {
       info.owner = owner;
       info.node_key = node_key;
       info.url = url;
+      info.is_active = false;
     });
+    needs_approval(owner);
   }  
+}
+
+ACTION priveos::peerapprove(const name sender) {
+  require_auth(sender);
+  
+  const auto& node = nodes.get(sender.value, "Sender must be a registered node");
+  was_approved_by(node.owner, sender);
 }
     
 ACTION priveos::unregnode(const name owner) {

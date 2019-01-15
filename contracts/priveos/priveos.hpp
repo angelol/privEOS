@@ -13,7 +13,7 @@ using namespace eosio;
 CONTRACT priveos : public eosio::contract {
   using contract::contract;
   public:
-    priveos(name self,name code, datastream<const char*> ds) : eosio::contract(self,code,ds), nodes(_self, _self.value), read_prices(_self, _self.value), store_prices(_self, _self.value), currencies(_self, _self.value){}
+    priveos(name self,name code, datastream<const char*> ds) : eosio::contract(self,code,ds), nodes(_self, _self.value), read_prices(_self, _self.value), store_prices(_self, _self.value), currencies(_self, _self.value), peerapprovals(_self, _self.value){}
     
     const name fee_account{"priveosxfees"};
     const std::string accessgrant_action_name{"accessgrant"};
@@ -67,6 +67,13 @@ CONTRACT priveos : public eosio::contract {
       uint64_t primary_key() const { return currency.code().raw(); }  
     };
     
+    TABLE peerapproval {
+      name node;
+      std::set<name> approved_by;
+      
+      uint64_t primary_key() const { return node.value; } 
+    };
+    
     typedef multi_index<"nodes"_n, nodeinfo> nodes_table;
     
     typedef multi_index<"storepricef"_n, store_pricefeed> store_pricefeed_table;
@@ -77,6 +84,9 @@ CONTRACT priveos : public eosio::contract {
     
     typedef multi_index<"balances"_n, balance> balances_table;
     typedef multi_index<"currencies"_n, currency_t> currencies_table;
+    
+    typedef multi_index<"peerapproval"_n, peerapproval> peerapproval_table;
+    peerapproval_table peerapprovals;
     
     nodes_table nodes;
     readprice_table read_prices;
@@ -106,6 +116,8 @@ CONTRACT priveos : public eosio::contract {
       const std::string url
     );
     
+    ACTION peerapprove(const name sender);
+
     ACTION unregnode(
       const name owner
     );
@@ -226,6 +238,24 @@ CONTRACT priveos : public eosio::contract {
         return v[s/2];
       }
     }    
+    
+    void needs_approval(const name node) {
+      const auto itr = peerapprovals.find(node.value);
+      if(itr == peerapprovals.end()) {
+        peerapprovals.emplace(node, [&](auto& pa) {
+          pa.node = node;
+        });
+      } 
+    }
+    
+    void was_approved_by(const name node, const name approver) {
+      const auto itr = peerapprovals.find(node.value);
+      if(itr != peerapprovals.end()) {
+        peerapprovals.modify(itr, node, [&](auto& pa) {
+          pa.approved_by.insert(approver);
+        });
+      }
+    }
 };
 
 
