@@ -3,8 +3,7 @@ const restify = require('restify')
 const corsMiddleware = require('restify-cors-middleware')
 
 const axios = require('axios')
-axios.defaults.timeout = 2500;
-
+axios.defaults.timeout = 15000 // make sure we're not hanging forever
 const Promise = require('bluebird')
 const Backend = require('../common/backend')
 const log = require('loglevel')
