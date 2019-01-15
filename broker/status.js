@@ -34,7 +34,7 @@ async function broker_status(req, res) {
   
   if(blocks_behind.error) {
     throw blocks_behind.error
-  } else if(blocks_behind > 15) {
+  } else if(blocks_behind.delay > 15) {
     errors.push(`Demux index is ${blocks_behind} blocks behind`)
   }
   
@@ -62,6 +62,7 @@ async function broker_status(req, res) {
   
   const end = new Date()
   info['duration'] = end-start
+  info['index_head'] = blocks_behind.head
   
   let status = errors.length ? "error" : "ok"
   let data = {
@@ -86,7 +87,10 @@ async function get_blocks_behind() {
   const db = await mongo.db()    
   const index = await db.collection('index_state').findOne()
   const info = await eos.getInfo({})
-  return info.head_block_num - index.blockNumber
+  return {
+    head: index.blockNumber,
+    delay: info.head_block_num - index.blockNumber,
+  }
 }
 
 async function get_kms_status() {
