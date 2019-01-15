@@ -35,7 +35,7 @@ async function broker_status(req, res) {
   if(blocks_behind.error) {
     throw blocks_behind.error
   } else if(blocks_behind.delay > 15) {
-    errors.push(`Demux index is ${blocks_behind} blocks behind`)
+    errors.push(`Demux index is ${blocks_behind.delay} blocks behind`)
   }
   
   if(kms_status.error) {
