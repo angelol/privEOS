@@ -8,50 +8,80 @@ const encryption_service = require('../kms/proxy')
 const ByteBuffer = require('bytebuffer')
 const assert = require('assert')
 const ipfsClient = require('ipfs-http-client')
+const { version } = require('../package.json')
 const log = require('loglevel')
 log.setDefaultLevel(config.logLevel)
 
 const eos = Eos({httpEndpoint: config.httpEndpoint, chainId: config.chainId})
 
 async function broker_status(req, res) {
+  const start = new Date()
   let errors = []
   
-  const blocks_behind = await get_blocks_behind()
-  if(blocks_behind > 15) {
+  const [
+    blocks_behind,
+    kms_status,
+    encryption_service_status,
+    ipfs_status,
+    info,
+  ] = await Promise.all([
+    wrap(get_blocks_behind)(),
+    wrap(get_kms_status)(),
+    wrap(test_encryption_service)(),
+    wrap(check_ipfs)(),
+    wrap(get_info)(),
+  ])
+  
+  if(blocks_behind.error) {
+    throw blocks_behind.error
+  } else if(blocks_behind > 15) {
     errors.push(`Demux index is ${blocks_behind} blocks behind`)
   }
   
-  try {
-    const kms_status = await get_kms_status()  
-    if(kms_status != 'ok') {
-      errors.push(`KMS Server returns status ${kms_status}`)
-    }  
-  } catch(e) {
-    console.error(`Error while trying to connect to KMS Server: ${e}`)
+  if(kms_status.error) {
+    console.error(`Error while trying to connect to KMS Server: ${kms_status.error}`)
     errors.push(`Error while trying to connect to KMS Server`)
-  }
+  } else if(kms_status != 'ok') {
+    errors.push(`KMS Server returns status ${kms_status}`)
+  } 
   
-  try { 
-    await test_encryption_service()  
-  } catch(e) {
-    console.error(`Encryption Service challenge failed with error ${e}`)
+  if(encryption_service_status.error) {
+    console.error(`Encryption Service challenge failed with error ${encryption_service_status.error}`)
     errors.push(`Encryption Service challenge failed`)
   }
-  
-  try {
-    await check_ipfs()
-  } catch(e) {
-    console.error(`IPFS error ${e}`)
+
+  if(ipfs_status.error) {
+    console.error(`IPFS error ${ipfs_status.error}`)
     errors.push(`IPFS challenge failed`)
   }
   
-  const status = errors.length ? "error" : "ok"
-  res.send({
+  if(info.error) {
+    console.error(`Error while getting info: ${info.error}`)
+    errors.push(`Error while getting info`)
+  }
+  
+  const end = new Date()
+  info['duration'] = end-start
+  
+  let status = errors.length ? "error" : "ok"
+  let data = {
     status,
-    errors,
-  })
+    info,
+  }
+  if(errors.length) {
+    data['errors'] = errors
+  }
+  
+  res.send(data)
 }
 
+async function get_info() {
+  return {
+    version,
+  }
+}
+
+/* Checks */
 async function get_blocks_behind() {
   const db = await mongo.db()    
   const index = await db.collection('index_state').findOne()
@@ -110,6 +140,16 @@ async function test_encryption_service() {
 async function check_ipfs() {
   const ipfs = ipfsClient(config.ipfsConfig.host, config.ipfsConfig.port, {'protocol': config.ipfsConfig.protocol})
   await ipfs.get('/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG/quick-start').timeout(1000, "Timeout while ipfs.get")
+}
+
+function wrap(fun) {
+  return async () => {
+    try {
+      return (await fun()) || {}
+    } catch(error) {
+      return {error}
+    }
+  }
 }
 
 module.exports = { broker_status }
