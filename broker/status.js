@@ -92,7 +92,7 @@ async function get_blocks_behind() {
 async function get_kms_status() {
   const url = new URL('/kms/status/', `http://127.0.0.1:${config.kmsPort}`).href
   const res = await axios.get(url)
-  console.log(`kms_status returned: ${JSON.stringify(res.data)}`)
+  log.debug(`kms_status returned: ${JSON.stringify(res.data)}`)
   return res.data.status
 }
 
