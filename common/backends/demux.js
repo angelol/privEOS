@@ -41,7 +41,7 @@ async function get_store_trace(dappcontract, file, timeout_seconds=0) {
     if( (now-start) > timeout_seconds*1000 ) {
       break
     }
-    Promise.delay(100)
+    await Promise.delay(100)
   }
 
   assert.ok(trace, "Backend Error, no store action found")
@@ -74,7 +74,7 @@ async function get_accessgrant_trace(dappcontract, user, file, timeout_seconds=0
     if( (now-start) > timeout_seconds*1000 ) {
       break
     }
-    Promise.delay(100)
+    await Promise.delay(100)
   }
   assert.ok(trace, "Backend Error, no accessgrant action found")
 	log.debug("accessgrant check trace: ", trace.data);
