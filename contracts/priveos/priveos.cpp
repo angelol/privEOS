@@ -3,9 +3,8 @@
 ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data, const symbol token, bool auditable) {
   require_auth(owner);
   // print( "Storing file ", file);
-  auto& curr = currencies.get(token.code().raw(), "Token not accepted");
+  const auto& curr = currencies.get(token.code().raw(), "Token not accepted");
   const auto fee = get_store_fee(token);
-  print("Fee is ", fee);
   
   if(fee.amount > 0) {
     sub_balance(owner, fee);
@@ -22,7 +21,7 @@ ACTION priveos::accessgrant(const name user, const name contract, const std::str
   require_auth(user);
   require_recipient(contract);
   
-  auto& curr = currencies.get(token.code().raw(), "Token not accepted");
+  const auto& curr = currencies.get(token.code().raw(), "Token not accepted");
   const auto fee = get_read_fee(token);
   
   if(fee.amount > 0) {
@@ -42,16 +41,20 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
   eosio_assert(node_key != public_key(), "public key should not be the default value");
   // eosio_assert(url.substr(0, 8) == std::string("https://"), "URL parameter must be a valid https URL");
   
-  auto node_idx = nodes.find(owner.value);
+  const auto node_idx = nodes.find(owner.value);
   if(node_idx != nodes.end()) {
+    // node already exists
     nodes.modify(node_idx, owner, [&](nodeinfo& info) {
       info.node_key = node_key;
       info.url = url;
     });
+    // if node had been deactivated before, 
+    // the user can call regnode to ask for reapproval
     if(!node_idx->is_active) {
       needs_approval(owner);
     }
   } else {
+    // we have a new node
     nodes.emplace(owner, [&](nodeinfo& info) {
       info.owner = owner;
       info.node_key = node_key;
@@ -62,19 +65,24 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
   }  
 }
 
-ACTION priveos::peerapprove(const name sender) {
+ACTION priveos::peerapprove(const name sender, const name owner) {
   require_auth(sender);
   
   const auto& node = nodes.get(sender.value, "Sender must be a registered node");
-  was_approved_by(node.owner, sender);
+  was_approved_by(sender, owner);
+}
+
+ACTION priveos::peerdisable(const name sender, const name owner) {
+  require_auth(sender);
+  
+  const auto& node = nodes.get(sender.value, "Sender must be a registered node");
+  disable_node(owner);
 }
     
 ACTION priveos::unregnode(const name owner) {
   require_auth(owner);
-  const auto& node = nodes.get(owner.value, "owner not found");
-  nodes.modify(node, same_payer, [&](nodeinfo& info) {
-    info.is_active = false;
-  });
+  const auto itr = nodes.find(owner.value);
+  nodes.erase(itr);
 }
 
 ACTION priveos::setprice(const name node, const asset price, const std::string action) {
@@ -104,7 +112,7 @@ ACTION priveos::addcurrency(const symbol currency, const name contract) {
 ACTION priveos::prepare(const name user, const symbol currency) {
   require_auth(user);
   balances_table balances(_self, user.value);      
-  auto it = balances.find(currency.code().raw());
+  const auto it = balances.find(currency.code().raw());
   if(it == balances.end()) {
     balances.emplace(user, [&](auto& bal){
         bal.funds = asset{0, currency};

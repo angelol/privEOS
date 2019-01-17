@@ -13,32 +13,38 @@ using namespace eosio;
 CONTRACT priveos : public eosio::contract {
   using contract::contract;
   public:
-    priveos(name self,name code, datastream<const char*> ds) : eosio::contract(self,code,ds), nodes(_self, _self.value), read_prices(_self, _self.value), store_prices(_self, _self.value), currencies(_self, _self.value), peerapprovals(_self, _self.value){}
+    priveos(name self,name code, datastream<const char*> ds) : eosio::contract(self,code,ds), nodes(_self, _self.value), read_prices(_self, _self.value), store_prices(_self, _self.value), currencies(_self, _self.value), peerapprovals(_self, _self.value), peerdisapprovals(_self, _self.value){}
     
     const name fee_account{"priveosxfees"};
     const std::string accessgrant_action_name{"accessgrant"};
     const std::string store_action_name{"store"};    
+    const static auto PEERS_NEEDED = 5;
     
     TABLE nodeinfo {
       name        owner;
       eosio::public_key   node_key;
       std::string         url;
-      bool                is_active = true;
+      bool                is_active = false;
       
       uint64_t primary_key()const { return owner.value; }      
     };
-    
+    typedef multi_index<"nodes"_n, nodeinfo> nodes_table;
+    nodes_table nodes;
+
     TABLE store_pricefeed {
       name node;
       asset price;
       uint64_t primary_key() const { return node.value; }
     };
+    typedef multi_index<"storepricef"_n, store_pricefeed> store_pricefeed_table;
+
     
     TABLE read_pricefeed {
       name node;
       asset price;
       uint64_t primary_key() const { return node.value; }
     };
+    typedef multi_index<"readpricef"_n, read_pricefeed> read_pricefeed_table;
 
     /*
      * Price for storing items (charged by the store action)
@@ -47,6 +53,9 @@ CONTRACT priveos : public eosio::contract {
       asset money;
       uint64_t primary_key() const { return money.symbol.code().raw(); }
     };
+    typedef multi_index<"storeprice"_n, storeprice> storeprice_table;
+    storeprice_table store_prices;
+
 
     /*
      * Price for reading items (charged by the accessgrant action) 
@@ -55,17 +64,23 @@ CONTRACT priveos : public eosio::contract {
       asset money;
       uint64_t primary_key() const { return money.symbol.code().raw(); }
     };
+    typedef multi_index<"readprice"_n, readprice> readprice_table;
+    readprice_table read_prices;
+
     
     TABLE balance {
         asset funds;
         uint64_t primary_key() const { return funds.symbol.code().raw(); }        
     };    
-    
+    typedef multi_index<"balances"_n, balance> balances_table;
+
     TABLE currency_t {
       symbol currency;
       name contract;
       uint64_t primary_key() const { return currency.code().raw(); }  
     };
+    typedef multi_index<"currencies"_n, currency_t> currencies_table;
+    currencies_table currencies;
     
     TABLE peerapproval {
       name node;
@@ -73,25 +88,18 @@ CONTRACT priveos : public eosio::contract {
       
       uint64_t primary_key() const { return node.value; } 
     };
-    
-    typedef multi_index<"nodes"_n, nodeinfo> nodes_table;
-    
-    typedef multi_index<"storepricef"_n, store_pricefeed> store_pricefeed_table;
-    typedef multi_index<"readpricef"_n, read_pricefeed> read_pricefeed_table;
-    
-    typedef multi_index<"readprice"_n, readprice> readprice_table;
-    typedef multi_index<"storeprice"_n, storeprice> storeprice_table;
-    
-    typedef multi_index<"balances"_n, balance> balances_table;
-    typedef multi_index<"currencies"_n, currency_t> currencies_table;
-    
     typedef multi_index<"peerapproval"_n, peerapproval> peerapproval_table;
     peerapproval_table peerapprovals;
     
-    nodes_table nodes;
-    readprice_table read_prices;
-    storeprice_table store_prices;
-    currencies_table currencies;
+    TABLE peerdisapproval {
+      name node;
+      std::set<name> disapproved_by;
+      
+      uint64_t primary_key() const { return node.value; } 
+    };
+    typedef multi_index<"peerdisappr"_n, peerdisapproval> peerdisapproval_table;
+    peerdisapproval_table peerdisapprovals;
+
     
     ACTION store(
       const name owner, 
@@ -116,7 +124,8 @@ CONTRACT priveos : public eosio::contract {
       const std::string url
     );
     
-    ACTION peerapprove(const name sender);
+    ACTION peerapprove(const name sender, const name owner);
+    ACTION peerdisable(const name sender, const name owner);
 
     ACTION unregnode(
       const name owner
@@ -142,7 +151,7 @@ CONTRACT priveos : public eosio::contract {
     
     void validate_asset(const asset quantity) {
       eosio_assert(quantity.amount > 0, "Deposit amount must be > 0");
-      auto& curr = currencies.get(quantity.symbol.code().raw(), "Currency not accepted");
+      const auto& curr = currencies.get(quantity.symbol.code().raw(), "Currency not accepted");
       
       /* If we are in a notification action that was initiated by 
        * require_recipient in the eosio.token contract, get_code() is the
@@ -180,7 +189,7 @@ CONTRACT priveos : public eosio::contract {
     
 
     const asset get_read_fee(symbol currency) {
-      auto itr = read_prices.find(currency.code().raw());
+      const auto itr = read_prices.find(currency.code().raw());
       if(itr != read_prices.end()) {
         return itr->money;
       } else {
@@ -189,7 +198,7 @@ CONTRACT priveos : public eosio::contract {
     }
     
     const asset get_store_fee(symbol currency) {
-      auto itr = store_prices.find(currency.code().raw());
+      const auto itr = store_prices.find(currency.code().raw());
       if(itr != store_prices.end()) {
         return itr->money;
       } else {
@@ -200,7 +209,7 @@ CONTRACT priveos : public eosio::contract {
     
     void add_balance(name user, asset value) {
       balances_table balances(_self, user.value);
-      auto user_it = balances.find(value.symbol.code().raw());      
+      const auto user_it = balances.find(value.symbol.code().raw());      
       eosio_assert(user_it != balances.end(), "Balance table entry does not exist, call prepare first");
       balances.modify(user_it, user, [&](auto& bal){
           bal.funds += value;
@@ -225,7 +234,7 @@ CONTRACT priveos : public eosio::contract {
     }
     
     int64_t median(std::vector<int64_t>& v) {
-      size_t s = v.size();
+      const size_t s = v.size();
       if(s == 0) {
         return 0;
       } else if(s == 1) {
@@ -248,11 +257,75 @@ CONTRACT priveos : public eosio::contract {
       } 
     }
     
-    void was_approved_by(const name node, const name approver) {
+    void was_approved_by(const name approver, const name node) {
       const auto itr = peerapprovals.find(node.value);
+      
+      /**
+        * If number of needed approvals is met (including the current one),
+        * erase peerapproval from the table and activate node.
+        */
+      if(itr->approved_by.size() + 1 >= PEERS_NEEDED) {
+        peerapprovals.erase(itr);
+        return activate_node(node);
+      }
+      
+      /**
+        * Otherwise, add the approver to the set
+        */
       if(itr != peerapprovals.end()) {
-        peerapprovals.modify(itr, node, [&](auto& pa) {
+        peerapprovals.modify(itr, same_payer, [&](auto& pa) {
           pa.approved_by.insert(approver);
+        });
+      }
+    }
+    
+    void was_disapproved_by(const name disapprover, const name node) {
+      const auto itr = peerdisapprovals.find(node.value);
+      
+      /**
+        * If no peerdisapproval table entry exists yet, create one and exit
+        */
+      if(itr == peerdisapprovals.end()) {
+        peerdisapprovals.emplace(disapprover, [&](auto& pd) {
+          pd.node = node;
+          pd.disapproved_by.insert(disapprover);
+        });
+        return;
+      }
+      
+      /**
+        * If number of needed disapprovals is met (including the current one),
+        * erase peerdisapproval from the table and disable the node.
+        */
+      if(itr->disapproved_by.size() + 1 >= PEERS_NEEDED) {
+        peerdisapprovals.erase(itr);
+        return disable_node(node);
+      }
+      
+      /**
+        * Otherwise, add the disapprover to the set
+        */
+      if(itr != peerdisapprovals.end()) {
+        peerdisapprovals.modify(itr, same_payer, [&](auto& pa) {
+          pa.disapproved_by.insert(disapprover);
+        });
+      }
+    }
+    
+    void activate_node(const name node) {
+      const auto node_idx = nodes.find(node.value);
+      if(node_idx != nodes.end()) {
+        nodes.modify(node_idx, same_payer, [&](auto& info) {
+          info.is_active = true;
+        });
+      }
+    }
+    
+    void disable_node(const name node) {
+      const auto node_idx = nodes.find(node.value);
+      if(node_idx != nodes.end()) {
+        nodes.modify(node_idx, same_payer, [&](auto& info) {
+          info.is_active = false;
         });
       }
     }
