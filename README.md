@@ -29,6 +29,10 @@ If you are using a firewall, please make sure that it allows stateful connection
 ## Registering your Node
 Once your node is all set up, you can call ```priveosrules:regnode```, it's the privEOS equivalent of ```eosio:regproduce``` 🙂
 
+## Demux Syncing
+Demux syncing works best with node that's in close network proximity. If you have problems keeping your demux index in sync with the tip of the chain, make sure you are using an API Endpoint that is close to your server. We've observed problems when the ping to the API Endpoint is greater than 100ms. So if you're in the UK and using an API Endpoint in Germany, you're probably okay, but not if you use one from Australia.
+
+
 Example command:
 
     cleos -u https://jungle2.cryptolions.io  push action priveosrules regnode '["YOUR_EOS_ACCOUNT", "YOUR_NODE_PUBLIC_KEY", "https://YOUR_SERVER_NAME"]' -p YOUR_EOS_ACCOUNT
