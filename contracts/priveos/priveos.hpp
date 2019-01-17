@@ -259,7 +259,7 @@ CONTRACT priveos : public eosio::contract {
     
     void was_approved_by(const name approver, const name node) {
       const auto itr = peerapprovals.find(node.value);
-      
+      print(" itr->approved_by.size(): ", itr->approved_by.size());
       /**
         * If number of needed approvals is met (including the current one),
         * erase peerapproval from the table and activate node.
@@ -273,7 +273,8 @@ CONTRACT priveos : public eosio::contract {
         * Otherwise, add the approver to the set
         */
       if(itr != peerapprovals.end()) {
-        peerapprovals.modify(itr, same_payer, [&](auto& pa) {
+        print(" adding approver to the set");
+        peerapprovals.modify(itr, approver, [&](auto& pa) {
           pa.approved_by.insert(approver);
         });
       }
@@ -306,7 +307,7 @@ CONTRACT priveos : public eosio::contract {
         * Otherwise, add the disapprover to the set
         */
       if(itr != peerdisapprovals.end()) {
-        peerdisapprovals.modify(itr, same_payer, [&](auto& pa) {
+        peerdisapprovals.modify(itr, disapprover, [&](auto& pa) {
           pa.disapproved_by.insert(disapprover);
         });
       }

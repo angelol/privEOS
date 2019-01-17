@@ -72,6 +72,12 @@ regnodes:
 shownodes:
 	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) nodes
 
+approvals:
+	$(CLEOS) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) peerapproval
+
+approve:
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) peerapprove '["testnodexxx1", "testnodexxx2"]' -p testnodexxx1
+	
 setprice:
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx1", "1000.0000 EUR", "accessgrant"]' -p testnodexxx1
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx1", "0.0000 EOS", "store"]' -p testnodexxx1
