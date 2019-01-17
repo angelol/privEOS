@@ -65,7 +65,7 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
   }  
 }
 
-ACTION priveos::peerapprove(const name sender, const name owner) {
+ACTION priveos::peerappr(const name sender, const name owner) {
   print("peerapprove: sender: ", sender);
   require_auth(sender);
   
@@ -73,7 +73,7 @@ ACTION priveos::peerapprove(const name sender, const name owner) {
   was_approved_by(sender, owner);
 }
 
-ACTION priveos::peerdisable(const name sender, const name owner) {
+ACTION priveos::peerdisappr(const name sender, const name owner) {
   require_auth(sender);
   
   nodes.get(sender.value, "Sender must be a registered node");
@@ -144,7 +144,7 @@ extern "C" {
     
     if (code == receiver) {
       switch (action) { 
-        EOSIO_DISPATCH_HELPER(priveos, (store)(accessgrant)(regnode)(unregnode)(setprice)(addcurrency)(prepare)(peerapprove)(peerdisable) ) 
+        EOSIO_DISPATCH_HELPER(priveos, (store)(accessgrant)(regnode)(unregnode)(setprice)(addcurrency)(prepare)(peerappr)(peerdisappr) ) 
       }    
     }
     eosio_exit(0);
