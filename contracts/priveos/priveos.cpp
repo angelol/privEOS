@@ -66,6 +66,14 @@ ACTION priveos::unregnode(const name owner) {
   });
 }
 
+ACTION priveos::admunreg(const name owner) {
+  require_auth(_self);
+  const auto& node = nodes.get(owner.value, "owner not found");
+  nodes.modify(node, same_payer, [&](nodeinfo& info) {
+    info.is_active = false;
+  });
+}
+
 ACTION priveos::setprice(const name node, const asset price, const std::string action) {
   nodes.get(node.value, "node not found.");
   currencies.get(price.symbol.code().raw(), "Token not accepted");
@@ -124,7 +132,7 @@ extern "C" {
     
     if (code == receiver) {
       switch (action) { 
-        EOSIO_DISPATCH_HELPER(priveos, (store)(accessgrant)(regnode)(unregnode)(setprice)(addcurrency)(prepare) ) 
+        EOSIO_DISPATCH_HELPER(priveos, (store)(accessgrant)(regnode)(unregnode)(setprice)(addcurrency)(prepare)(admunreg) ) 
       }    
     }
     eosio_exit(0);
