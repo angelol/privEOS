@@ -267,6 +267,14 @@ CONTRACT priveos : public eosio::contract {
     void was_approved_by(const name approver, const name node) {
       const auto itr = peerapprovals.find(node.value);
       print(" itr->approved_by.size(): ", itr->approved_by.size());
+      
+      /**
+        * We only approve peers when a request already exists/ 
+        */
+      if(itr == peerapprovals.end()) {
+        return;
+      }
+      
       /**
         * If number of needed approvals is met (including the current one),
         * erase peerapproval from the table and activate node.
@@ -327,6 +335,8 @@ CONTRACT priveos : public eosio::contract {
           info.is_active = true;
         });
       }
+      
+      peerdisapprovals.erase(peerdisapprovals.find(node.value));
     }
     
     void disable_node(const name node) {
@@ -336,6 +346,7 @@ CONTRACT priveos : public eosio::contract {
           info.is_active = false;
         });
       }
+      peerapprovals.erase(peerapprovals.find(node.value));
     }
 };
 
