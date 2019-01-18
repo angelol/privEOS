@@ -125,7 +125,6 @@ async function execute_transaction(node, action_name) {
 }
 
 async function is_node_okay(node) {
-  return true
   const url = new URL('/broker/status/', node.url)
   let okay = false
   try {
