@@ -1,18 +1,22 @@
 module.exports = {
   httpEndpoint: 'http://localhost:8888',
   chainId: 'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f',
+  watchdogPermission: {
+    permission: 'watchdog',
+    key: 'PRIVATE_KEY',
+  },
   mongoUrl: 'mongodb://127.0.0.1:27017',
   dbName: 'priveos',
   contract: 'priveosrules',
-  nodeAccount: 'testnode1',
+  kmsPort: 3001,
+  brokerPort: 4000,
+  nodeAccount: 'testnodexxx1',
   backend: 'demux',
   encryptionServiceUrl: 'http://127.0.0.1:6000',
-  kmsPort: 3000,
-  brokerPort: 4000,
   ipfsConfig: {
     host: 'localhost',
     port: '5001',
-    protocol: 'http'
+    protocol: 'http',
   },
   logLevel: 'info',
 }
