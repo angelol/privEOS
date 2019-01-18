@@ -124,8 +124,15 @@ CONTRACT priveos : public eosio::contract {
       const std::string url
     );
     
-    ACTION peerapprove(const name sender, const name owner);
-    ACTION peerdisable(const name sender, const name owner);
+    ACTION peerappr(
+      const name sender, 
+      const name owner
+    );
+    
+    ACTION peerdisappr(
+      const name sender, 
+      const name owner
+    );
 
     ACTION unregnode(
       const name owner
