@@ -70,14 +70,16 @@ ACTION priveos::peerappr(const name sender, const name owner) {
   require_auth(sender);
   
   nodes.get(sender.value, "Sender must be a registered node");
-  was_approved_by(sender, owner);
+  const auto &node = nodes.get(owner.value, "Owner must be a registered node");
+  was_approved_by(sender, node);
 }
 
 ACTION priveos::peerdisappr(const name sender, const name owner) {
   require_auth(sender);
   
   nodes.get(sender.value, "Sender must be a registered node");
-  was_disapproved_by(sender, owner);
+  const auto &node = nodes.get(owner.value, "Owner must be a registered node");
+  was_disapproved_by(sender, node);
 }
     
 ACTION priveos::unregnode(const name owner) {

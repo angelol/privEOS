@@ -264,8 +264,13 @@ CONTRACT priveos : public eosio::contract {
       } 
     }
     
-    void was_approved_by(const name approver, const name node) {
-      const auto itr = peerapprovals.find(node.value);
+    void was_approved_by(const name approver, const nodeinfo node) {
+      if(node.is_active) {
+        // no point in approving this node if it's already active
+        return;
+      }
+      
+      const auto itr = peerapprovals.find(node.owner.value);
       print(" itr->approved_by.size(): ", itr->approved_by.size());
       
       /**
@@ -295,15 +300,20 @@ CONTRACT priveos : public eosio::contract {
       }
     }
     
-    void was_disapproved_by(const name disapprover, const name node) {
-      const auto itr = peerdisapprovals.find(node.value);
+    void was_disapproved_by(const name disapprover, const nodeinfo& node) {
+      if(!node.is_active) {
+        // no point in disapproving this node if it's already deactivated
+        return;
+      }
+      
+      const auto itr = peerdisapprovals.find(node.owner.value);
       
       /**
         * If no peerdisapproval table entry exists yet, create one and exit
         */
       if(itr == peerdisapprovals.end()) {
         peerdisapprovals.emplace(disapprover, [&](auto& pd) {
-          pd.node = node;
+          pd.node = node.owner;
           pd.disapproved_by.insert(disapprover);
         });
         return;
@@ -328,25 +338,25 @@ CONTRACT priveos : public eosio::contract {
       }
     }
     
-    void activate_node(const name node) {
-      const auto node_idx = nodes.find(node.value);
+    void activate_node(const nodeinfo& node) {
+      const auto node_idx = nodes.find(node.owner.value);
       if(node_idx != nodes.end()) {
         nodes.modify(node_idx, same_payer, [&](auto& info) {
           info.is_active = true;
         });
       }
       
-      peerdisapprovals.erase(peerdisapprovals.find(node.value));
+      peerdisapprovals.erase(peerdisapprovals.find(node.owner.value));
     }
     
-    void disable_node(const name node) {
-      const auto node_idx = nodes.find(node.value);
+    void disable_node(const nodeinfo& node) {
+      const auto node_idx = nodes.find(node.owner.value);
       if(node_idx != nodes.end()) {
         nodes.modify(node_idx, same_payer, [&](auto& info) {
           info.is_active = false;
         });
       }
-      peerapprovals.erase(peerapprovals.find(node.value));
+      peerapprovals.erase(peerapprovals.find(node.owner.value));
     }
 };
 
