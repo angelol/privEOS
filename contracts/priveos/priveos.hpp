@@ -388,7 +388,7 @@ CONTRACT priveos : public eosio::contract {
       }
       
       // if there are any incomplete approvals, clear them out
-      const auto &itr = peerapprovals.find(node.owner.value);
+      const auto itr = peerapprovals.find(node.owner.value);
       if(itr != peerapprovals.end()) {
         peerapprovals.erase(itr);
       }
