@@ -8,5 +8,8 @@ apps:
   - script : index.js
     cwd    : kms
     name   : kms
+  - script : index.js
+    cwd    : watchdog
+    name   : watchdog
 
  
