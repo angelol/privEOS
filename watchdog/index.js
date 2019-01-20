@@ -111,7 +111,9 @@ function needs_my_disapproval(node) {
 async function get_approvals() {
   const res = await eos.getTableRows({json:true, scope: config.contract, code: config.contract,  table: 'peerapproval', limit:100})
   return res.rows.reduce((a, b) => {
-    a[b.node] = b.approved_by
+    if(!is_expired(b)) {
+      a[b.node] = b.approved_by
+    }
     return a
   }, {})
 }
@@ -120,11 +122,16 @@ async function get_disapprovals() {
   const res = await eos.getTableRows({json:true, scope: config.contract, code: config.contract,  table: 'peerdisappr', limit:100})
   log.debug(`get_disapprovals: ${JSON.stringify(res.rows,null, 2)}`)
   return res.rows.reduce((a, b) => {
-    a[b.node] = b.disapproved_by
+    if(!is_expired(b)) {
+      a[b.node] = b.disapproved_by
+    }
     return a
   }, {})
 }
 
+function is_expired(approval) {
+  return (new Date() - approval.created_at) > 5*60 
+}
 async function execute_transaction(node, action_name) {
   const actions = [{
     account: config.contract,
