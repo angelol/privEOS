@@ -15,11 +15,11 @@ CONTRACT priveos : public eosio::contract {
   public:
     priveos(name self,name code, datastream<const char*> ds) : eosio::contract(self,code,ds), nodes(_self, _self.value), read_prices(_self, _self.value), store_prices(_self, _self.value), currencies(_self, _self.value), peerapprovals(_self, _self.value), peerdisapprovals(_self, _self.value){}
     
-    const name fee_account{"priveosxfees"};
+    static constexpr name fee_account{"priveosxfees"};
     const std::string accessgrant_action_name{"accessgrant"};
     const std::string store_action_name{"store"};    
-    const static auto PEERS_NEEDED = 5;
-    const static auto FIVE_MINUTES = 5*60;
+    const static std::size_t PEERS_NEEDED{5};
+    const static uint32_t FIVE_MINUTES{5*60};
     
     TABLE nodeinfo {
       name        owner;
