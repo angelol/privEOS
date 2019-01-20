@@ -26,6 +26,14 @@ async function main() {
 		process.send('ready')		
 	}
   log.debug("Ohai main")
+  
+  const watchdog_should_run = await should_watchdog_run()
+  if(!watchdog_should_run) {
+    log.info("Contract version is incompatible, skipping this round.")
+    setTimeout(main, 10000)
+    return
+  }
+  
   // 1. get nodes
   const nodes = await get_nodes()
   approvals = await get_approvals()
@@ -148,5 +156,14 @@ async function get_nodes() {
   const res = await eos.getTableRows({json:true, scope: config.contract, code: config.contract,  table: 'nodes', limit:100})
   return res.rows.filter(x => x.owner != config.nodeAccount)
 }
+
+async function should_watchdog_run() {
+  const res = await eos.getAbi({account_name: config.contract})
+  const table_names = res.abi.tables.map(x => x.name)
+  // console.log(JSON.stringify(table_names, null, 2))
+  return table_names.includes('peerapproval')
+}
 main()
 // get_disapprovals().then(x => console.log(JSON.stringify(x, null, 2)))
+
+// xxx()
