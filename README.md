@@ -26,6 +26,22 @@ If you are using a firewall, please make sure that it allows stateful connection
 * `443` This is the standard SSL port that Nginx is listening on.
 * `4001` We recommend opening this up for IPFS so other Swarm nodes can connect to us. This also makes our setup future-proof as there are ideas to build a private IPFS subnet consisting of privEOS nodes.
 
+## Add Watchdog Permission
+
+When a new node `regnode`s with privEOS, it is not active by default. It first has to be approved by a minimum number of peers. Every node runs the watchdog daemon for this purpose. It checks the status of new nodes, and if everything is okay, approves it by calling the `priveosrules:peerappr` action. Once a minimum number of peers have approved a certain node, it is activated. This is to make sure that only functional nodes can be activated.
+
+The same process happens with currently active nodes. The watchdog regularly checks the status of all active nodes. If a node is offline or has a problem, the watchdog calls the `priveosrules:peerdisappr` action. Once a threshold amount of peer nodes have disapproved a node, it is being deactivated by the smart contract.
+
+That's why every node needs to be able to call the actions `priveosrules:peerappr` and `priveosrules:peerdisappr` non-interactively. For this purpose, we create a custom permission that is linked to these actions.
+
+Please generate a new, dedicated public/private keypair for this purpose and then create your custom permission like this:
+
+    cleos set account permission YOUR_EOS_ACCOUNT watchdog YOUR_NEW_DEDICATED_PUBLIC_KEY active
+    cleos set action permission YOUR_EOS_ACCOUNT priveosrules peerappr watchdog
+    cleos set action permission YOUR_EOS_ACCOUNT priveosrules peerdisappr watchdog
+    
+This new permission named `watchdog` can only be used to call the above actions and nothing else, so it is safe to store this private key on the server.
+    
 ## Registering your Node
 Once your node is all set up, you can call ```priveosrules:regnode```, it's the privEOS equivalent of ```eosio:regproduce``` 🙂
 

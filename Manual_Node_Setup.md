@@ -61,7 +61,11 @@ Make sure IPFS is automatically started:
     cp common/config.js-example common/config.js
     vi common/config.js
     
-When editing the config file, make sure to enter a valid `httpEndpoint` of the chain you want to connect to and a matching `chainId`. Under `nodeAccount`, enter your EOS BP account that you will use to `regnode` with the privEOS contract. If you're following this guide, you don't need to touch the rest of the values.
+When editing the config file, make sure to enter a valid `httpEndpoint` of the chain you want to connect to and a matching `chainId`. Under `nodeAccount`, enter your EOS BP account that you will use to `regnode` with the privEOS contract. 
+
+Please follow the [instructions to add a watchdog permission](https://github.com/rawrat/privEOS#add-watchdog-permission) and under `watchdogPermission`, enter your the private key of your newly generated `watchdog` permission. 
+
+If you're following this guide, you don't need to touch the rest of the values.
 
 Start service and check log output for potential errors:
 
