@@ -42,3 +42,66 @@ apps:
     watch  : ['.', '../common']
     wait_ready: true
  
+# start 5 instances of the watchdog for testing
+  - script : index.js
+    cwd    : watchdog
+    name   : watchdog_1
+    args   : testnodexxx1
+    watch  : ['.', '../common']
+    wait_ready: true
+  - script : index.js
+    cwd    : watchdog
+    name   : watchdog_2
+    args   : testnodexxx2
+    watch  : ['.', '../common']
+    wait_ready: true
+  - script : index.js
+    cwd    : watchdog
+    name   : watchdog_3
+    args   : testnodexxx3
+    watch  : ['.', '../common']
+    wait_ready: true
+  - script : index.js
+    cwd    : watchdog
+    name   : watchdog_4
+    args   : testnodexxx4
+    watch  : ['.', '../common']
+    wait_ready: true
+  - script : index.js
+    cwd    : watchdog
+    name   : watchdog_5
+    args   : testnodexxx5
+    watch  : ['.', '../common']
+    wait_ready: true
+
+# start 5 instances of the broker for testing
+  - script : index.js
+    cwd    : broker
+    name   : broker_1
+    args   : 4401 testnodexxx1
+    watch  : ['.', '../common']
+    wait_ready: true
+  - script : index.js
+    cwd    : broker
+    name   : broker_2
+    args   : 4402 testnodexxx2
+    watch  : ['.', '../common']
+    wait_ready: true
+  - script : index.js
+    cwd    : broker
+    name   : broker_3
+    args   : 4403 testnodexxx3
+    watch  : ['.', '../common']
+    wait_ready: true
+  - script : index.js
+    cwd    : broker
+    name   : broker_4
+    args   : 4404 testnodexxx4
+    watch  : ['.', '../common']
+    wait_ready: true
+  - script : index.js
+    cwd    : broker
+    name   : broker_5
+    args   : 4405 testnodexxx5
+    watch  : ['.', '../common']
+    wait_ready: true

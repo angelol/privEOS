@@ -14,9 +14,17 @@ const eos = Eos({
   keyProvider: [config.watchdogPermission.key],
 })
 
+if(process.argv[2]) {
+  config.nodeAccount = process.argv[2]
+  log.debug(`config.nodeAccount: ${config.nodeAccount}`)
+}
+
 let approvals, disapprovals
 
 async function main() {
+  if(process.send) {
+		process.send('ready')		
+	}
   log.debug("Ohai main")
   // 1. get nodes
   const nodes = await get_nodes()
@@ -67,11 +75,9 @@ async function disapprove(node) {
 
 function needs_my_approval(node) {
   const approval = approvals[node.owner]
+  log.debug(`needs_my_approval: approval: ${approval}`)
   if(!approval) {
-    /* 
-     * Approvals happen only upon requests, so if none exists, we do nothing.
-     */
-    return false
+    return true
   }
   // Only approve if we haven't already approved this request
   return !approval.includes(config.nodeAccount)
@@ -126,6 +132,7 @@ async function execute_transaction(node, action_name) {
 
 async function is_node_okay(node) {
   const url = new URL('/broker/status/', node.url)
+  log.debug(`Trying ${url.href}`)
   let okay = false
   try {
     const res = await axios.get(url.href)

@@ -19,6 +19,7 @@ CONTRACT priveos : public eosio::contract {
     const std::string accessgrant_action_name{"accessgrant"};
     const std::string store_action_name{"store"};    
     const static auto PEERS_NEEDED = 5;
+    const static auto FIVE_MINUTES = 5*60;
     
     TABLE nodeinfo {
       name        owner;
@@ -85,8 +86,10 @@ CONTRACT priveos : public eosio::contract {
     TABLE peerapproval {
       name node;
       std::set<name> approved_by;
+      uint32_t created_at;
       
       uint64_t primary_key() const { return node.value; } 
+      bool is_expired() const { return (now() - created_at) > FIVE_MINUTES; }
     };
     typedef multi_index<"peerapproval"_n, peerapproval> peerapproval_table;
     peerapproval_table peerapprovals;
@@ -94,8 +97,10 @@ CONTRACT priveos : public eosio::contract {
     TABLE peerdisapproval {
       name node;
       std::set<name> disapproved_by;
+      uint32_t created_at;
       
       uint64_t primary_key() const { return node.value; } 
+      bool is_expired() const { return (now() - created_at) > FIVE_MINUTES; }
     };
     typedef multi_index<"peerdisappr"_n, peerdisapproval> peerdisapproval_table;
     peerdisapproval_table peerdisapprovals;
@@ -167,7 +172,6 @@ CONTRACT priveos : public eosio::contract {
        * Make sure we're checking that against the known contract account. 
        */
       eosio_assert(curr.contract == get_code(), "We're not so easily fooled");
-      print("Curr: ", curr.currency, "contract: ", curr.contract);
     }
     
     template<typename T>
@@ -255,28 +259,37 @@ CONTRACT priveos : public eosio::contract {
       }
     }    
     
-    void needs_approval(const name node) {
-      const auto itr = peerapprovals.find(node.value);
-      if(itr == peerapprovals.end()) {
-        peerapprovals.emplace(node, [&](auto& pa) {
-          pa.node = node;
-        });
-      } 
-    }
     
-    void was_approved_by(const name approver, const nodeinfo node) {
+    void was_approved_by(const name approver, const nodeinfo& node) {
       if(node.is_active) {
         // no point in approving this node if it's already active
         return;
       }
       
       const auto itr = peerapprovals.find(node.owner.value);
-      print(" itr->approved_by.size(): ", itr->approved_by.size());
       
       /**
-        * We only approve peers when a request already exists/ 
+        * If no peerapproval table entry exists yet, create one and exit
         */
       if(itr == peerapprovals.end()) {
+        peerapprovals.emplace(approver, [&](auto& pa) {
+          pa.node = node.owner;
+          pa.approved_by.insert(approver);
+          pa.created_at = now();
+        });
+        return;
+      } else if(itr->is_expired()) {
+        /**
+          * If it's expired, erase the old one and start fresh.
+          * This is to make sure the other disapprovals are not 
+          * from another century.
+          */
+        peerapprovals.erase(itr);
+        peerapprovals.emplace(approver, [&](auto& pa) {
+          pa.node = node.owner;
+          pa.approved_by.insert(approver);
+          pa.created_at = now();
+        });
         return;
       }
       
@@ -293,7 +306,6 @@ CONTRACT priveos : public eosio::contract {
         * Otherwise, add the approver to the set
         */
       if(itr != peerapprovals.end()) {
-        print(" adding approver to the set");
         peerapprovals.modify(itr, approver, [&](auto& pa) {
           pa.approved_by.insert(approver);
         });
@@ -315,6 +327,20 @@ CONTRACT priveos : public eosio::contract {
         peerdisapprovals.emplace(disapprover, [&](auto& pd) {
           pd.node = node.owner;
           pd.disapproved_by.insert(disapprover);
+          pd.created_at = now();
+        });
+        return;
+      } else if(itr->is_expired()) {
+        /**
+          * If it's expired, erase the old one and start fresh.
+          * This is to make sure the other disapprovals are not 
+          * from another century.
+          */
+        peerdisapprovals.erase(itr);
+        peerdisapprovals.emplace(disapprover, [&](auto& pd) {
+          pd.node = node.owner;
+          pd.disapproved_by.insert(disapprover);
+          pd.created_at = now();
         });
         return;
       }
@@ -346,7 +372,11 @@ CONTRACT priveos : public eosio::contract {
         });
       }
       
-      peerdisapprovals.erase(peerdisapprovals.find(node.owner.value));
+      // if there are any incomplete disapprovals, clear them out
+      const auto itr = peerdisapprovals.find(node.owner.value);
+      if(itr != peerdisapprovals.end()) {
+        peerdisapprovals.erase(itr);
+      }
     }
     
     void disable_node(const nodeinfo& node) {
@@ -356,7 +386,12 @@ CONTRACT priveos : public eosio::contract {
           info.is_active = false;
         });
       }
-      peerapprovals.erase(peerapprovals.find(node.owner.value));
+      
+      // if there are any incomplete approvals, clear them out
+      const auto &itr = peerapprovals.find(node.owner.value);
+      if(itr != peerapprovals.end()) {
+        peerapprovals.erase(itr);
+      }
     }
 };
 

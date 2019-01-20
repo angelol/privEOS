@@ -44,24 +44,18 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
   const auto node_idx = nodes.find(owner.value);
   if(node_idx != nodes.end()) {
     // node already exists
-    nodes.modify(node_idx, owner, [&](nodeinfo& info) {
+    nodes.modify(node_idx, owner, [&](auto& info) {
       info.node_key = node_key;
       info.url = url;
     });
-    // if node had been deactivated before, 
-    // the user can call regnode to ask for reapproval
-    if(!node_idx->is_active) {
-      needs_approval(owner);
-    }
   } else {
     // we have a new node
-    nodes.emplace(owner, [&](nodeinfo& info) {
+    nodes.emplace(owner, [&](auto& info) {
       info.owner = owner;
       info.node_key = node_key;
       info.url = url;
       info.is_active = false;
     });
-    needs_approval(owner);
   }  
 }
 
