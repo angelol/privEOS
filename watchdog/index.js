@@ -7,6 +7,10 @@ const { URL } = require('url')
 const config = require('../common/config')
 const Eos = require('eosjs')
 
+if(!config.watchdogPermission) {
+  log.error(`Configuration error: Please add "watchdogPermission" to common/config.js`)
+}
+
 const eos = Eos({
   httpEndpoint: config.httpEndpoint, 
   chainId: config.chainId, 
