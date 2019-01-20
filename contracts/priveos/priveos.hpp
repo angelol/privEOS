@@ -18,7 +18,6 @@ CONTRACT priveos : public eosio::contract {
     static constexpr name fee_account{"priveosxfees"};
     const std::string accessgrant_action_name{"accessgrant"};
     const std::string store_action_name{"store"};    
-    const static std::size_t PEERS_NEEDED{5};
     const static uint32_t FIVE_MINUTES{5*60};
     
     TABLE nodeinfo {
@@ -297,7 +296,7 @@ CONTRACT priveos : public eosio::contract {
         * If number of needed approvals is met (including the current one),
         * erase peerapproval from the table and activate node.
         */
-      if(itr->approved_by.size() + 1 >= PEERS_NEEDED) {
+      if(itr->approved_by.size() + 1 >= peers_needed()) {
         peerapprovals.erase(itr);
         return activate_node(node);
       }
@@ -349,7 +348,7 @@ CONTRACT priveos : public eosio::contract {
         * If number of needed disapprovals is met (including the current one),
         * erase peerdisapproval from the table and disable the node.
         */
-      if(itr->disapproved_by.size() + 1 >= PEERS_NEEDED) {
+      if(itr->disapproved_by.size() + 1 >= peers_needed()) {
         peerdisapprovals.erase(itr);
         return disable_node(node);
       }
@@ -392,6 +391,16 @@ CONTRACT priveos : public eosio::contract {
       if(itr != peerapprovals.end()) {
         peerapprovals.erase(itr);
       }
+    }
+    
+    uint32_t peers_needed() {
+      uint32_t active_nodes{0};
+      for(const auto& node: nodes) {
+        if(node.is_active) {
+          active_nodes++;
+        }
+      }
+      return active_nodes/2 + 1;
     }
 };
 
