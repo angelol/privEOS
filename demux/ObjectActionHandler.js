@@ -31,8 +31,7 @@ const config = require("../common/config.js")
 const { AbstractActionHandler } = require("demux")
 const mongo = require("../common/mongo")
 global.Promise = require('bluebird')
-const log = require('loglevel')
-log.setDefaultLevel(config.logLevel)
+const log = require('../common/log')
 
 class ObjectActionHandler extends AbstractActionHandler {
 

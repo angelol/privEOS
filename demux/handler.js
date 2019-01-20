@@ -32,8 +32,7 @@ const mongo = require("../common/mongo")
 const ipfsClient = require('ipfs-http-client')
 const assert = require('assert')
 global.Promise = require('bluebird')
-const log = require('loglevel')
-log.setDefaultLevel(config.logLevel)
+const log = require('../common/log')
 
 async function insertStore(state, payload, blockInfo, context) {
   log.debug("insertStore: payload.data: ", payload.data)

@@ -15,8 +15,7 @@ const { NodeosActionReader } = require("demux-eos") // eslint-disable-line
 const ObjectActionHandler = require("./ObjectActionHandler")
 const handlerVersion = require("./handler")
 const mongo = require("../common/mongo")
-const log = require('loglevel')
-log.setDefaultLevel(config.logLevel)
+const log = require('../common/log')
 
 /*
  * This ObjectActionHandler, which does not change the signature from its parent AbstractActionHandler, takes an array

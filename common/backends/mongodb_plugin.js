@@ -1,6 +1,6 @@
 const mongo = require('../mongo.js')
 const config = require('../config')
-const log = require('loglevel')
+const log = require('../log')
 
 async function get_store_trace(dappcontract, file) {
   const db = await mongo.db()

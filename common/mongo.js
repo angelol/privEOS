@@ -2,8 +2,7 @@ const MongoClient = require('mongodb')
 const config = require('./config')
 const assert = require("assert")
 global.Promise = require('bluebird')
-const log = require('loglevel')
-log.setDefaultLevel(config.logLevel)
+const log = require('../common/log')
 
 /**
   * MongoDB convenience class

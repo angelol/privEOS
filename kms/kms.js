@@ -3,8 +3,7 @@ const assert = require('assert')
 const config = require('../common/config')
 const encryption_service = require('./proxy')
 const getMultiHash = require('../common/multihash')
-const log = require('loglevel')
-log.setDefaultLevel(config.logLevel)
+const log = require('../common/log')
 
 class UserNotAuthorized extends Error {}
 

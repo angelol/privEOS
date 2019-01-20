@@ -2,10 +2,9 @@
 const axios = require('axios')
 axios.defaults.timeout = 3000
 const Promise = require('bluebird')
-const log = require('loglevel')
+const log = require('../common/log')
 const { URL } = require('url')
 const config = require('../common/config')
-log.setDefaultLevel(config.logLevel)
 const Eos = require('eosjs')
 
 const eos = Eos({

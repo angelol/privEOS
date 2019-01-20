@@ -1,7 +1,7 @@
 const mongo = require('../mongo.js')
+const log = require('../log')
 const config = require('../config')
 const assert = require('assert')
-const log = require('loglevel')
 global.Promise = require('bluebird')
 log.setDefaultLevel(config.logLevel)
 

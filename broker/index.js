@@ -6,18 +6,11 @@ const axios = require('axios')
 axios.defaults.timeout = 15000 // make sure we're not hanging forever
 const Promise = require('bluebird')
 const Backend = require('../common/backend')
-const log = require('loglevel')
+const log = require('../common/log')
+const config = require('../common/config')
 const { URL } = require('url')
 const { broker_status } = require('./status')
 
-var config
-try {
-	config = require('../common/config')
-	log.setDefaultLevel(config.logLevel)
-} catch(e) {
-	log.error("../common/config.js not found. Please copy ../common/config.js-example to ../common/config.js and modify to your needs.")
-	process.exit(1)
-}
 const { get_nodes, all_nodes, contract, fetch_from_ipfs } = require('./helpers')
 
 if(process.argv[2]) {
@@ -141,7 +134,7 @@ async function broker_read(req, res) {
 
 
 server.listen(config.brokerPort, "127.0.0.1", function() {
-  log.info('Broker %s listening at %s', server.name, server.url)
+  log.info(`Broker ${server.name} listening at ${server.url}`)
 	if(process.send) {
 		process.send('ready')		
 	}

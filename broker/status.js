@@ -9,8 +9,7 @@ const ByteBuffer = require('bytebuffer')
 const assert = require('assert')
 const ipfsClient = require('ipfs-http-client')
 const { version } = require('../package.json')
-const log = require('loglevel')
-log.setDefaultLevel(config.logLevel)
+const log = require('../common/log')
 
 const eos = Eos({httpEndpoint: config.httpEndpoint, chainId: config.chainId})
 

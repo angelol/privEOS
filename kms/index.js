@@ -1,15 +1,7 @@
 'use strict'
 const restify = require('restify')
-const log = require('loglevel')
-
-var config
-try {
-	config = require('../common/config')
-	log.setDefaultLevel(config.logLevel)
-} catch(e) {
-	log.error("../common/config.js not found. Please copy ../common/config.js-example to ../common/config.js and modify to your needs.")
-	process.exit(1)
-}
+const log = require('../common/log')
+const config = require('../common/config')
 const KMS = require('./kms')
 
 if(process.argv[2]) {
