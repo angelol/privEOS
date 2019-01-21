@@ -142,6 +142,10 @@ CONTRACT priveos : public eosio::contract {
       const name owner
     );
     
+    ACTION admunreg(
+      const name owner
+    );
+    
     ACTION setprice(
       const name node,
       const asset price,

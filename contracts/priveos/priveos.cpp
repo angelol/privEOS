@@ -39,7 +39,8 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
   require_auth(owner);
 
   eosio_assert(node_key != public_key(), "public key should not be the default value");
-  // eosio_assert(url.substr(0, 8) == std::string("https://"), "URL parameter must be a valid https URL");
+  eosio_assert(node_key.type == (uint32_t)0, "Only K1 Keys supported");
+  eosio_assert(url.substr(0, 8) == std::string("https://"), "URL parameter must be a valid https URL");
   
   const auto node_idx = nodes.find(owner.value);
   if(node_idx != nodes.end()) {
@@ -80,6 +81,14 @@ ACTION priveos::unregnode(const name owner) {
   require_auth(owner);
   const auto itr = nodes.find(owner.value);
   nodes.erase(itr);
+}
+
+ACTION priveos::admunreg(const name owner) {
+  require_auth(_self);
+  const auto& node = nodes.get(owner.value, "owner not found");
+  nodes.modify(node, same_payer, [&](nodeinfo& info) {
+    info.is_active = false;
+  });
 }
 
 ACTION priveos::setprice(const name node, const asset price, const std::string action) {
@@ -140,7 +149,7 @@ extern "C" {
     
     if (code == receiver) {
       switch (action) { 
-        EOSIO_DISPATCH_HELPER(priveos, (store)(accessgrant)(regnode)(unregnode)(setprice)(addcurrency)(prepare)(peerappr)(peerdisappr) ) 
+        EOSIO_DISPATCH_HELPER(priveos, (store)(accessgrant)(regnode)(unregnode)(setprice)(addcurrency)(prepare)(peerappr)(peerdisappr)(admunreg) ) 
       }    
     }
     eosio_exit(0);

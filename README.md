@@ -44,7 +44,6 @@ This new permission named `watchdog` can only be used to call the above actions 
     
 ## Registering your Node
 Once your node is all set up, you can call ```priveosrules:regnode```, it's the privEOS equivalent of ```eosio:regproduce``` 🙂
-
 Example command:
 
     cleos -u https://jungle2.cryptolions.io  push action priveosrules regnode '["YOUR_EOS_ACCOUNT", "YOUR_NODE_PUBLIC_KEY", "https://YOUR_SERVER_NAME"]' -p YOUR_EOS_ACCOUNT
@@ -66,6 +65,11 @@ The price charged for reading and writing to privEOS will be the median of all p
 
 ## Checking your Node Health
 Once you've completed the ```regnode``` step above, your node should appear on the [privEOS monitor](https://monitor.priveos.io/). 
+
+## Demux Syncing
+Demux syncing works best with node that's in close network proximity. If you have problems keeping your demux index in sync with the tip of the chain, make sure you are using an API endpoint that is close to your server. We've observed problems when the ping to the API endpoint is greater than 100ms. So if you're in the UK and using an API Endpoint in Germany, you're probably okay, but not if you use one from Australia.
+
+Demux is the easiest to set up because you can use any public API endpoint, but it has a few drawbacks. Currently, it does not support inline actions. PrivEOS also supports other backends such as the eosio::mongodb_plugin for nodeos. If you would like to test privEOS with mongodb_plugin, let us know on [Telegram](https://t.me/SLANT_official).
 
 ## Testing
 For testing, you can use the [privEOS client library](https://github.com/rawrat/priveos-client)
