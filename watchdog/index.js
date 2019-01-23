@@ -6,6 +6,8 @@ const log = require('../common/log')
 const { URL } = require('url')
 const config = require('../common/config')
 const Eos = require('eosjs')
+const restify = require('restify')
+
 
 if(!config.watchdogPermission) {
   log.error(`Configuration error: Please add "watchdogPermission" to common/config.js`)
@@ -22,15 +24,31 @@ if(process.argv[2]) {
   config.nodeAccount = process.argv[2]
   log.debug(`config.nodeAccount: ${config.nodeAccount}`)
 }
+const server = restify.createServer()
+
+server.get('/watchdog/status/', async function(req, res, next) {
+	try { 
+		res.send({
+	    status: 'ok',
+		})
+	} catch(err) {
+		log.error("Error: ", err)
+		res.send(500, "Generic Error")
+	}
+	next()
+})
+
+const port = config.watchdogPort || 3101
+server.listen(port, "127.0.0.1", function() {
+  log.info('Watchdog listening on port ', port)
+	if(process.send) {
+		process.send('ready')		
+	}
+})
 
 let approvals, disapprovals
 
 async function main() {
-  if(process.send) {
-		process.send('ready')		
-	}
-  log.debug("Ohai main")
-  
   const watchdog_should_run = await should_watchdog_run()
   if(!watchdog_should_run) {
     log.info("Contract version is incompatible, skipping this round.")
@@ -175,6 +193,4 @@ async function should_watchdog_run() {
   return table_names.includes('peerapproval')
 }
 main()
-// get_disapprovals().then(x => console.log(JSON.stringify(x, null, 2)))
 
-// xxx()

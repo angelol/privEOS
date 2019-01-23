@@ -16,6 +16,7 @@ const eos = Eos({httpEndpoint: config.httpEndpoint, chainId: config.chainId})
 async function broker_status(req, res) {
   const start = new Date()
   let errors = []
+  let warnings = []
   
   const [
     blocks_behind,
@@ -23,12 +24,14 @@ async function broker_status(req, res) {
     encryption_service_status,
     ipfs_status,
     info,
+    watchdog_status,
   ] = await Promise.all([
     wrap(get_blocks_behind)(),
     wrap(get_kms_status)(),
     wrap(test_encryption_service)(),
     wrap(check_ipfs)(),
     wrap(get_info)(),
+    wrap(check_watchdog)(),
   ])
   
   if(blocks_behind.error) {
@@ -59,6 +62,14 @@ async function broker_status(req, res) {
     errors.push(`Error while getting info`)
   }
   
+  if(watchdog_status.error) {
+    log.error(`Watchdog error: ${watchdog_status.error}`)
+    warnings.push(`Watchdog not running`)
+  } else if(watchdog_status != 'ok') {
+    log.error(`Watchdog returned status: ${watchdog_status}`)
+    warnings.push(`Watchdog Error`)
+  }
+  
   const end = new Date()
   info['duration'] = end-start
   info['index_head'] = blocks_behind.head
@@ -70,6 +81,9 @@ async function broker_status(req, res) {
   }
   if(errors.length) {
     data['errors'] = errors
+  }
+  if(warnings.length) {
+    data['warnings'] = warnings
   }
   
   res.send(data)
@@ -145,6 +159,17 @@ async function check_ipfs() {
   await ipfs.get('/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG/quick-start').timeout(1000, "Timeout while ipfs.get")
 }
 
+async function check_watchdog() {
+  const port = config.watchdogPort || 3101
+  const url = new URL('/watchdog/status/', `http://127.0.0.1:${port}`).href
+  const res = await axios.get(url)
+  return res.data.status
+}
+
+/**
+  * Function wrapper to gracefully handle exceptions inside Promise.all
+  * This is needed because Promise.all aborts when any promise rejects.
+  */
 function wrap(fun) {
   return async () => {
     try {
