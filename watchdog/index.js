@@ -24,6 +24,10 @@ if(process.argv[2]) {
   config.nodeAccount = process.argv[2]
   log.debug(`config.nodeAccount: ${config.nodeAccount}`)
 }
+if(process.argv[3]) {
+  config.watchdogPort = process.argv[3]
+}
+
 const server = restify.createServer()
 
 server.get('/watchdog/status/', async function(req, res, next) {
