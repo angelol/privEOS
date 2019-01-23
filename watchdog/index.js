@@ -30,10 +30,12 @@ if(process.argv[3]) {
 
 const server = restify.createServer()
 
+let status = 'ok'
+
 server.get('/watchdog/status/', async function(req, res, next) {
 	try { 
 		res.send({
-	    status: 'ok',
+	    status: status,
 		})
 	} catch(err) {
 		log.error("Error: ", err)
@@ -70,7 +72,15 @@ async function main() {
   //    if not okay and active => disapprove
   //    with 30 nodes, 1 round takes 60 seconds
   for(const node of nodes) {
-    await handle_node(node)
+    try {
+      await handle_node(node)
+      status = 'ok'
+    } catch(e) {
+      log.error(e)
+      if(status == 'ok') {
+        status = 'error while checking node'
+      } 
+    }
     await Promise.delay(2000)
   }
   setTimeout(main, 0)
@@ -80,11 +90,11 @@ async function handle_node(node) {
   const node_is_okay = await is_node_okay(node)
   log.debug(`Node ${node.owner} is ${node_is_okay}`)
   if(node_is_okay && !node.is_active) {
-    log.debug(`Node ${node.owner} is okay, approving`)
+    log.info(`Node ${node.owner} is okay, approving`)
     return approve(node)
   }
   if(!node_is_okay && node.is_active) {
-    log.debug(`Node ${node.owner} is down, disapproving`)
+    log.info(`Node ${node.owner} is down, disapproving`)
     return disapprove(node)
   }
 }
@@ -168,7 +178,15 @@ async function execute_transaction(node, action_name) {
       owner: node.owner,
     }
   }]
-  return eos.transaction({actions})
+  try { 
+    const res = eos.transaction({actions})
+    status = 'ok'
+    return res
+  } catch(e) {
+    log.error(`Error while executing transaction: ${e}`)
+    status = "error while executing transaction"
+    throw e
+  }
 }
 
 async function is_node_okay(node) {
