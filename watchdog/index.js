@@ -131,10 +131,6 @@ function needs_my_disapproval(node) {
   const disapproval = disapprovals[node.owner]
   log.debug(`Node ${node.owner} disapproval: ${disapproval}`)
   if(!disapproval) {
-    /* This is different from the behaviour for approvals.
-     * If a node is not okay, we are disapproving it regardless of
-     * whether or not a disapproval request already exists.
-     */
     return true
   }
   // Only disapprove if we haven't already disapproved this request
