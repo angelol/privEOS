@@ -9,6 +9,7 @@ const Eos = require('eosjs')
 
 if(!config.watchdogPermission) {
   log.error(`Configuration error: Please add "watchdogPermission" to common/config.js`)
+  process.exit(1)
 }
 
 const eos = Eos({
