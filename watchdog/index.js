@@ -159,7 +159,7 @@ async function get_disapprovals() {
 }
 
 function is_expired(approval) {
-  return (new Date() - approval.created_at) > 5*60 
+  return ((new Date()).getTime()/1000 - approval.created_at) > 5*60 
 }
 async function execute_transaction(node, action_name) {
   const actions = [{
