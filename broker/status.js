@@ -67,7 +67,7 @@ async function broker_status(req, res) {
     warnings.push(`Watchdog not running`)
   } else if(watchdog_status != 'ok') {
     log.error(`Watchdog returned status: ${watchdog_status}`)
-    warnings.push(`Watchdog Error`)
+    warnings.push(`Watchdog Error: ${watchdog_status}`)
   }
   
   const end = new Date()
