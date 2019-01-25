@@ -7,6 +7,7 @@ const { URL } = require('url')
 const config = require('../common/config')
 const Eos = require('eosjs')
 const restify = require('restify')
+const eosjs_ecc = require('eosjs-ecc')
 
 
 if(!config.watchdogPermission) {
@@ -34,9 +35,17 @@ let status = 'ok'
 
 server.get('/watchdog/status/', async function(req, res, next) {
 	try { 
-		res.send({
-	    status: status,
-		})
+    const err = await check_permissions()
+    if(err) {
+      res.send({
+  	    status: err,
+  		})
+    } else {
+      res.send({
+  	    status: status,
+  		})
+    }
+		
 	} catch(err) {
 		log.error("Error: ", err)
 		res.send(500, "Generic Error")
@@ -210,5 +219,28 @@ async function should_watchdog_run() {
   // console.log(JSON.stringify(table_names, null, 2))
   return table_names.includes('peerapproval')
 }
+
+async function check_permissions() {
+  const res = await eos.getAccount(config.nodeAccount)
+  // console.log("res: ", res)
+  const watchdog_perm = res.permissions.filter(x => x.perm_name == config.watchdogPermission.permission)[0]
+  
+  if(!watchdog_perm) {
+    return `No permission found with name ${config.watchdogPermission.permission}`
+  }
+  // console.log("watchdog_perm.required_auth: ", JSON.stringify(watchdog_perm.required_auth, null, 2))
+  const auth = watchdog_perm.required_auth
+  
+  if(auth.threshold != 1) {
+    return "Threshold should be 1"
+  }
+  
+  const configured_public_key = eosjs_ecc.privateToPublic(config.watchdogPermission.key)
+  
+  if(auth.keys[0].key != configured_public_key) {
+    return `Key is ${auth.keys[0].key} but configured key is ${configured_public_key}`
+  }  
+}
+
 main()
 
