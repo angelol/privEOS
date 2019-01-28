@@ -8,6 +8,7 @@ BOB=priveosbob11
 BOB_PRIVATE_KEY=5JqvAdD1vQG3MRAsC9RVzdPJxnUCBNVfvRhL7ZmQ7rCqUoMGrnw
 BOB_PUBLIC_KEY=EOS87xyhE6czLCpuF8PaEGc3UiXHHyCMQB2zHygpEsXyDJHadHWFK
 CONTRACT_ACCOUNT=priveosrules
+WALLET=priveostest
 WALLET_PASSWORD=`cat wallet-password.txt`
 EOS_CONTRACTS_DIR=/Users/al/Documents/eos/eos/build/contracts
 CLEOS=cleos

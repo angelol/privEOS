@@ -18,15 +18,15 @@ init:
 
 
 create_wallet:
-	$(CLEOS) wallet create --file=wallet-password.txt
+	$(CLEOS) wallet create --name=$(WALLET) --file=wallet-password.txt
 
 import_keys:
-	$(CLEOS) wallet import --name=eosio --private-key=$(PRIVATE_KEY)
-	$(CLEOS) wallet import --name=eosio --private-key=$(ALICE_PRIVATE_KEY)
-	$(CLEOS) wallet import --name=eosio --private-key=$(BOB_PRIVATE_KEY)
+	$(CLEOS) wallet import --name=$(WALLET) --private-key=$(PRIVATE_KEY)
+	$(CLEOS) wallet import --name=$(WALLET) --private-key=$(ALICE_PRIVATE_KEY)
+	$(CLEOS) wallet import --name=$(WALLET) --private-key=$(BOB_PRIVATE_KEY)
 
 unlock:
-	$(CLEOS) wallet unlock --password $(WALLET_PASSWORD)
+	$(CLEOS) wallet unlock --name=$(WALLET) --password $(WALLET_PASSWORD)
 		
 system:
 	$(CLEOS) create account eosio eosio.token $(PUBLIC_KEY) $(PUBLIC_KEY)
