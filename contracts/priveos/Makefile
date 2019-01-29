@@ -63,11 +63,29 @@ fundusers:
 
 	
 regnodes:
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx1", "$(PK_NODE_1)", "http://localhost:3001"]' -p testnodexxx1
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx2", "$(PK_NODE_2)", "http://localhost:3002"]' -p testnodexxx2
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx3", "$(PK_NODE_3)", "http://localhost:3003"]' -p testnodexxx3
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx4", "$(PK_NODE_4)", "http://localhost:3004"]' -p testnodexxx4
-	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx5", "$(PK_NODE_5)", "http://localhost:3005"]' -p testnodexxx5
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx1", "$(PK_NODE_1)", "http://localhost:4401"]' -p testnodexxx1
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx2", "$(PK_NODE_2)", "http://localhost:4402"]' -p testnodexxx2
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx3", "$(PK_NODE_3)", "http://localhost:4403"]' -p testnodexxx3
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx4", "$(PK_NODE_4)", "http://localhost:4404"]' -p testnodexxx4
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx5", "$(PK_NODE_5)", "http://localhost:4405"]' -p testnodexxx5
+
+permitwatchdogs:
+	$(CLEOS) set account permission testnodexxx1 watchdog $(PK_NODE_1) active
+	$(CLEOS) set action permission testnodexxx1 priveosrules peerappr watchdog
+	$(CLEOS) set action permission testnodexxx1 priveosrules peerdisappr watchdog
+	$(CLEOS) set account permission testnodexxx2 watchdog $(PK_NODE_1) active
+	$(CLEOS) set action permission testnodexxx2 priveosrules peerappr watchdog
+	$(CLEOS) set action permission testnodexxx2 priveosrules peerdisappr watchdog
+	$(CLEOS) set account permission testnodexxx3 watchdog $(PK_NODE_1) active
+	$(CLEOS) set action permission testnodexxx3 priveosrules peerappr watchdog
+	$(CLEOS) set action permission testnodexxx3 priveosrules peerdisappr watchdog
+	$(CLEOS) set account permission testnodexxx4 watchdog $(PK_NODE_1) active
+	$(CLEOS) set action permission testnodexxx4 priveosrules peerappr watchdog
+	$(CLEOS) set action permission testnodexxx4 priveosrules peerdisappr watchdog
+	$(CLEOS) set account permission testnodexxx5 watchdog $(PK_NODE_1) active
+	$(CLEOS) set action permission testnodexxx5 priveosrules peerappr watchdog
+	$(CLEOS) set action permission testnodexxx5 priveosrules peerdisappr watchdog
+	
 
 admunreg:
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) admunreg '["testnodexxx1"]' -p $(CONTRACT_ACCOUNT)
