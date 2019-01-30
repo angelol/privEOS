@@ -2,7 +2,7 @@ include config.conf
 -include config-local.conf
 
 build:
-	 eosio-cpp -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
+	 eosio-cpp -D=LOCAL -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
 	
 deploy: build
 	$(CLEOS) set contract $(CONTRACT_ACCOUNT) ../$(CPP_IN)

@@ -40,7 +40,9 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
 
   eosio_assert(node_key != public_key(), "public key should not be the default value");
   eosio_assert(node_key.type == (uint32_t)0, "Only K1 Keys supported");
+#ifndef LOCAL
   eosio_assert(url.substr(0, 8) == std::string("https://"), "URL parameter must be a valid https URL");
+#endif
   
   const auto node_idx = nodes.find(owner.value);
   if(node_idx != nodes.end()) {
