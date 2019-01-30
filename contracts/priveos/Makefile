@@ -15,6 +15,7 @@ init:
 	make fundusers
 	make addcurrency
 	make setprice
+	make watchdogpermissions
 
 
 create_wallet:
@@ -69,7 +70,7 @@ regnodes:
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx4", "$(PK_NODE_4)", "http://localhost:4404"]' -p testnodexxx4
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx5", "$(PK_NODE_5)", "http://localhost:4405"]' -p testnodexxx5
 
-permitwatchdogs:
+watchdogpermissions:
 	$(CLEOS) set account permission testnodexxx1 watchdog $(PK_NODE_1) active
 	$(CLEOS) set action permission testnodexxx1 priveosrules peerappr watchdog
 	$(CLEOS) set action permission testnodexxx1 priveosrules peerdisappr watchdog
