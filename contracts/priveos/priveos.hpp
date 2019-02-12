@@ -110,8 +110,9 @@ CONTRACT priveos : public eosio::contract {
       const name contract, 
       const std::string file, 
       const std::string data,
+      const bool auditable,
       const symbol token,
-      bool auditable
+      const bool contractpays
     );
     
     ACTION accessgrant(
@@ -119,7 +120,8 @@ CONTRACT priveos : public eosio::contract {
       const name contract, 
       const std::string file, 
       const eosio::public_key public_key,
-      const symbol token
+      const symbol token,
+      const bool contractpays
     );
     
     ACTION regnode(
@@ -186,6 +188,10 @@ CONTRACT priveos : public eosio::contract {
     );
     
   private:
+    void charge_fee(const name user, const name contract, const asset& fee, const bool contractpays);
+    void charge_store_fee(const name user, const name contract, const symbol& token, const bool contractpays);
+    void charge_read_fee(const name user, const name contract, const symbol& token, const bool contractpays);
+
     template<typename T>
     void propagate_price_change(
       const name node, 
@@ -203,21 +209,13 @@ CONTRACT priveos : public eosio::contract {
     
 
     const asset get_read_fee(symbol currency) {
-      const auto itr = read_prices.find(currency.code().raw());
-      if(itr != read_prices.end()) {
-        return itr->money;
-      } else {
-        return asset{0, currency};
-      }
+      const auto price = read_prices.get(currency.code().raw(), "Token not accepted");
+      return price.money;
     }
     
     const asset get_store_fee(symbol currency) {
-      const auto itr = store_prices.find(currency.code().raw());
-      if(itr != store_prices.end()) {
-        return itr->money;
-      } else {
-        return asset{0, currency};
-      }    
+      const auto price = store_prices.get(currency.code().raw(), "Token not accepted");
+      return price.money;
     }
 
     

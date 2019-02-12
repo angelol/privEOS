@@ -1,38 +1,33 @@
 #include "price.cpp"
+#include "fee.cpp"
 
-ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data, const symbol token, bool auditable) {
+ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data, const bool auditable, const symbol token, const bool contractpays) {
   require_auth(owner);
-  // print( "Storing file ", file);
-  const auto& curr = currencies.get(token.code().raw(), "Token not accepted");
-  const auto fee = get_store_fee(token);
   
-  if(fee.amount > 0) {
-    sub_balance(owner, fee);
-    action(
-      permission_level{_self, "active"_n},
-      curr.contract,
-      "transfer"_n,
-      std::make_tuple(_self, fee_account, fee, std::string("Fee"))
-    ).send();
-  }
-}
-    
-ACTION priveos::accessgrant(const name user, const name contract, const std::string file, const public_key public_key, const symbol token) {
-  require_auth(user);
+  /**
+    * We need to notify the app contract because this transaction might charge 
+    * a fee to the app. The app can implement validity checks in this 
+    * notification as a way to prevent abuse.
+    */
   require_recipient(contract);
   
-  const auto& curr = currencies.get(token.code().raw(), "Token not accepted");
-  const auto fee = get_read_fee(token);
+  charge_store_fee(owner, contract, token, contractpays);  
+}
+    
+ACTION priveos::accessgrant(const name user, const name contract, const std::string file, const public_key public_key, const symbol token, const bool contractpays) {
+  require_auth(user);
   
-  if(fee.amount > 0) {
-    sub_balance(user, fee);
-    action(
-      permission_level{_self, "active"_n},
-      curr.contract,
-      "transfer"_n,
-      std::make_tuple(_self, fee_account, fee, std::string("Fee"))
-    ).send();
-  }
+  /**
+    * We need to notify the app contract for 2 reasons:
+    
+    * 1) Because this transaction might charge a fee to the app (see above).
+    * 2) The app can decide who gets access to this file in the notification. 
+    *    If permission should not be granted to this user, the app contract 
+    *    needs to raise an error here.
+    */
+  require_recipient(contract);
+    
+  charge_read_fee(user, contract, token, contractpays);
 }
     
 ACTION priveos::regnode(const name owner, const public_key node_key, const std::string url) {
