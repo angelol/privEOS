@@ -63,7 +63,7 @@ async function insertStore(state, payload, blockInfo, context) {
     const ipfs_hash = results[0].hash
     log.debug("ipfs_hash: ", ipfs_hash)
     assert.equal(hash, ipfs_hash, "Hashes differ, this should not be possible")
-    
+    await db.collection('data').deleteOne({_id: res._id})
     
   } catch(e) {
     log.error(e)
