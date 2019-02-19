@@ -52,14 +52,14 @@ server.post('/kms/store/', async function(req, res, next) {
 server.post('/kms/read/', async function(req, res, next) {
 	const body = req.body
 	try {
-		if(!body || !body.file || !body.requester || !body.dappcontract || !body.payload) {
+		if(!body || !body.file || !body.requester || !body.dappcontract || !body.payload || !body.txid) {
 	    return res.send(400, "Bad request")
 	  }		
 		const timeout_seconds = body.timeout_seconds || 0
 
 		const kms = new KMS(config)
 		log.debug("calling kms.read")
-		const data = await kms.read(body.file, body.requester, body.dappcontract, body.payload, timeout_seconds)
+		const data = await kms.read(body.file, body.requester, body.dappcontract, body.payload, body.txid, timeout_seconds)
 		log.debug("Read data from kms: ", data)
 		res.send(data)
 	} catch(e) {

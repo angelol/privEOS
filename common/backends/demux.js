@@ -48,8 +48,8 @@ async function get_store_trace(dappcontract, file, timeout_seconds=0) {
   return trace.data
 }
 
-async function get_accessgrant_trace(dappcontract, user, file, timeout_seconds=0) {
-  log.debug(`get_accessgrant_trace: ${user} ${file}`)
+async function get_accessgrant_trace(dappcontract, user, file, txid, timeout_seconds=0) {
+  log.debug(`get_accessgrant_trace: ${user} ${file} ${txid}`)
   const db = await mongo.db()
   const start = new Date()
   let trace
@@ -60,6 +60,7 @@ async function get_accessgrant_trace(dappcontract, user, file, timeout_seconds=0
       "data.file": file,
       "data.user": user,
       "data.contract": dappcontract,
+      "transactionId": txid,
     }
     const items = await db.collection('accessgrant')
       .find(params)

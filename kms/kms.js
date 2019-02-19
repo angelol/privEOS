@@ -18,11 +18,11 @@ class KMS {
     Backend.store_data(file, data, hash, owner, dappcontract)
   }
       
-  async read(file, requester, dappcontract, data, timeout_seconds) {
+  async read(file, requester, dappcontract, data, txid, timeout_seconds) {
     log.debug("Ohai read")
     const [store_trace, accessgrant_trace] = await Promise.all([
   		Backend.get_store_trace(dappcontract, file, timeout_seconds),
-  		Backend.get_accessgrant_trace(dappcontract, requester, file, timeout_seconds),
+  		Backend.get_accessgrant_trace(dappcontract, requester, file, txid, timeout_seconds),
   	])    
     if(!store_trace || !accessgrant_trace) {
       log.error("User is not authorised")

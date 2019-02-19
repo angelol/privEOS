@@ -96,7 +96,7 @@ async function broker_store(req, res) {
 
 async function broker_read(req, res) {
 	log.debug("broker_read")
-	if(!req.body || !req.body.file || !req.body.requester || !req.body.dappcontract) {
+	if(!req.body || !req.body.file || !req.body.requester || !req.body.dappcontract || !req.body.txid) {
 		return res.send(400, "Bad request")
 	}
 	
@@ -104,6 +104,7 @@ async function broker_read(req, res) {
 	const requester = req.body.requester
 	const dappcontract = req.body.dappcontract
 	const timeout_seconds = req.body.timeout_seconds || 0
+	const txid = req.body.txid
 	
 	const store_trace = await Backend.get_store_trace(dappcontract, file, timeout_seconds)
 	log.debug("store_trace: ", store_trace)
@@ -122,6 +123,7 @@ async function broker_read(req, res) {
 				requester: requester,
 				dappcontract: dappcontract,
 				payload: payload,
+				txid,
 				timeout_seconds: timeout_seconds,
 			})
 	})
