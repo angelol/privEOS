@@ -10,16 +10,32 @@ const restify = require('restify')
 const eosjs_ecc = require('eosjs-ecc')
 
 
-if(!config.watchdogPermission) {
-  log.error(`Configuration error: Please add "watchdogPermission" to common/config.js`)
-  process.exit(1)
+// check only required for bps to migrate to new config file with multiple chain ids
+if(!config.chains) {
+  log.warn(`Configuration warning: Please migrate config to support multiple chains - single chain support will be dropped in the future.`)
+  config.chains = [
+    config
+  ]
 }
 
-const eos = Eos({
-  httpEndpoint: config.httpEndpoint, 
-  chainId: config.chainId, 
-  keyProvider: [config.watchdogPermission.key],
+function validateConfig(chainConfig, index) {
+  if(!chainConfig.watchdogPermission) {
+    log.error(`Configuration error in chain #${index}: Please add "watchdogPermission" to common/config.js`)
+    process.exit(1)
+  }
+}
+
+config.chains.forEach((chainConfig, index) => {
+  validateConfig(chainConfig, index)
 })
+
+
+const chainConnectors = config.chains.map(chainConfig => Eos({
+  httpEndpoint: chainConfig.httpEndpoint, 
+  chainId: chainConfig.chainId,
+  keyProvider: [chainConfig.watchdogPermission.key],
+}))
+
 
 if(process.argv[2]) {
   config.nodeAccount = process.argv[2]
@@ -64,63 +80,69 @@ server.listen(port, "127.0.0.1", function() {
 let approvals, disapprovals
 
 async function main() {
-  const watchdog_should_run = await should_watchdog_run()
-  if(!watchdog_should_run) {
-    log.info("Contract version is incompatible, skipping this round.")
-    setTimeout(main, 10000)
-    return
-  }
-  
-  // 1. get nodes
-  const nodes = await get_nodes()
-  approvals = await get_approvals()
-  disapprovals = await get_disapprovals()
-  log.debug(`disapprovals: ${JSON.stringify(disapprovals)}`)
-  // 2. check node status
-  //    if okay and not active => approve
-  //    if not okay and active => disapprove
-  //    with 30 nodes, 1 round takes 60 seconds
-  for(const node of nodes) {
-    try {
-      await handle_node(node)
-      status = 'ok'
-    } catch(e) {
-      log.error(e)
-      if(status == 'ok') {
-        status = 'error while checking node'
-      } 
+  let checkedNodes = [] // to avoid multiple check calls to the same node due to different chain ids, we store them here
+
+  for (let i = 0; i < chainConnectors.length; i++) {
+    let eos = chainConnectors[i]
+    const watchdog_should_run = await should_watchdog_run(eos)
+    if(!watchdog_should_run) {
+      log.info("Contract version is incompatible, skipping this round.")
+      setTimeout(main, 10000)
+      return
     }
-    await Promise.delay(2000)
+    
+    // 1. get nodes
+    const nodes = await get_nodes(eos)
+    log.debug('nodes', nodes)
+    approvals = await get_approvals(eos)
+    disapprovals = await get_disapprovals(eos)
+    log.debug(`disapprovals: ${JSON.stringify(disapprovals)}`)
+    // 2. check node status
+    //    if okay and not active => approve
+    //    if not okay and active => disapprove
+    //    with 30 nodes, 1 round takes 60 seconds
+    for(const node of nodes) {
+      try {
+        await handle_node(node, eos)
+        status = 'ok'
+      } catch(e) {
+        log.error(e)
+        if(status == 'ok') {
+          status = 'error while checking node'
+        } 
+      }
+      await Promise.delay(2000)
+    }
   }
   setTimeout(main, 0)
 }
 
-async function handle_node(node) {
+async function handle_node(node, eos) {
   const node_is_okay = await is_node_okay(node)
   log.debug(`Node ${node.owner} is ${node_is_okay}`)
   if(node_is_okay && !node.is_active) {
     log.info(`Node ${node.owner} is okay, approving`)
-    return approve(node)
+    return approve(node, eos)
   }
   if(!node_is_okay && node.is_active) {
     log.info(`Node ${node.owner} is down, disapproving`)
-    return disapprove(node)
+    return disapprove(node, eos)
   }
 }
 
-async function approve(node) {
+async function approve(node, eos) {
   if(needs_my_approval(node)) {
     log.debug(`Node ${node.owner} needs my approval`)
-    return execute_transaction(node, 'peerappr')
+    return execute_transaction(node, 'peerappr', eos)
   } else {
     log.debug(`Node ${node.owner} already approved by me`)
   }
 }
 
-async function disapprove(node) {
+async function disapprove(node, eos) {
   if(needs_my_disapproval(node)) {
     log.debug(`Node ${node.owner} needs my disapproval`)
-    return execute_transaction(node, 'peerdisappr')
+    return execute_transaction(node, 'peerdisappr', eos)
   } else {
     log.debug(`Node ${node.owner} already disapproved by me`)
   }
@@ -146,7 +168,7 @@ function needs_my_disapproval(node) {
   return !disapproval.includes(config.nodeAccount)  
 }
 
-async function get_approvals() {
+async function get_approvals(eos) {
   const res = await eos.getTableRows({json:true, scope: config.contract, code: config.contract,  table: 'peerapproval', limit:100})
   return res.rows.reduce((a, b) => {
     if(!is_expired(b)) {
@@ -156,7 +178,7 @@ async function get_approvals() {
   }, {})
 }
 
-async function get_disapprovals() {
+async function get_disapprovals(eos) {
   const res = await eos.getTableRows({json:true, scope: config.contract, code: config.contract,  table: 'peerdisappr', limit:100})
   log.debug(`get_disapprovals: ${JSON.stringify(res.rows,null, 2)}`)
   return res.rows.reduce((a, b) => {
@@ -170,7 +192,7 @@ async function get_disapprovals() {
 function is_expired(approval) {
   return ((new Date()).getTime()/1000 - approval.created_at) > 5*60 
 }
-async function execute_transaction(node, action_name) {
+async function execute_transaction(node, action_name, eos) {
   const actions = [{
     account: config.contract,
     name: action_name,
@@ -208,19 +230,19 @@ async function is_node_okay(node) {
   }
   return okay
 }
-async function get_nodes() {
+async function get_nodes(eos) {
   const res = await eos.getTableRows({json:true, scope: config.contract, code: config.contract,  table: 'nodes', limit:100})
   return res.rows.filter(x => x.owner != config.nodeAccount)
 }
 
-async function should_watchdog_run() {
+async function should_watchdog_run(eos) {
   const res = await eos.getAbi({account_name: config.contract})
   const table_names = res.abi.tables.map(x => x.name)
   // console.log(JSON.stringify(table_names, null, 2))
   return table_names.includes('peerapproval')
 }
 
-async function check_permissions() {
+async function check_permissions(eos) {
   const res = await eos.getAccount(config.nodeAccount)
   // console.log("res: ", res)
   const watchdog_perm = res.permissions.filter(x => x.perm_name == config.watchdogPermission.permission)[0]
