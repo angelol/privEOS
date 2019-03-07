@@ -40,9 +40,7 @@ class Demux {
     * This ObjectActionHandler, which does not change the signature from its parent AbstractActionHandler, takes an array
     * of `HandlerVersion` objects
     */
-    console.log('instantiate mongo now', this.mongo)
     this.mongo = new Mongo(config.mongoUrl, chainConfig.dbName)
-    console.log('Mongo Instance', this.mongo)
     const WrappedObjectActionHandler = ObjectActionHandler(this.mongo)
     this.actionHandler = new WrappedObjectActionHandler([handlerVersion])
     this.last_block_number = null
