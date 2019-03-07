@@ -1,5 +1,4 @@
 const MongoClient = require('mongodb')
-const config = require('./config')
 const assert = require("assert")
 global.Promise = require('bluebird')
 const log = require('../common/log')
@@ -12,7 +11,7 @@ const log = require('../common/log')
   * const mongo = new Mongo(mongoUrl, dbName)
   * const db = await mongo.db()
   */
-class Mongo {
+module.exports = class Mongo {
   constructor(url, dbName) {
     this.url = url
     this.dbName = dbName
@@ -38,7 +37,3 @@ class Mongo {
     return this._db
   }
 }
-
-module.exports = new Mongo(config.mongoUrl, config.dbName)
-
-

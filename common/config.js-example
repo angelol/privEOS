@@ -3,9 +3,9 @@ module.exports = {
     {
       httpEndpoint: 'http://localhost:8888',
       chainId: "3a953df32658a2c7ef97c4048acb255969e803dafd92b96755bbc90ce4d1e448",
-      dbName: 'priveos',
       contract: 'priveosrules',
       nodeAccount: 'testnodexxx1',
+      dbName: 'priveos_eos_1',
       watchdogPermission: {
         permission: 'watchdog',
         key: '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3',
@@ -14,9 +14,9 @@ module.exports = {
     {
       httpEndpoint: 'http://localhost:8889',
       chainId: "9f41cc4cc5555bad2b77bd8368dcac1b640b51db8564521b6e8945014a6c90ac",
-      dbName: 'priveos',
       contract: 'priveosrules',
       nodeAccount: 'testnodexxx1',
+      dbName: 'priveos_eos_2',
       watchdogPermission: {
         permission: 'watchdog',
         key: '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3',
@@ -24,7 +24,6 @@ module.exports = {
     },
   ],
   mongoUrl: 'mongodb://127.0.0.1:27017',
-  dbName: 'priveos',
   contract: 'priveosrules',
   kmsPort: 3001,
   brokerPort: 4000,
