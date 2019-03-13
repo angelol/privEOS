@@ -40,7 +40,7 @@ async function broker_status(req, res) {
 
   // const blocks_behind = await Promise.all(chains.map(chain => wrap(get_blocks_behind)(chain)))
   
-  console.log('#### chain_specific_tests', chain_specific_tests)
+  // console.log('#### chain_specific_tests', chain_specific_tests)
   
   
   const chain_infos = chain_specific_tests.map(info => {
@@ -57,6 +57,7 @@ async function broker_status(req, res) {
       result.errors.push(`Demux index is ${info.blocks_behind.delay} blocks behind`)
     }
     
+    // console.log('encryption service challenge', info.encryption_service_status)
     if(info.encryption_service_status.error) {
       console.error(`Encryption Service challenge failed with error ${info.encryption_service_status.error}`)
       result.errors.push(`Encryption Service challenge failed`)
@@ -134,6 +135,7 @@ async function get_kms_status() {
 }
 
 async function test_encryption_service(chain) {
+  console.log('##@#@#@#@#@#@#@#@#@')
   // any key, doesn't matter at all
   const test_key = {
     public: "EOS5y6p5XgxRHXgvVRQ1YnZbKGx8H4GQgYGvENvTLCP1LtKPy1WuB",
@@ -141,7 +143,10 @@ async function test_encryption_service(chain) {
   } 
   const test_message = "Test"
   
-  const res = await chain.eos.getTableRows({json:true, scope: config.contract, code: config.contract,  table: 'nodes', limit:100})
+
+  console.log('### get table rows nodes')
+  const res = await chain.eos.getTableRows({json:true, scope: chain.config.contract, code: chain.config.contract, table: 'nodes', limit:100})
+  console.log('### got table rows', res.rows)
   const myself = res.rows.filter(x => x.owner == config.nodeAccount)[0]
   log.debug('res.rows: ' + JSON.stringify(myself, null, 2))
   if(!myself) {

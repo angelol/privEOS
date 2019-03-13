@@ -1,5 +1,5 @@
 {
-  "name": "priveos",
+  "name": "priveos-node",
   "version": "v0.1.4",
   "main": "index.js",
   "repository": "git@github.com:rawrat/privEOS.git",
