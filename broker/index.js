@@ -8,6 +8,7 @@ const Promise = require('bluebird')
 const Backend = require('../common/backend')
 const log = require('../common/log')
 const config = require('../common/config')
+const chains =  require('../common/chains')
 const { URL } = require('url')
 const { broker_status } = require('./status')
 
@@ -68,7 +69,8 @@ server.post('/broker/read/', async function(req, res, next) {
 
 async function broker_store(req, res) {
 	const body = req.body
-	if(!body || !body.file || !body.data || !body.owner || !body.dappcontract) {
+	// TODO add check for body.chainId
+	if(!body || !body.file || !body.data || !body.owner || !body.dappcontract || !body.chainId) {
 		return res.send(400, "Bad request")
 	}
 	log.debug("Ohai broker_store")
@@ -82,6 +84,7 @@ async function broker_store(req, res) {
 					owner: body.owner,
 					data: body.data,
 					dappcontract: body.dappcontract,
+					chainId: body.chainId,
 				})
 			return res
 		} catch(e) {
@@ -96,7 +99,8 @@ async function broker_store(req, res) {
 
 async function broker_read(req, res) {
 	log.debug("broker_read")
-	if(!req.body || !req.body.file || !req.body.requester || !req.body.dappcontract || !req.body.txid) {
+	// TODO add check for body.chainId
+	if(!req.body || !req.body.file || !req.body.requester || !req.body.dappcontract || !req.body.txid || !req.body.chainId) {
 		return res.send(400, "Bad request")
 	}
 	
@@ -125,6 +129,7 @@ async function broker_read(req, res) {
 				payload: payload,
 				txid,
 				timeout_seconds: timeout_seconds,
+				chainId: req.body.chainId,
 			})
 	})
 	log.debug("payload.threshold: ", payload.threshold)
