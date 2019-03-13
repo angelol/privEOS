@@ -27,8 +27,8 @@ let status = 'ok'
 server.get('/watchdog/status/', async function(req, res, next) {
   try {
     let errors = []
-    for (let i = 0; i < chains.length; i++) {
-      let chain = chains[i]
+    for (let i = 0; i < chains.adapters.length; i++) {
+      let chain = chains.adapters[i]
       const err = await check_permissions(chain)
       if (err) errors.push(err)
     }
@@ -61,8 +61,8 @@ let approvals, disapprovals
 async function main() {
   let checkedNodes = [] // to avoid multiple check calls to the same node due to different chain ids, we store them here
 
-  for (let i = 0; i < chains.length; i++) {
-    let chain = chains[i]
+  for (let i = 0; i < chains.adapters.length; i++) {
+    let chain = chains.adapters[i]
     log.debug(`Run watchdog for ${chain.config.httpEndpoint}, ${chain.config.chainId}`)
     const watchdog_should_run = await should_watchdog_run(chain)
     if(!watchdog_should_run) {
@@ -187,7 +187,7 @@ async function execute_transaction(node, action_name, chain) {
     }
   }]
   try { 
-    const res = eos.transaction({actions})
+    const res = chain.eos.transaction({actions})
     status = 'ok'
     return res
   } catch(e) {
