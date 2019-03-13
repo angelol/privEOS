@@ -19,9 +19,9 @@ const adapters = config.chains.map(chainConfig => {
     // console.log('chainConfig', chainConfig, chainConfig.watchdogPermission.key)
     return {
         eos: Eos({
-        httpEndpoint: chainConfig.httpEndpoint, 
-        chainId: chainConfig.chainId,
-        keyProvider: [chainConfig.watchdogPermission.key],
+            httpEndpoint: chainConfig.httpEndpoint, 
+            chainId: chainConfig.chainId,
+            keyProvider: [chainConfig.watchdogPermission.key],
         }),
         config: chainConfig,
         mongo: new Mongo(config.mongoUrl, chainConfig.dbName)
@@ -32,7 +32,7 @@ function get_chain(chainId) {
     const chain = adapters.find(el => {
         return el.config.chainId == chainId
     })
-    return chain.length > 0 && chain[0] || null
+    return chain
 }
 
 module.exports = {
