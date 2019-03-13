@@ -74,7 +74,8 @@ async function broker_store(req, res) {
 		return res.send(400, "Bad request")
 	}
 	log.debug("Ohai broker_store")
-	const nodes = await all_nodes()
+	const chain = chains.get_chain(body.chainId)
+	const nodes = await all_nodes(chain)
 	const promises = nodes.map(async node => {
 		log.debug("nodes.map: ", node)
 		const url = new URL('/kms/store/', node.url).href
@@ -109,15 +110,17 @@ async function broker_read(req, res) {
 	const dappcontract = req.body.dappcontract
 	const timeout_seconds = req.body.timeout_seconds || 0
 	const txid = req.body.txid
+
+	const chain = chains.get_chain(req.body.chainId)
 	
-	const store_trace = await Backend.get_store_trace(dappcontract, file, timeout_seconds)
+	const store_trace = await Backend.get_store_trace(chain, dappcontract, file, timeout_seconds)
 	log.debug("store_trace: ", store_trace)
 	const hash = store_trace.data
 	log.debug("hash: ", hash)
 	
 	const payload = JSON.parse(await fetch_from_ipfs(hash))
 	log.debug("payload: ", payload)
-	const nodes = await get_nodes(payload, dappcontract, file)
+	const nodes = await get_nodes(chain, payload)
 
 	const promises = nodes.map(node => {
 		log.debug("nodes.map: ", node)

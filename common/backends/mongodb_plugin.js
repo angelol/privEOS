@@ -2,8 +2,8 @@ const mongo = require('../mongo.js')
 const config = require('../config')
 const log = require('../log')
 
-async function get_store_trace(dappcontract, file) {
-  const db = await mongo.db()
+async function get_store_trace(chain, dappcontract, file) {
+  const db = await chain.mongo.db()
   const items = await db.collection('action_traces')
     .find({
       "act.account" : config.contract, 
@@ -19,8 +19,8 @@ async function get_store_trace(dappcontract, file) {
   return JSON.parse(trace.act.data.data)
 }
 
-async function get_accessgrant_trace(user, file) {
-  const db = await mongo.db()
+async function get_accessgrant_trace(chain, user, file) {
+  const db = await chain.mongo.db()
   const items = await db.collection('action_traces')
     .find({
 			"act.account" : config.contract, 

@@ -5,8 +5,8 @@ const assert = require('assert')
 global.Promise = require('bluebird')
 log.setDefaultLevel(config.logLevel)
 
-async function store_data(file, data, hash, owner, dappcontract) {
-  const db = await mongo.db()
+async function store_data(chain, file, data, hash, owner, dappcontract) {
+  const db = await chain.mongo.db()
   const doc = {
     file,
     data,
@@ -18,8 +18,8 @@ async function store_data(file, data, hash, owner, dappcontract) {
   await db.collection('data').insertOne(doc).timeout(100, "Timeout while Backend.store_data")
 }
 
-async function get_store_trace(dappcontract, file, timeout_seconds=0) {
-  const db = await mongo.db()
+async function get_store_trace(chain, dappcontract, file, timeout_seconds=0) {
+  const db = await chain.mongo.db()
   const start = new Date()
   let trace
   while(true) {
@@ -48,9 +48,9 @@ async function get_store_trace(dappcontract, file, timeout_seconds=0) {
   return trace.data
 }
 
-async function get_accessgrant_trace(dappcontract, user, file, txid, timeout_seconds=0) {
+async function get_accessgrant_trace(chain, dappcontract, user, file, txid, timeout_seconds=0) {
   log.debug(`get_accessgrant_trace: ${user} ${file} ${txid}`)
-  const db = await mongo.db()
+  const db = await chain.mongo.db()
   const start = new Date()
   let trace
   while(true) {

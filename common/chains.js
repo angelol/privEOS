@@ -15,8 +15,7 @@ config.chains.forEach((chainConfig, index) => {
     }
 })
 
-
-const chainConnectors = config.chains.map(chainConfig => {
+const adapters = config.chains.map(chainConfig => {
     // console.log('chainConfig', chainConfig, chainConfig.watchdogPermission.key)
     return {
         eos: Eos({
@@ -29,4 +28,14 @@ const chainConnectors = config.chains.map(chainConfig => {
     }
 })
 
-module.exports = chainConnectors
+function get_chain(chainId) {
+    const chain = adapters.find(el => {
+        return el.config.chainId == chainId
+    })
+    return chain.length > 0 && chain[0] || null
+}
+
+module.exports = {
+    adapters,
+    get_chain
+}
