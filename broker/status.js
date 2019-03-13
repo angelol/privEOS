@@ -1,6 +1,6 @@
 const mongo = require("../common/mongo")
 const Eos = require('eosjs')
-const eosjs_ecc = require('eosjs-ecc')
+const eosjs_ecc = require('eosjs-ecc-priveos')
 const config = require('../common/config')
 const { URL } = require('url')
 const axios = require('axios')

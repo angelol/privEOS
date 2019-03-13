@@ -7,7 +7,7 @@ const { URL } = require('url')
 const config = require('../common/config')
 const Eos = require('eosjs')
 const restify = require('restify')
-const eosjs_ecc = require('eosjs-ecc')
+const eosjs_ecc = require('eosjs-ecc-priveos')
 
 
 if(!config.watchdogPermission) {

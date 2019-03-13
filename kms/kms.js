@@ -47,6 +47,7 @@ class KMS {
       public_key: data.public_key,
       recipient_public_key: accessgrant_trace.public_key,
     })
+    console.log("my_share: ", JSON.stringify(my_share, null, 2))
     return {
       message: share.message,
       nonce: String(share.nonce),
