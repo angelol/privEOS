@@ -17,29 +17,52 @@ async function broker_status(req, res) {
   
   const [
     kms_status,
-    encryption_service_status,
     ipfs_status,
     info,
     watchdog_status,
   ] = await Promise.all([
     wrap(get_kms_status)(),
-    wrap(test_encryption_service)(),
     wrap(check_ipfs)(),
     wrap(get_info)(),
     wrap(check_watchdog)(),
   ])
 
-  const blocks_behind = await Promise.all(chains.map(chain => wrap(get_blocks_behind)(chain)))
+  const chain_specific_tests = await Promise.all(chains.map(async chain => {
+    const blocks_behind = await wrap(get_blocks_behind)(chain)
+    const encryption_service_status = await wrap(test_encryption_service)(chain)
 
-  console.log('#### status', blocks_behind)
-  
-
-  blocks_behind.forEach(info => {
-    if(info.error) {
-      throw info.error
-    } else if(info.delay > 15) {
-      errors.push(`Demux index is ${info.delay} blocks behind`)
+    return {
+      chainId: chain.config.chainId,
+      blocks_behind,
+      encryption_service_status
     }
+  }))
+
+  // const blocks_behind = await Promise.all(chains.map(chain => wrap(get_blocks_behind)(chain)))
+  
+  console.log('#### chain_specific_tests', chain_specific_tests)
+  
+  
+  const chain_infos = chain_specific_tests.map(info => {
+    let result = {
+      chainId: info.chainId,
+      info: {
+        index_head: info.blocks_behind.head
+      },
+      errors: []
+    }
+    if(info.blocks_behind.error) {
+      throw info.blocks_behind.error
+    } else if(info.blocks_behind.delay > 15) {
+      result.errors.push(`Demux index is ${info.blocks_behind.delay} blocks behind`)
+    }
+    
+    if(info.encryption_service_status.error) {
+      console.error(`Encryption Service challenge failed with error ${info.encryption_service_status.error}`)
+      result.errors.push(`Encryption Service challenge failed`)
+    }
+
+    return result
   })
   
   if(kms_status.error) {
@@ -48,11 +71,6 @@ async function broker_status(req, res) {
   } else if(kms_status != 'ok') {
     errors.push(`KMS Server returns status ${kms_status}`)
   } 
-  
-  if(encryption_service_status.error) {
-    console.error(`Encryption Service challenge failed with error ${encryption_service_status.error}`)
-    errors.push(`Encryption Service challenge failed`)
-  }
 
   if(ipfs_status.error) {
     console.error(`IPFS error ${ipfs_status.error}`)
@@ -74,12 +92,12 @@ async function broker_status(req, res) {
   
   const end = new Date()
   info['duration'] = end-start
-  info['index_head'] = blocks_behind.head
   
   let status = errors.length ? "error" : "ok"
   let data = {
     status,
     info,
+    chains: chain_infos
   }
   if(errors.length) {
     data['errors'] = errors
@@ -99,12 +117,10 @@ async function get_info() {
 
 /* Checks */
 async function get_blocks_behind(chain) {
-  console.log('chain', chain)
   const db = await chain.mongo.db()
   const index = await db.collection('index_state').findOne()
   const info = await chain.eos.getInfo({})
   return {
-    chainId: chain.config.chainId,
     head: index.blockNumber,
     delay: info.head_block_num - index.blockNumber,
   }
