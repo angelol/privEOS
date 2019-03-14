@@ -40,6 +40,7 @@ module.exports = class Mongo {
   }
 
   async close() {
+    if (!this._connection) return
     await this._connection.close()
     this._db = null
     this._connection = null

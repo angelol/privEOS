@@ -19,12 +19,7 @@ async function store_data(chain, file, data, hash, owner, dappcontract) {
 }
 
 async function get_store_trace(chain, dappcontract, file, timeout_seconds=0) {
-  // console.log('chain.config.contract', chain.config.contract)
-  // console.log('dappcontract', dappcontract)
-  // console.log('file get store trace', file)
-  // console.log('chain', chain.config)
   const db = await chain.mongo.db()
-  // console.log('mongo', chain.mongo)
   const start = new Date()
   let trace
   while(true) {
@@ -43,8 +38,8 @@ async function get_store_trace(chain, dappcontract, file, timeout_seconds=0) {
       break
     } 
     const now = new Date()
+    console.log(now-start)
     if( (now-start) > timeout_seconds*1000 ) {
-      console.log('abort')
       break
     }
     await Promise.delay(100)

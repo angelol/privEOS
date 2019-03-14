@@ -44,6 +44,7 @@ class Demux {
     const WrappedObjectActionHandler = ObjectActionHandler(this.mongo)
     this.actionHandler = new WrappedObjectActionHandler([handler(this.mongo)])
     this.last_block_number = null
+    this.config = chainConfig
     this.start()
   }
 
@@ -60,7 +61,7 @@ class Demux {
     log.info("starting_block: ", starting_block)
 
     const actionReader = new NodeosActionReader(
-      config.httpEndpoint,
+      this.config.httpEndpoint,
       starting_block,
     )
     const actionWatcher = new BaseActionWatcher(
