@@ -128,14 +128,13 @@ async function test_encryption_service() {
     console.info("This node has not been registered, skipping test_encryption_service")
     return
   }
-  const share = eosjs_ecc.Aes.encrypt(test_key.private, myself.node_key, test_message)	
-
+  let share = eosjs_ecc.Aes.encrypt(test_key.private, myself.node_key, test_message)	
+  share = share.toString('base64')
+  console.log("Encrypted share: ", share)
   const payload = await encryption_service.reencrypt({
     share: {
-      public_key: myself.node_key,
-      message: share.message.toString('hex'),
-      nonce: String(share.nonce),
-      checksum: share.checksum,
+      node_key: myself.node_key,
+      share,
     },
     public_key: test_key.public,
     recipient_public_key: test_key.public,
@@ -146,9 +145,7 @@ async function test_encryption_service() {
   const decrypted = eosjs_ecc.Aes.decrypt(
     test_key.private, 
     myself.node_key, 
-    payload.nonce, 
-    ByteBuffer.fromHex(payload.message).toBinary(), 
-    payload.checksum
+    Buffer.from(payload.message, 'base64'),
   )	
   log.debug("Decrypted message is: ", String(decrypted))
   assert.equal(test_message, String(decrypted), "Decrypted message does not match")

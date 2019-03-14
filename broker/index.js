@@ -115,10 +115,10 @@ async function broker_read(req, res) {
 	log.debug("payload: ", payload)
 	const nodes = await get_nodes(payload, dappcontract, file)
 
-	const promises = nodes.map(node => {
+	const promises = nodes.map(async node => {
 		log.debug("nodes.map: ", node)
 		const url = new URL('/kms/read/', node.url).href
-		return axios.post(url, {
+		const res = await axios.post(url, {
 				file: file,
 				requester: requester,
 				dappcontract: dappcontract,
@@ -126,12 +126,14 @@ async function broker_read(req, res) {
 				txid,
 				timeout_seconds: timeout_seconds,
 			})
+		return res.data
 	})
 	log.debug("payload.threshold: ", payload.threshold)
-	let data = await Promise.some(promises, payload.threshold)
-	data = data.map(x => x.data)
+	const shares = await Promise.some(promises, payload.threshold)
+	// const shares = data.map(x => x.data)
+	log.debug("Shares: ", shares )
 	log.debug('Finished Sending to all Nodes')
-	res.send(data)
+	res.send({shares, user_key: payload.user_key})
 }
 
 

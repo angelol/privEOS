@@ -44,15 +44,13 @@ class KMS {
     
     const share = await encryption_service.reencrypt({
       share: my_share,
-      public_key: data.public_key,
+      public_key: data.user_key,
       recipient_public_key: accessgrant_trace.public_key,
     })
-    console.log("my_share: ", JSON.stringify(my_share, null, 2))
+    log.debug("share: ", JSON.stringify(share, null, 2))
     return {
       message: share.message,
-      nonce: String(share.nonce),
-      checksum: share.checksum,
-      public_key: my_share.public_key,
+      node_key: my_share.node_key,
     }
   }
 }
