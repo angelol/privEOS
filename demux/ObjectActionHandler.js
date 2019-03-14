@@ -31,11 +31,9 @@ const { AbstractActionHandler } = require("demux")
 global.Promise = require('bluebird')
 const log = require('../common/log')
 
-module.exports = (mongo) => {
+module.exports = mongo => {
 
   class ObjectActionHandler extends AbstractActionHandler {
-
-  
     async handleWithState(handle) {
       await handle(1)
     }

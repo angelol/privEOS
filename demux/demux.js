@@ -13,7 +13,7 @@
 const { BaseActionWatcher } = require("demux")
 const { NodeosActionReader } = require("demux-eos") // eslint-disable-line
 const ObjectActionHandler = require("./ObjectActionHandler")
-const handlerVersion = require("./handler")
+const handler = require("./handler")
 const Mongo = require("../common/mongo")
 let mongo = null
 let demux = null
@@ -42,7 +42,7 @@ class Demux {
     */
     this.mongo = new Mongo(config.mongoUrl, chainConfig.dbName)
     const WrappedObjectActionHandler = ObjectActionHandler(this.mongo)
-    this.actionHandler = new WrappedObjectActionHandler([handlerVersion])
+    this.actionHandler = new WrappedObjectActionHandler([handler(this.mongo)])
     this.last_block_number = null
     this.start()
   }
