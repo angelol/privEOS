@@ -19,14 +19,19 @@ async function store_data(chain, file, data, hash, owner, dappcontract) {
 }
 
 async function get_store_trace(chain, dappcontract, file, timeout_seconds=0) {
+  // console.log('chain.config.contract', chain.config.contract)
+  // console.log('dappcontract', dappcontract)
+  // console.log('file get store trace', file)
+  // console.log('chain', chain.config)
   const db = await chain.mongo.db()
+  // console.log('mongo', chain.mongo)
   const start = new Date()
   let trace
   while(true) {
     const items = await db.collection('store')
       .find({
         "name": "store",
-        "account": config.contract,
+        "account": chain.config.contract,
         "data.contract": dappcontract,
         "data.file": file,
       })
@@ -39,6 +44,7 @@ async function get_store_trace(chain, dappcontract, file, timeout_seconds=0) {
     } 
     const now = new Date()
     if( (now-start) > timeout_seconds*1000 ) {
+      console.log('abort')
       break
     }
     await Promise.delay(100)
@@ -55,7 +61,7 @@ async function get_accessgrant_trace(chain, dappcontract, user, file, txid, time
   let trace
   while(true) {
     const params = {
-      "account" : config.contract, 
+      "account" : chain.config.contract, 
       "name": "accessgrant",
       "data.file": file,
       "data.user": user,

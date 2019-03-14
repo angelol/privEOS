@@ -1,15 +1,13 @@
-const mongo = require('../mongo.js')
-const config = require('../config')
 const log = require('../log')
 
 async function get_store_trace(chain, dappcontract, file) {
   const db = await chain.mongo.db()
   const items = await db.collection('action_traces')
     .find({
-      "act.account" : config.contract, 
+      "act.account" : chain.config.contract, 
       "act.data.file": file,
       "act.name": "store",
-      "receipt.receiver": config.contract,
+      "receipt.receiver": chain.config.contract,
       "act.data.contract": dappcontract,
     })
     .sort({"receipt.global_sequence": -1})
@@ -23,10 +21,10 @@ async function get_accessgrant_trace(chain, user, file) {
   const db = await chain.mongo.db()
   const items = await db.collection('action_traces')
     .find({
-			"act.account" : config.contract, 
+			"act.account" : chain.config.contract, 
 			"act.data.file": file,
 			"act.name": "accessgrant",
-			"receipt.receiver": config.contract,
+			"receipt.receiver": chain.config.contract,
 			"act.data.user": user,
 		})
 		.sort({"receipt.global_sequence": -1})
