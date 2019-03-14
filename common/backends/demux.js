@@ -38,7 +38,6 @@ async function get_store_trace(chain, dappcontract, file, timeout_seconds=0) {
       break
     } 
     const now = new Date()
-    console.log(now-start)
     if( (now-start) > timeout_seconds*1000 ) {
       break
     }
