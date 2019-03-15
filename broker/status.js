@@ -140,7 +140,7 @@ async function test_encryption_service(chain) {
   
 
   const res = await chain.eos.getTableRows({json:true, scope: chain.config.contract, code: chain.config.contract, table: 'nodes', limit:100})
-  const myself = res.rows.filter(x => x.owner == config.nodeAccount)[0]
+  const myself = res.rows.filter(x => x.owner == chain.config.nodeAccount)[0]
   log.debug('res.rows: ' + JSON.stringify(myself, null, 2))
   if(!myself) {
     console.info("This node has not been registered, skipping test_encryption_service")

@@ -1,8 +1,10 @@
 const config = require('../common/config')
 const Eos = require('eosjs')
 const Mongo = require('../common/mongo')
+const log = require('../common/log')
 
 if(process.argv[3]) {
+    log.warn(`Overwriting nodeAccount with cli argument: ${process.argv[3]}`)
 	config.chains = config.chains.map(chain => {
 		return {
 			...chain,

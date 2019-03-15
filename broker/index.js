@@ -18,10 +18,6 @@ if(process.argv[2]) {
 	config.brokerPort = process.argv[2]
 }
 
-if(process.argv[3]) {
-	config.nodeAccount = process.argv[3]
-}
-
 const server = restify.createServer()
 server.use(restify.plugins.bodyParser())
 
