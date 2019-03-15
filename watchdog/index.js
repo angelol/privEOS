@@ -10,14 +10,8 @@ const restify = require('restify')
 const eosjs_ecc = require('eosjs-ecc')
 
 
-console.log('process.argv', process.argv)
 if(process.argv[2]) {
   config.watchdogPort = process.argv[2]
-}
-
-if(process.argv[3]) {
-  config.nodeAccount = process.argv[3]
-  log.debug(`config.nodeAccount: ${config.nodeAccount}`)
 }
 
 const server = restify.createServer()
@@ -57,9 +51,11 @@ server.listen(port, "127.0.0.1", function() {
 })
 
 let approvals, disapprovals
+let localApprovals, localDisapprovals
 
 async function main() {
-  let checkedNodes = [] // to avoid multiple check calls to the same node due to different chain ids, we store them here
+  localApprovals = []
+  localDisapprovals = []
 
   for (let i = 0; i < chains.adapters.length; i++) {
     let chain = chains.adapters[i]
@@ -75,6 +71,7 @@ async function main() {
     const nodes = await get_nodes(chain)
     log.debug('nodes', nodes)
     approvals = await get_approvals(chain)
+    log.debug(`approvals: ${JSON.stringify(approvals)}`)
     disapprovals = await get_disapprovals(chain)
     log.debug(`disapprovals: ${JSON.stringify(disapprovals)}`)
     // 2. check node status
@@ -91,14 +88,15 @@ async function main() {
           status = 'error while checking node'
         } 
       }
-      await Promise.delay(2000)
+      await Promise.delay(chains.adapters.length <= 5 ? parseInt(2000 / chains.adapters.length) : 400) // each node should be checked every 2000sec across all chains
     }
   }
   setTimeout(main, 0)
 }
 
 async function handle_node(node, chain) {
-  const node_is_okay = await is_node_okay(node)
+  const node_is_okay = localDisapprovals.includes(node.url) ? false : localApprovals.includes(node.url) || await is_node_okay(node)
+  node_is_okay ? localApprovals.push(node.url) : localDisapprovals.push(node.url)
   log.debug(`Node ${node.owner} is ${node_is_okay}`)
   if(node_is_okay && !node.is_active) {
     log.info(`Node ${node.owner} is okay, approving`)
@@ -111,7 +109,7 @@ async function handle_node(node, chain) {
 }
 
 async function approve(node, chain) {
-  if(needs_my_approval(node)) {
+  if(needs_my_approval(node, chain)) {
     log.debug(`Node ${node.owner} needs my approval`)
     return execute_transaction(node, 'peerappr', chain)
   } else {
@@ -120,7 +118,7 @@ async function approve(node, chain) {
 }
 
 async function disapprove(node, chain) {
-  if(needs_my_disapproval(node)) {
+  if(needs_my_disapproval(node, chain)) {
     log.debug(`Node ${node.owner} needs my disapproval`)
     return execute_transaction(node, 'peerdisappr', chain)
   } else {
@@ -128,28 +126,29 @@ async function disapprove(node, chain) {
   }
 }
 
-function needs_my_approval(node) {
+function needs_my_approval(node, chain) {
   const approval = approvals[node.owner]
   log.debug(`needs_my_approval: approval: ${approval}`)
   if(!approval) {
     return true
   }
   // Only approve if we haven't already approved this request
-  return !approval.includes(config.nodeAccount)
+  return !approval.includes(chain.config.nodeAccount)
 }
 
-function needs_my_disapproval(node) {
+function needs_my_disapproval(node, chain) {
   const disapproval = disapprovals[node.owner]
   log.debug(`Node ${node.owner} disapproval: ${disapproval}`)
   if(!disapproval) {
     return true
   }
   // Only disapprove if we haven't already disapproved this request
-  return !disapproval.includes(config.nodeAccount)  
+  return !disapproval.includes(chain.config.nodeAccount)  
 }
 
 async function get_approvals(chain) {
   const res = await chain.eos.getTableRows({json:true, scope: chain.config.contract, code: chain.config.contract, table: 'peerapproval', limit:100})
+  log.debug(`get_approvals: ${JSON.stringify(res.rows,null, 2)}`)
   return res.rows.reduce((a, b) => {
     if(!is_expired(b)) {
       a[b.node] = b.approved_by
