@@ -64,13 +64,25 @@ server.listen(port, "127.0.0.1", function() {
 let approvals, disapprovals
 
 async function main() {
+  while(true) {
+    try {
+      log.info("Ohai loop")
+      await loop()
+    } catch(e) {
+      log.error(e)
+      log.info("Continuing...")
+      await Promise.delay(10000)
+    }
+  }
+}
+
+async function loop() {
   const watchdog_should_run = await should_watchdog_run()
   if(!watchdog_should_run) {
     log.info("Contract version is incompatible, skipping this round.")
-    setTimeout(main, 10000)
+    await Promise.delay(10000)
     return
   }
-  
   // 1. get nodes
   const nodes = await get_nodes()
   approvals = await get_approvals()
@@ -92,7 +104,6 @@ async function main() {
     }
     await Promise.delay(2000)
   }
-  setTimeout(main, 0)
 }
 
 async function handle_node(node) {
