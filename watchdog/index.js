@@ -10,14 +10,14 @@ const restify = require('restify')
 const eosjs_ecc = require('eosjs-ecc')
 
 
-
-
+console.log('process.argv', process.argv)
 if(process.argv[2]) {
-  config.nodeAccount = process.argv[2]
-  log.debug(`config.nodeAccount: ${config.nodeAccount}`)
+  config.watchdogPort = process.argv[2]
 }
+
 if(process.argv[3]) {
-  config.watchdogPort = process.argv[3]
+  config.nodeAccount = process.argv[3]
+  log.debug(`config.nodeAccount: ${config.nodeAccount}`)
 }
 
 const server = restify.createServer()
@@ -225,7 +225,6 @@ async function should_watchdog_run(chain) {
 
 async function check_permissions(chain) {
   const res = await chain.eos.getAccount(chain.config.nodeAccount)
-  // console.log("res: ", res)
   const watchdog_perm = res.permissions.filter(x => x.perm_name == chain.config.watchdogPermission.permission)[0]
   
   if(!watchdog_perm) {
