@@ -69,7 +69,6 @@ server.post('/broker/read/', async function(req, res, next) {
 
 async function broker_store(req, res) {
 	const body = req.body
-	// TODO add check for body.chainId
 	if(!body || !body.file || !body.data || !body.owner || !body.dappcontract || !body.chainId) {
 		return res.send(400, "Bad request")
 	}
@@ -94,13 +93,11 @@ async function broker_store(req, res) {
 	})
 	const response = await Promise.all(promises)
 	log.debug('Finished Sending to all Nodes')
-	// console.log("Response: ", response)
 	res.send('okay')
 }
 
 async function broker_read(req, res) {
 	log.debug("broker_read")
-	// TODO add check for body.chainId
 	if(!req.body || !req.body.file || !req.body.requester || !req.body.dappcontract || !req.body.txid || !req.body.chainId) {
 		return res.send(400, "Bad request")
 	}

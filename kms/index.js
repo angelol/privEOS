@@ -8,9 +8,8 @@ if(process.argv[2]) {
 	config.kmsPort = process.argv[2]
 }
 
-if(process.argv[3]) {
-	config.nodeAccount = process.argv[3]
-}
+
+console.log('config.chains', config.chains)
 
 var server = restify.createServer()
 server.use(restify.plugins.bodyParser())

@@ -5,6 +5,8 @@ const encryption_service = require('./proxy')
 const getMultiHash = require('../common/multihash')
 const log = require('../common/log')
 
+// log.setLevel("debug")
+
 class UserNotAuthorized extends Error {}
 
 async function store(chainId, file, data, owner, dappcontract) {
@@ -33,7 +35,7 @@ async function read(chainId, file, requester, dappcontract, data, txid, timeout_
   // const data = JSON.parse(store_trace.data)
   const nodes = data.data
   log.debug("DATA: ", JSON.stringify(data, null, 2))
-  const my_share = nodes.filter(x => x.node == chain.nodeAccount)[0]
+  const my_share = nodes.filter(x => x.node == chain.config.nodeAccount)[0]
   log.debug("my_share: ", JSON.stringify(my_share, null, 2))
   assert.notEqual(null, my_share, "my_share not found!")
 

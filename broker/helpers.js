@@ -9,7 +9,7 @@ async function all_nodes(chain) {
   return res.rows.filter(x => x.is_active)
 }
 
-async function get_nodes(payload, chain) {
+async function get_nodes(chain, payload) {
   const nodes = payload.data
   const owners = nodes.map(value => value.node)
   const active_nodes = await all_nodes(chain)
