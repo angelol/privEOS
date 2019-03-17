@@ -94,6 +94,9 @@ watchdogpermissions:
 admunreg:
 	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) admunreg '["testnodexxx1"]' -p $(CONTRACT_ACCOUNT)
 
+unregnode:
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) unregnode '["testnodexxx3"]' -p testnodexxx3
+
 shownodes:
 	$(CLEOS_ENDPOINT) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) nodes
 
