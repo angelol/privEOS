@@ -54,6 +54,19 @@ let approvals, disapprovals
 let localApprovals, localDisapprovals
 
 async function main() {
+  while(true) {
+    try {
+      log.info("Ohai loop")
+      await loop()
+    } catch(e) {
+      log.error(e)
+      log.info("Continuing...")
+      await Promise.delay(10000)
+    }
+  }
+}
+
+async function loop() {
   localApprovals = []
   localDisapprovals = []
 
@@ -63,7 +76,7 @@ async function main() {
     const watchdog_should_run = await should_watchdog_run(chain)
     if(!watchdog_should_run) {
       log.info("Contract version is incompatible, skipping this round.")
-      setTimeout(main, 10000)
+      await Promise.delay(10000)
       return
     }
     
@@ -78,7 +91,7 @@ async function main() {
     //    if okay and not active => approve
     //    if not okay and active => disapprove
     //    with 30 nodes, 1 round takes 60 seconds
-    for(const node of nodes) {
+    for (const node of nodes) {
       try {
         await handle_node(node, chain)
         status = 'ok'
@@ -88,10 +101,9 @@ async function main() {
           status = 'error while checking node'
         } 
       }
-      await Promise.delay(chains.adapters.length <= 5 ? parseInt(2000 / chains.adapters.length) : 400) // each node should be checked every 2000sec across all chains
+      await Promise.delay(chains.adapters.length <= 5 ? parseInt(2000 / chains.adapters.length) : 400) // each node should be checked every 2000sec across all chains 
     }
   }
-  setTimeout(main, 0)
 }
 
 async function handle_node(node, chain) {
