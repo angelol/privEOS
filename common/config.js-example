@@ -6,6 +6,7 @@ module.exports = {
       contract: 'priveosrules',
       nodeAccount: 'testnodexxx1',
       dbName: 'priveos_eos_1',
+      type: 'eosio',
       watchdogPermission: {
         permission: 'watchdog',
         key: '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3',
@@ -17,6 +18,7 @@ module.exports = {
       contract: 'priveosrules',
       nodeAccount: 'testnodexxx1',
       dbName: 'priveos_eos_2',
+      type: 'eosio',
       watchdogPermission: {
         permission: 'watchdog',
         key: '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3',
