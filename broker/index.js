@@ -65,6 +65,12 @@ server.post('/broker/read/', async function(req, res, next) {
 
 async function broker_store(req, res) {
 	const body = req.body
+
+	// For older versions of priveos-client that don't send chainId
+	if(!body.chainId) {
+		body.chainId = chains.defaultChainId
+	}
+
 	if(!body || !body.file || !body.data || !body.owner || !body.dappcontract || !body.chainId) {
 		return res.send(400, "Bad request")
 	}
@@ -93,18 +99,25 @@ async function broker_store(req, res) {
 }
 
 async function broker_read(req, res) {
+	const body = req.body
 	log.debug("broker_read")
-	if(!req.body || !req.body.file || !req.body.requester || !req.body.dappcontract || !req.body.txid || !req.body.chainId) {
+	
+	// For older versions of priveos-client that don't send chainId
+	if(!body.chainId) {
+		body.chainId = chains.defaultChainId
+	}
+	
+	if(!body || !body.file || !body.requester || !body.dappcontract || !body.txid || !body.chainId) {
 		return res.send(400, "Bad request")
 	}
 	
-	const file = req.body.file
-	const requester = req.body.requester
-	const dappcontract = req.body.dappcontract
-	const timeout_seconds = req.body.timeout_seconds || 0
-	const txid = req.body.txid
+	const file = body.file
+	const requester = body.requester
+	const dappcontract = body.dappcontract
+	const timeout_seconds = body.timeout_seconds || 0
+	const txid = body.txid
 
-	const chain = chains.get_chain(req.body.chainId)
+	const chain = chains.get_chain(body.chainId)
 	
 	const store_trace = await Backend.get_store_trace(chain, dappcontract, file, timeout_seconds)
 	log.debug("store_trace: ", store_trace)
@@ -125,7 +138,7 @@ async function broker_read(req, res) {
 				payload: payload,
 				txid,
 				timeout_seconds: timeout_seconds,
-				chainId: req.body.chainId,
+				chainId: body.chainId,
 			})
 	})
 	log.debug("payload.threshold: ", payload.threshold)
