@@ -3,6 +3,11 @@ const Eos = require('eosjs')
 const Mongo = require('../common/mongo')
 const log = require('../common/log')
 
+// Stay backwards compatible with the single-chain-style config format
+if(!config.chains) {
+    config.chains = [config]
+}
+
 if(process.argv[3]) {
     log.warn(`Overwriting nodeAccount with cli argument: ${process.argv[3]}`)
 	config.chains = config.chains.map(chain => {
@@ -13,11 +18,6 @@ if(process.argv[3]) {
 	})
 }
 
-// check only required for bps to migrate to new config file with multiple chain ids
-if(!config.chains) {
-    log.warn(`Configuration warning: Please migrate config to support multiple chains - single chain support will be dropped in the future. See https://github.com/rawrat/privEOS/blob/multichain-support/common/config.js-example for example.`)
-    config.chains = [config]
-}
 
 config.chains.forEach((chainConfig, index) => {
     if(!chainConfig.watchdogPermission) {
