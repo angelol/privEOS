@@ -5,7 +5,10 @@ const log = require('../common/log')
 
 // Stay backwards compatible with the single-chain-style config format
 if(!config.chains) {
-    config.chains = [config]
+    config.chains = [
+      // deep copy
+      JSON.parse(JSON.stringify(config))
+    ]
 }
 
 if(process.argv[3]) {
