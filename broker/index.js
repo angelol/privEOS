@@ -8,6 +8,7 @@ const Promise = require('bluebird')
 const Backend = require('../common/backend')
 const log = require('../common/log')
 const config = require('../common/config')
+const chains =  require('../common/chains')
 const { URL } = require('url')
 const { broker_status } = require('./status')
 
@@ -15,10 +16,6 @@ const { get_nodes, all_nodes, contract, fetch_from_ipfs } = require('./helpers')
 
 if(process.argv[2]) {
 	config.brokerPort = process.argv[2]
-}
-
-if(process.argv[3]) {
-	config.nodeAccount = process.argv[3]
 }
 
 const server = restify.createServer()
@@ -68,11 +65,18 @@ server.post('/broker/read/', async function(req, res, next) {
 
 async function broker_store(req, res) {
 	const body = req.body
-	if(!body || !body.file || !body.data || !body.owner || !body.dappcontract) {
+
+	// For older versions of priveos-client that don't send chainId
+	if(!body.chainId) {
+		body.chainId = chains.defaultChainId
+	}
+
+	if(!body || !body.file || !body.data || !body.owner || !body.dappcontract || !body.chainId) {
 		return res.send(400, "Bad request")
 	}
 	log.debug("Ohai broker_store")
-	const nodes = await all_nodes()
+	const chain = chains.get_chain(body.chainId)
+	const nodes = await all_nodes(chain)
 	const promises = nodes.map(async node => {
 		log.debug("nodes.map: ", node)
 		const url = new URL('/kms/store/', node.url).href
@@ -82,6 +86,7 @@ async function broker_store(req, res) {
 					owner: body.owner,
 					data: body.data,
 					dappcontract: body.dappcontract,
+					chainId: body.chainId,
 				})
 			return res
 		} catch(e) {
@@ -90,30 +95,38 @@ async function broker_store(req, res) {
 	})
 	const response = await Promise.all(promises)
 	log.debug('Finished Sending to all Nodes')
-	// console.log("Response: ", response)
 	res.send('okay')
 }
 
 async function broker_read(req, res) {
+	const body = req.body
 	log.debug("broker_read")
-	if(!req.body || !req.body.file || !req.body.requester || !req.body.dappcontract || !req.body.txid) {
+	
+	// For older versions of priveos-client that don't send chainId
+	if(!body.chainId) {
+		body.chainId = chains.defaultChainId
+	}
+	
+	if(!body || !body.file || !body.requester || !body.dappcontract || !body.txid || !body.chainId) {
 		return res.send(400, "Bad request")
 	}
 	
-	const file = req.body.file
-	const requester = req.body.requester
-	const dappcontract = req.body.dappcontract
-	const timeout_seconds = req.body.timeout_seconds || 0
-	const txid = req.body.txid
+	const file = body.file
+	const requester = body.requester
+	const dappcontract = body.dappcontract
+	const timeout_seconds = body.timeout_seconds || 0
+	const txid = body.txid
+
+	const chain = chains.get_chain(body.chainId)
 	
-	const store_trace = await Backend.get_store_trace(dappcontract, file, timeout_seconds)
+	const store_trace = await Backend.get_store_trace(chain, dappcontract, file, timeout_seconds)
 	log.debug("store_trace: ", store_trace)
 	const hash = store_trace.data
 	log.debug("hash: ", hash)
 	
 	const payload = JSON.parse(await fetch_from_ipfs(hash))
 	log.debug("payload: ", payload)
-	const nodes = await get_nodes(payload, dappcontract, file)
+	const nodes = await get_nodes(chain, payload)
 
 	const promises = nodes.map(async node => {
 		log.debug("nodes.map: ", node)
@@ -125,6 +138,7 @@ async function broker_read(req, res) {
 				payload: payload,
 				txid,
 				timeout_seconds: timeout_seconds,
+				chainId: body.chainId,
 			})
 		return res.data
 	})

@@ -46,31 +46,31 @@ apps:
   - script : index.js
     cwd    : watchdog
     name   : watchdog_1
-    args   : testnodexxx1 3101
+    args   : 3101 testnodexxx1
     watch  : ['.', '../common']
     wait_ready: true
   - script : index.js
     cwd    : watchdog
     name   : watchdog_2
-    args   : testnodexxx2 3102
+    args   : 3102 testnodexxx2
     watch  : ['.', '../common']
     wait_ready: true
   - script : index.js
     cwd    : watchdog
     name   : watchdog_3
-    args   : testnodexxx3 3103
+    args   : 3103 testnodexxx3
     watch  : ['.', '../common']
     wait_ready: true
   - script : index.js
     cwd    : watchdog
     name   : watchdog_4
-    args   : testnodexxx4 3104
+    args   : 3104 testnodexxx4
     watch  : ['.', '../common']
     wait_ready: true
   - script : index.js
     cwd    : watchdog
     name   : watchdog_5
-    args   : testnodexxx5 3105
+    args   : 3105 testnodexxx5
     watch  : ['.', '../common']
     wait_ready: true
 

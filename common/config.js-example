@@ -1,16 +1,32 @@
 module.exports = {
-  httpEndpoint: 'http://localhost:8888',
-  chainId: 'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f',
-  watchdogPermission: {
-    permission: 'watchdog',
-    key: 'PRIVATE_KEY',
-  },
+  chains: [
+    {
+      httpEndpoint: 'http://localhost:8888',
+      chainId: "3a953df32658a2c7ef97c4048acb255969e803dafd92b96755bbc90ce4d1e448",
+      contract: 'priveosrules',
+      nodeAccount: 'testnodexxx1',
+      dbName: 'priveos_eos_1',
+      watchdogPermission: {
+        permission: 'watchdog',
+        key: '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3',
+      },
+    },
+    {
+      httpEndpoint: 'http://localhost:8889',
+      chainId: "9f41cc4cc5555bad2b77bd8368dcac1b640b51db8564521b6e8945014a6c90ac",
+      contract: 'priveosrules',
+      nodeAccount: 'testnodexxx1',
+      dbName: 'priveos_eos_2',
+      watchdogPermission: {
+        permission: 'watchdog',
+        key: '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3',
+      },
+    },
+  ],
   mongoUrl: 'mongodb://127.0.0.1:27017',
-  dbName: 'priveos',
   contract: 'priveosrules',
   kmsPort: 3001,
   brokerPort: 4000,
-  nodeAccount: 'testnodexxx1',
   backend: 'demux',
   encryptionServiceUrl: 'http://127.0.0.1:6000',
   ipfsConfig: {

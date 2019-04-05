@@ -1,7 +1,6 @@
-const mongo = require("../common/mongo")
-const Eos = require('eosjs')
 const eosjs_ecc = require('eosjs-ecc-priveos')
 const config = require('../common/config')
+const chains = require('../common/chains')
 const { URL } = require('url')
 const axios = require('axios')
 const encryption_service = require('../kms/proxy')
@@ -11,57 +10,75 @@ const ipfsClient = require('ipfs-http-client')
 const { version } = require('../package.json')
 const log = require('../common/log')
 
-const eos = Eos({httpEndpoint: config.httpEndpoint, chainId: config.chainId})
-
 async function broker_status(req, res) {
   const start = new Date()
   let errors = []
   let warnings = []
   
   const [
-    blocks_behind,
     kms_status,
-    encryption_service_status,
     ipfs_status,
     info,
     watchdog_status,
   ] = await Promise.all([
-    wrap(get_blocks_behind)(),
     wrap(get_kms_status)(),
-    wrap(test_encryption_service)(),
     wrap(check_ipfs)(),
     wrap(get_info)(),
     wrap(check_watchdog)(),
   ])
+
+  const chain_specific_tests = await Promise.all(chains.adapters.map(async chain => {
+    const blocks_behind = await wrap(get_blocks_behind)(chain)
+    const encryption_service_status = await wrap(test_encryption_service)(chain)
+
+    return {
+      chainId: chain.config.chainId,
+      blocks_behind,
+      encryption_service_status
+    }
+  }))
   
-  if(blocks_behind.error) {
-    throw blocks_behind.error
-  } else if(blocks_behind.delay > 15) {
-    errors.push(`Demux index is ${blocks_behind.delay} blocks behind`)
-  }
+  
+  const chain_infos = chain_specific_tests.map(info => {
+    let result = {
+      chainId: info.chainId,
+      info: {
+        index_head: info.blocks_behind.head
+      },
+      errors: []
+    }
+    if(info.blocks_behind.error) {
+      throw info.blocks_behind.error
+    } else if(info.blocks_behind.delay > 15) {
+      result.errors.push(`Demux index is ${info.blocks_behind.delay} blocks behind`)
+    }
+
+    if(info.encryption_service_status.error) {
+      log.error(`Encryption Service challenge failed with error ${info.encryption_service_status.error}`)
+      result.errors.push(`Encryption Service challenge failed`)
+    }
+
+    return result
+  })
   
   if(kms_status.error) {
-    console.error(`Error while trying to connect to KMS Server: ${kms_status.error}`)
+    log.error(`Error while trying to connect to KMS Server: ${kms_status.error}`)
     errors.push(`Error while trying to connect to KMS Server`)
   } else if(kms_status != 'ok') {
+    log.error(`KMS Server returns status ${kms_status}`)
     errors.push(`KMS Server returns status ${kms_status}`)
   } 
-  
-  if(encryption_service_status.error) {
-    console.error(`Encryption Service challenge failed with error ${encryption_service_status.error}`)
-    errors.push(`Encryption Service challenge failed`)
-  }
 
   if(ipfs_status.error) {
-    console.error(`IPFS error ${ipfs_status.error}`)
+    log.error(`IPFS error ${ipfs_status.error}`)
     errors.push(`IPFS challenge failed`)
   }
   
   if(info.error) {
-    console.error(`Error while getting info: ${info.error}`)
+    log.error(`Error while getting info: ${info.error}`)
     errors.push(`Error while getting info`)
   }
-  
+
   if(watchdog_status.error) {
     log.error(`Watchdog error: ${watchdog_status.error}`)
     warnings.push(`Watchdog not running`)
@@ -72,12 +89,12 @@ async function broker_status(req, res) {
   
   const end = new Date()
   info['duration'] = end-start
-  info['index_head'] = blocks_behind.head
   
   let status = errors.length ? "error" : "ok"
   let data = {
     status,
     info,
+    chains: chain_infos
   }
   if(errors.length) {
     data['errors'] = errors
@@ -96,16 +113,16 @@ async function get_info() {
 }
 
 /* Checks */
-async function get_blocks_behind() {
-  const db = await mongo.db()    
+async function get_blocks_behind(chain) {
+  const db = await chain.mongo.db()
   const index = await db.collection('index_state').findOne()
-  const info = await eos.getInfo({})
+  const info = await chain.eos.getInfo({})
   return {
     head: index.blockNumber,
     delay: info.head_block_num - index.blockNumber,
   }
 }
-
+ 
 async function get_kms_status() {
   const url = new URL('/kms/status/', `http://127.0.0.1:${config.kmsPort}`).href
   const res = await axios.get(url)
@@ -113,7 +130,7 @@ async function get_kms_status() {
   return res.data.status
 }
 
-async function test_encryption_service() {
+async function test_encryption_service(chain) {
   // any key, doesn't matter at all
   const test_key = {
     public: "EOS5y6p5XgxRHXgvVRQ1YnZbKGx8H4GQgYGvENvTLCP1LtKPy1WuB",
@@ -121,8 +138,9 @@ async function test_encryption_service() {
   } 
   const test_message = "Test"
   
-  const res = await eos.getTableRows({json:true, scope: config.contract, code: config.contract,  table: 'nodes', limit:100})
-  const myself = res.rows.filter(x => x.owner == config.nodeAccount)[0]
+
+  const res = await chain.eos.getTableRows({json:true, scope: chain.config.contract, code: chain.config.contract, table: 'nodes', limit:100})
+  const myself = res.rows.filter(x => x.owner == chain.config.nodeAccount)[0]
   log.debug('res.rows: ' + JSON.stringify(myself, null, 2))
   if(!myself) {
     console.info("This node has not been registered, skipping test_encryption_service")
@@ -168,9 +186,9 @@ async function check_watchdog() {
   * This is needed because Promise.all aborts when any promise rejects.
   */
 function wrap(fun) {
-  return async () => {
+  return async (...args) => {
     try {
-      return (await fun()) || {}
+      return (await fun(...args)) || {}
     } catch(error) {
       return {error}
     }

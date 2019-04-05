@@ -1,20 +1,18 @@
-const Eos = require('eosjs')
 const log = require('../common/log')
 const config = require('../common/config')
 const ipfsClient = require('ipfs-http-client')
 global.Promise = require('bluebird')
 
-const eos = Eos({httpEndpoint: config.httpEndpoint, chainId: config.chainId})
-   
-async function all_nodes() {
-  const res = await eos.getTableRows({json:true, scope: config.contract, code: config.contract,  table: 'nodes', limit:100})
+
+async function all_nodes(chain) {
+  const res = await chain.eos.getTableRows({json:true, scope: chain.config.contract, code: chain.config.contract, table: 'nodes', limit:100})
   return res.rows.filter(x => x.is_active)
 }
 
-async function get_nodes(payload, dappcontract, file) {
+async function get_nodes(chain, payload) {
   const nodes = payload.data
   const owners = nodes.map(value => value.node)
-  const active_nodes = await all_nodes()
+  const active_nodes = await all_nodes(chain)
   return active_nodes.filter(x => owners.includes(x.owner))
 }
 
