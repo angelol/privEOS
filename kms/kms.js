@@ -41,15 +41,32 @@ async function read(chainId, file, requester, dappcontract, data, txid, timeout_
 
   log.debug(`Decrypt for public key ${data.public_key}`)
   
+  let user_key
+  if(data.public_key) {
+    // old format (v0.1.4 and lower)
+    // REMOVE_WHEN_MAINNET
+    user_key = data.public_key
+  } else if(data.user_key) {
+    // new format (v0.1.5 and up)
+    user_key = data.user_key
+  }
+  assert.ok(user_key, "No user_key. Invalid Share.")
+  
   const share = await encryption_service.reencrypt({
     share: my_share,
-    public_key: data.user_key,
+    public_key: user_key,
     recipient_public_key: accessgrant_trace.public_key,
   })
   log.debug("share: ", JSON.stringify(share, null, 2))
+  let node_key
+  if(my_share.public_key) {
+    node_key = my_share.public_key
+  } else if(my_share.node_key) {
+    node_key = my_share.node_key
+  }
   return {
     message: share.message,
-    node_key: my_share.node_key,
+    node_key,
   }
 }
 
