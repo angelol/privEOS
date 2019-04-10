@@ -148,7 +148,6 @@ async function test_encryption_service(chain) {
   }
   let share = eosjs_ecc.Aes.encrypt(test_key.private, myself.node_key, test_message)	
   share = share.toString('base64')
-  console.log("Encrypted share: ", share)
   const payload = await encryption_service.reencrypt({
     share: {
       node_key: myself.node_key,
