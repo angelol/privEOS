@@ -8,7 +8,7 @@ apps:
     cwd    : demux
     name   : demux
     watch  : ['.', '../common']
-    wait_ready: true
+    wait_ready: false
     
 # start 5 instances of the KMS for testing
   - script : index.js
