@@ -41,6 +41,8 @@ Please generate a new, dedicated public/private keypair for this purpose and the
     cleos set action permission YOUR_EOS_ACCOUNT priveosrules peerdisappr watchdog
     
 This new permission named `watchdog` can only be used to call the above actions and nothing else, so it is safe to store this private key on the server.
+
+This needs to be repeated for every chain.
     
 ## Registering your Node
 Once your node is all set up, you can call ```priveosrules:regnode```, it's the privEOS equivalent of ```eosio:regproduce``` 🙂
@@ -61,7 +63,9 @@ In order to set your price:
     cleos -u https://jungle2.cryptolions.io push action priveosrules setprice '["YOUR_EOS_ACCOUNT", "0.0000 EOS", "store"]' -p YOUR_EOS_ACCOUNT
     cleos -u https://jungle2.cryptolions.io push action priveosrules setprice '["YOUR_EOS_ACCOUNT", "0.0100 EOS", "accessgrant"]' -p YOUR_EOS_ACCOUNT
 
-The price charged for reading and writing to privEOS will be the median of all prices set by the BPs. At the moment, these fees will be collected on a separate account ```priveosxfees```.
+The price charged for reading and writing to privEOS will be the median of all prices set by the BPs.
+
+This process needs to be repeated for every chain that you would like to connect to.
 
 ## Checking your Node Health
 Once you've completed the ```regnode``` step above, your node should appear on the [privEOS monitor](https://monitor.priveos.io/). 
