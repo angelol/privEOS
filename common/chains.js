@@ -23,7 +23,6 @@ if(!config.chains) {
 }
 
 // check for duplicate dbNames
-console.log('check for duplicate dbNames')
 const dbNames = config.chains.map(x => x.dbName)
 assert.equal(dbNames.length, _.uniq(dbNames).length, "Configuration error. All dbNames must be unique. Please choose a unique dbName for every chain.")
 
