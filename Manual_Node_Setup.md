@@ -15,6 +15,8 @@ Install the Let's Encrypt certbot, so we can use https for everything:
     apt-get update
     apt-get install python-certbot-nginx
     
+Please install node.js 11 by following the instructions here: https://github.com/nodesource/distributions#installation-instructions. Unfortunately, Ubuntu comes with the ancient version 8 and we absolutely need nodejs 11.
+    
 Install the rest of the dependencies:
     
     apt install git nodejs npm mongodb-server golang nginx ntp
