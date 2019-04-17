@@ -61,7 +61,7 @@ Make sure IPFS is automatically started:
     cp common/config.js-example common/config.js
     vi common/config.js
     
-When editing the config file, make sure to enter a valid `httpEndpoint` of the chain you want to connect to and a matching `chainId`. Under `nodeAccount`, enter your EOS BP account that you will use to `regnode` with the privEOS contract. 
+When editing the config file, make sure to enter a valid `httpEndpoint` for every chain you want to connect to and a matching `chainId`. Under `nodeAccount`, enter your EOS BP account that you will use to `regnode` with the privEOS contract. `dbName` is the name of the mongodb database that should be used for the off-chain index and needs to be unique. `contract` is the contract where the privEOS smart contract is deployed to (usually `priveosrules`).
 
 Please follow the [instructions to add a watchdog permission](https://github.com/rawrat/privEOS#add-watchdog-permission) and under `watchdogPermission`, enter your the private key of your newly generated `watchdog` permission. 
 
