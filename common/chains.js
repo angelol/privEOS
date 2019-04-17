@@ -2,6 +2,8 @@ const config = require('../common/config')
 const Eos = require('eosjs')
 const Mongo = require('../common/mongo')
 const log = require('../common/log')
+const _ = require('underscore')
+const assert = require('assert')
 
 let defaultChainId
 if(config.defaultChainId) {
@@ -19,6 +21,11 @@ if(!config.chains) {
       JSON.parse(JSON.stringify(config))
     ]
 }
+
+// check for duplicate dbNames
+console.log('check for duplicate dbNames')
+const dbNames = config.chains.map(x => x.dbName)
+assert.equal(dbNames.length, _.uniq(dbNames).length, "Configuration error. All dbNames must be unique. Please choose a unique dbName for every chain.")
 
 if(process.argv[3]) {
   log.warn(`Overwriting nodeAccount with cli argument: ${process.argv[3]}`)

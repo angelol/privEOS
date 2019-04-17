@@ -2,6 +2,7 @@
 const config = require('../common/config')
 const log = require('../common/log')
 const { fork } = require('child_process')
+const chains = require('../common/chains')
 
 // Stay backwards compatible with the single-chain-style config format
 if(!config.chains) {
