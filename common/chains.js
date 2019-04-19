@@ -51,8 +51,6 @@ const adapters = config.chains.map(chainConfig => {
         chainId: chainConfig.chainId,
         keyProvider: [chainConfig.watchdogPermission.key],
     })
-    eos.keyProvider = [chainConfig.watchdogPermission.key]
-    eos.httpEndpoint = chainConfig.httpEndpoint
     return {
         eos,
         config: chainConfig,

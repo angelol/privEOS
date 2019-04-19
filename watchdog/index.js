@@ -199,7 +199,6 @@ async function execute_transaction(node, action_name, chain) {
       owner: node.owner,
     }
   }]
-  console.log(`eos.transaction with httpEndpoint: ${chain.eos.httpEndpoint} keyProvider: ${JSON.stringify(chain.eos.keyProvider)} actions: ${JSON.stringify(actions)}`)
   try { 
     const res = chain.eos.transaction({actions})
     status = 'ok'
