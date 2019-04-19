@@ -266,7 +266,7 @@ CONTRACT priveos : public eosio::contract {
         return;
       }
       
-      const auto itr = peerapprovals.find(node.owner.value);
+      auto itr = peerapprovals.find(node.owner.value);
       
       /**
         * If no peerapproval table entry exists yet, create one and exit
@@ -277,7 +277,6 @@ CONTRACT priveos : public eosio::contract {
           pa.approved_by.insert(approver);
           pa.created_at = now();
         });
-        return;
       } else if(itr->is_expired()) {
         /**
           * If it's expired, erase the old one and start fresh.
@@ -290,25 +289,25 @@ CONTRACT priveos : public eosio::contract {
           pa.approved_by.insert(approver);
           pa.created_at = now();
         });
-        return;
       }
+        
+      itr = peerapprovals.find(node.owner.value);
+      eosio_assert(itr != peerapprovals.end(), "We just created a peeraproval, so it should be there");
+
+      peerapprovals.modify(itr, approver, [&](auto& pa) {
+        pa.approved_by.insert(approver);
+      });
+      
+      itr = peerapprovals.find(node.owner.value);
+      eosio_assert(itr != peerapprovals.end(), "We just created a peeraproval, so it should be there");
       
       /**
         * If number of needed approvals is met (including the current one),
         * erase peerapproval from the table and activate node.
         */
-      if(itr->approved_by.size() + 1 >= peers_needed()) {
+      if(itr->approved_by.size() >= peers_needed()) {
         peerapprovals.erase(itr);
         return activate_node(node);
-      }
-      
-      /**
-        * Otherwise, add the approver to the set
-        */
-      if(itr != peerapprovals.end()) {
-        peerapprovals.modify(itr, approver, [&](auto& pa) {
-          pa.approved_by.insert(approver);
-        });
       }
     }
     
@@ -318,7 +317,7 @@ CONTRACT priveos : public eosio::contract {
         return;
       }
       
-      const auto itr = peerdisapprovals.find(node.owner.value);
+      auto itr = peerdisapprovals.find(node.owner.value);
       
       /**
         * If no peerdisapproval table entry exists yet, create one and exit
@@ -329,7 +328,6 @@ CONTRACT priveos : public eosio::contract {
           pd.disapproved_by.insert(disapprover);
           pd.created_at = now();
         });
-        return;
       } else if(itr->is_expired()) {
         /**
           * If it's expired, erase the old one and start fresh.
@@ -342,25 +340,23 @@ CONTRACT priveos : public eosio::contract {
           pd.disapproved_by.insert(disapprover);
           pd.created_at = now();
         });
-        return;
       }
       
+      itr = peerdisapprovals.find(node.owner.value);
+      eosio_assert(itr != peerdisapprovals.end(), "We just added a disapproval, so it should be here.");
+      peerdisapprovals.modify(itr, disapprover, [&](auto& pa) {
+        pa.disapproved_by.insert(disapprover);
+      });
+      
+      itr = peerdisapprovals.find(node.owner.value);
+      eosio_assert(itr != peerdisapprovals.end(), "We just added a disapproval, so it should be here.");
       /**
         * If number of needed disapprovals is met (including the current one),
         * erase peerdisapproval from the table and disable the node.
         */
-      if(itr->disapproved_by.size() + 1 >= peers_needed()) {
+      if(itr->disapproved_by.size() >= peers_needed()) {
         peerdisapprovals.erase(itr);
         return disable_node(node);
-      }
-      
-      /**
-        * Otherwise, add the disapprover to the set
-        */
-      if(itr != peerdisapprovals.end()) {
-        peerdisapprovals.modify(itr, disapprover, [&](auto& pa) {
-          pa.disapproved_by.insert(disapprover);
-        });
       }
     }
     
