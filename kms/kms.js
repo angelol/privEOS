@@ -56,6 +56,7 @@ async function read(chainId, file, requester, dappcontract, data, txid, timeout_
     share: my_share,
     public_key: user_key,
     recipient_public_key: accessgrant_trace.public_key,
+    chainId,
   })
   log.debug("share: ", JSON.stringify(share, null, 2))
   let node_key

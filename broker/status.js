@@ -155,6 +155,7 @@ async function test_encryption_service(chain) {
     },
     public_key: test_key.public,
     recipient_public_key: test_key.public,
+    chainId: chain.config.chainId,
   })
   
   log.debug("payload: ", JSON.stringify(payload))
