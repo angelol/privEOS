@@ -21,8 +21,7 @@ let status = 'ok'
 server.get('/watchdog/status/', async function(req, res, next) {
   try {
     let errors = []
-    for (let i = 0; i < chains.adapters.length; i++) {
-      let chain = chains.adapters[i]
+    for (const chain of chains.adapters) {
       const err = await check_permissions(chain)
       if (err) errors.push(err)
     }
@@ -70,39 +69,42 @@ async function loop() {
   localApprovals = []
   localDisapprovals = []
 
-  for (let i = 0; i < chains.adapters.length; i++) {
-    let chain = chains.adapters[i]
-    log.debug(`Run watchdog for ${chain.config.httpEndpoint}, ${chain.config.chainId}`)
-    const watchdog_should_run = await should_watchdog_run(chain)
-    if(!watchdog_should_run) {
-      log.info("Contract version is incompatible, skipping this round.")
-      await Promise.delay(10000)
-      return
+  for (const chain of chains.adapters) {
+    await handle_chain(chain)
+  }
+}
+
+async function handle_chain(chain) {
+  log.debug(`Run watchdog for ${chain.config.httpEndpoint}, ${chain.config.chainId}`)
+  const watchdog_should_run = await should_watchdog_run(chain)
+  if(!watchdog_should_run) {
+    log.info("Contract version is incompatible, skipping this round.")
+    await Promise.delay(10000)
+    return
+  }
+  
+  // 1. get nodes
+  const nodes = await get_nodes(chain)
+  log.debug('nodes', nodes)
+  approvals = await get_approvals(chain)
+  log.debug(`approvals: ${JSON.stringify(approvals)}`)
+  disapprovals = await get_disapprovals(chain)
+  log.debug(`disapprovals: ${JSON.stringify(disapprovals)}`)
+  // 2. check node status
+  //    if okay and not active => approve
+  //    if not okay and active => disapprove
+  //    with 30 nodes, 1 round takes 60 seconds
+  for (const node of nodes) {
+    try {
+      await handle_node(node, chain)
+      status = 'ok'
+    } catch(e) {
+      log.error(e)
+      if(status == 'ok') {
+        status = 'error while checking node'
+      } 
     }
-    
-    // 1. get nodes
-    const nodes = await get_nodes(chain)
-    log.debug('nodes', nodes)
-    approvals = await get_approvals(chain)
-    log.debug(`approvals: ${JSON.stringify(approvals)}`)
-    disapprovals = await get_disapprovals(chain)
-    log.debug(`disapprovals: ${JSON.stringify(disapprovals)}`)
-    // 2. check node status
-    //    if okay and not active => approve
-    //    if not okay and active => disapprove
-    //    with 30 nodes, 1 round takes 60 seconds
-    for (const node of nodes) {
-      try {
-        await handle_node(node, chain)
-        status = 'ok'
-      } catch(e) {
-        log.error(e)
-        if(status == 'ok') {
-          status = 'error while checking node'
-        } 
-      }
-      await Promise.delay(chains.adapters.length <= 5 ? parseInt(2000 / chains.adapters.length) : 400) // each node should be checked every 2000sec across all chains 
-    }
+    await Promise.delay(chains.adapters.length <= 5 ? parseInt(2000 / chains.adapters.length) : 400) // each node should be checked every 2000sec across all chains 
   }
 }
 
