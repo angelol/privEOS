@@ -90,7 +90,7 @@ async function broker_status(req, res) {
   const end = new Date()
   info['duration'] = end-start
   
-  let status = errors.length ? "error" : "ok"
+  let status = (hasErrors(chain_infos) || errors.length) ? "error" : "ok"
   let data = {
     status,
     info,
@@ -104,6 +104,12 @@ async function broker_status(req, res) {
   }
   
   res.send(data)
+}
+
+function hasErrors(chainInfos) {
+  return chainInfos.some(x => {
+    return x.errors.length > 0
+  })
 }
 
 async function get_info() {
@@ -155,7 +161,6 @@ async function test_encryption_service(chain) {
     },
     public_key: test_key.public,
     recipient_public_key: test_key.public,
-    chainId: chain.config.chainId,
   })
   
   log.debug("payload: ", JSON.stringify(payload))
