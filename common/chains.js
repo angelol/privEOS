@@ -46,12 +46,14 @@ config.chains.forEach((chainConfig, index) => {
 
 const adapters = config.chains.map(chainConfig => {
     // console.log('chainConfig', chainConfig, chainConfig.watchdogPermission.key)
+    let eos = Eos({
+        httpEndpoint: chainConfig.httpEndpoint, 
+        chainId: chainConfig.chainId,
+        keyProvider: [chainConfig.watchdogPermission.key],
+    })
+    eos.keyProvider = [chainConfig.watchdogPermission.key]
     return {
-        eos: Eos({
-            httpEndpoint: chainConfig.httpEndpoint, 
-            chainId: chainConfig.chainId,
-            keyProvider: [chainConfig.watchdogPermission.key],
-        }),
+        eos,
         config: chainConfig,
         mongo: new Mongo(config.mongoUrl, chainConfig.dbName)
     }
