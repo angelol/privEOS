@@ -51,6 +51,9 @@ const adapters = config.chains.map(chainConfig => {
         chainId: chainConfig.chainId,
         keyProvider: [chainConfig.watchdogPermission.key],
     })
+    eos.getInfo({}).then((info) => {
+      assert.equal(info.chain_id, chainConfig.chainId, `Configuration Error. The chainId is configured as ${chainConfig.chainId} but really is ${info.chain_id}`)
+    })
     return {
         eos,
         config: chainConfig,
