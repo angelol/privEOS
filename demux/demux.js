@@ -18,15 +18,6 @@ const Mongo = require("../common/mongo")
 let mongo = null
 let demux = null
 const log = require('../common/log')
-const { fork } = require('child_process')
-
-process.on('message', msg => {
-  console.log('Demux Message from parent:', typeof msg, msg);
-  if (!msg.type) return log.error("Received unknown message in demux child process", msg)
-  if (msg.type === "chainConfig") {
-    demux = new Demux(msg.data)
-  }
-});
 
 process.on('unhandledRejection', (reason, p) => {
   log.error('Unhandled Rejection at:', p, 'reason:', reason)
@@ -119,11 +110,6 @@ class Demux {
       const current_block_number = index.blockNumber
       if(this.last_block_number == current_block_number) {
         log.error(`Demux has stalled at block ${this.last_block_number}. Exiting.`)
-        const chainProc = fork('./demux.js')
-        chainProc.send({
-            type: "chainConfig",
-            data: this.config,
-        })
         process.exit(1)
       }
       this.last_block_number = current_block_number
