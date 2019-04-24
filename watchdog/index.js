@@ -50,7 +50,7 @@ server.listen(port, "127.0.0.1", function() {
 })
 
 let approvals, disapprovals
-let localApprovals, localDisapprovals
+let nodeStatus = []
 
 async function main() {
   while(true) {
@@ -66,9 +66,7 @@ async function main() {
 }
 
 async function loop() {
-  localApprovals = []
-  localDisapprovals = []
-
+  nodeStatus = []
   for (const chain of chains.adapters) {
     await handle_chain(chain)
   }
@@ -95,8 +93,10 @@ async function handle_chain(chain) {
   //    if not okay and active => disapprove
   //    with 30 nodes, 1 round takes 60 seconds
   for (const node of nodes) {
+    const node_status = nodeStatus[node.owner] || await get_node_status(node)
+    nodeStatus[node.owner] = node_status
     try {
-      await handle_node(node, chain)
+      await handle_node(node, chain, node_status)
       status = 'ok'
     } catch(e) {
       log.error(e)
@@ -108,9 +108,11 @@ async function handle_chain(chain) {
   }
 }
 
-async function handle_node(node, chain) {
-  const node_is_okay = localDisapprovals.includes(node.url) ? false : localApprovals.includes(node.url) || await is_node_okay(node)
-  node_is_okay ? localApprovals.push(node.url) : localDisapprovals.push(node.url)
+async function handle_node(node, chain, node_status) {
+  let node_is_okay = false
+  if (node_status.status == 'ok' && is_chain_ok(node_status, chain.config.chainId)) {
+    node_is_okay = true
+  }
   log.debug(`Node ${node.owner} is ${node_is_okay}`)
   if(node_is_okay && !node.is_active) {
     log.info(`Node ${node.owner} is okay, approving`)
@@ -210,20 +212,28 @@ async function execute_transaction(node, action_name, chain) {
   }
 }
 
-async function is_node_okay(node) {
+async function get_node_status(node) {
   const url = new URL('/broker/status/', node.url)
   log.debug(`Trying ${url.href}`)
-  let okay = false
   try {
     const res = await axios.get(url.href)
-    if(res.data.status == 'ok') {
-      okay = true
-    }
+    return res.data
   } catch(e) {
-    okay = false
+    log.error(e)
   }
-  return okay
+  return null
 }
+
+function is_chain_ok(node_status, chain_id) {
+  let ok = false
+  const chain = node_status.chains.find(chain => chain.chainId == chain_id)
+  console.log('###### errors', chain, chain_id)
+  if (chain && chain.errors.length == 0) {
+    ok = true
+  }
+  return ok
+}
+
 async function get_nodes(chain) {
   const res = await chain.eos.getTableRows({json:true, scope: chain.config.contract, code: chain.config.contract, table: 'nodes', limit:100})
   return res.rows.filter(x => x.owner != chain.config.nodeAccount)
