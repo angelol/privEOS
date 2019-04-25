@@ -6,6 +6,7 @@ const axios = require('axios')
 const encryption_service = require('../kms/proxy')
 const ByteBuffer = require('bytebuffer')
 const assert = require('assert')
+const _ = require('underscore')
 const ipfsClient = require('ipfs-http-client')
 const { version } = require('../package.json')
 const log = require('../common/log')
@@ -95,9 +96,7 @@ async function broker_status(req, res) {
     }
     return result
   })
-  
-  
-  
+    
   const end = new Date()
   info['duration'] = end-start
   
@@ -105,6 +104,18 @@ async function broker_status(req, res) {
     info,
     chains: chain_infos
   }
+  
+  /* The following if/else is only needed until the majority of nodes have upgraded.
+   * It's needed to make sure new nodes are not being deactivated
+   * by old watchdogs.
+   */
+  if(_.all(chain_infos.map(x => x.status == 'ok'))) {
+    data['status'] = 'ok'
+  } else {
+    data['status'] = 'error'
+  }
+  
+
   res.send(data)
 }
 
