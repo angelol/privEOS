@@ -92,7 +92,7 @@ async function broker_status(req, res) {
       result['status'] = 'ok'
     }
     if(warnings.length) {
-      results['warnings'] = warnings
+      result['warnings'] = warnings
     }
     return result
   })
