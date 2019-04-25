@@ -44,20 +44,24 @@ async function broker_status(req, res) {
       chainId: info.chainId,
       info: {
         index_head: info.blocks_behind.head
-      },
-      errors: []
+      }
     }
+    let chainErrors = []
+
     if(info.blocks_behind.error) {
       throw info.blocks_behind.error
     } else if(info.blocks_behind.delay > 15) {
-      result.errors.push(`Demux index is ${info.blocks_behind.delay} blocks behind`)
+      chainErrors.push(`Demux index is ${info.blocks_behind.delay} blocks behind`)
     }
 
     if(info.encryption_service_status.error) {
       log.error(`Encryption Service challenge failed with error ${info.encryption_service_status.error}`)
-      result.errors.push(`Encryption Service challenge failed`)
+      chainErrors.push(`Encryption Service challenge failed`)
     }
-
+    
+    if(chainErrors.length) {
+      result['errors'] = chainErrors
+    }
     return result
   })
   
@@ -90,9 +94,7 @@ async function broker_status(req, res) {
   const end = new Date()
   info['duration'] = end-start
   
-  let status = errors.length ? "error" : "ok"
   let data = {
-    status,
     info,
     chains: chain_infos
   }

@@ -110,7 +110,7 @@ async function handle_chain(chain) {
 
 async function handle_node(node, chain, node_status) {
   let node_is_okay = false
-  if (node_status.status == 'ok' && is_chain_ok(node_status, chain.config.chainId)) {
+  if (is_ok(node_status) && is_ok(get_chain(node_status, chain.config.chainId))) {
     node_is_okay = true
   }
   log.debug(`Node ${node.owner} is ${node_is_okay}`)
@@ -224,14 +224,17 @@ async function get_node_status(node) {
   return null
 }
 
-function is_chain_ok(node_status, chain_id) {
+function is_ok(obj) {
   let ok = false
-  const chain = node_status.chains.find(chain => chain.chainId == chain_id)
-  console.log('###### errors', chain, chain_id)
-  if (chain && chain.errors.length == 0) {
+  if (!obj.errors) {
     ok = true
   }
   return ok
+}
+
+function get_chain(node_status, chain_id) {
+  const chain = node_status.chains.find(chain => chain.chainId == chain_id)
+  return chain
 }
 
 async function get_nodes(chain) {
@@ -268,4 +271,3 @@ async function check_permissions(chain) {
 }
 
 main()
-
