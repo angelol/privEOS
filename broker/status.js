@@ -6,7 +6,6 @@ const axios = require('axios')
 const encryption_service = require('../kms/proxy')
 const ByteBuffer = require('bytebuffer')
 const assert = require('assert')
-const _ = require('underscore')
 const ipfsClient = require('ipfs-http-client')
 const { version } = require('../package.json')
 const log = require('../common/log')
@@ -109,7 +108,7 @@ async function broker_status(req, res) {
    * It's needed to make sure new nodes are not being deactivated
    * by old watchdogs.
    */
-  if(_.all(chain_infos.map(x => x.status == 'ok'))) {
+  if(chain_infos.every(x => x.status == 'ok')) {
     data['status'] = 'ok'
   } else {
     data['status'] = 'error'
