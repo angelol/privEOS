@@ -218,13 +218,7 @@ async function get_node_status(node) {
   try {
     const res = await axios.get(url.href)
     return res.data
-  } catch(e) {
-    if (e && e.response && e.response.status && e.response.statusText) {
-      log.error(`Invalid node response: ${e.response.status} - ${e.response.statusText}`)
-    } else {
-      log.error(e)
-    }
-  }
+  } catch(e) {}
   return null
 }
 
