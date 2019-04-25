@@ -12,8 +12,6 @@ const log = require('../common/log')
 
 async function broker_status(req, res) {
   const start = new Date()
-  let errors = []
-  let warnings = []
   
   const [
     kms_status,
@@ -46,50 +44,59 @@ async function broker_status(req, res) {
         index_head: info.blocks_behind.head
       }
     }
-    let chainErrors = []
+    const errors = []
+    const warnings = []
 
     if(info.blocks_behind.error) {
       throw info.blocks_behind.error
     } else if(info.blocks_behind.delay > 15) {
-      chainErrors.push(`Demux index is ${info.blocks_behind.delay} blocks behind`)
+      errors.push(`Demux index is ${info.blocks_behind.delay} blocks behind`)
     }
 
     if(info.encryption_service_status.error) {
       log.error(`Encryption Service challenge failed with error ${info.encryption_service_status.error}`)
-      chainErrors.push(`Encryption Service challenge failed`)
+      errors.push(`Encryption Service challenge failed`)
     }
     
-    if(chainErrors.length) {
-      result['errors'] = chainErrors
+    if(kms_status.error) {
+      log.error(`Error while trying to connect to KMS Server: ${kms_status.error}`)
+      errors.push(`Error while trying to connect to KMS Server`)
+    } else if(kms_status != 'ok') {
+      log.error(`KMS Server returns status ${kms_status}`)
+      errors.push(`KMS Server returns status ${kms_status}`)
+    } 
+
+    if(ipfs_status.error) {
+      log.error(`IPFS error ${ipfs_status.error}`)
+      errors.push(`IPFS challenge failed`)
+    }
+    
+    if(info.error) {
+      log.error(`Error while getting info: ${info.error}`)
+      errors.push(`Error while getting info`)
+    }
+
+    if(watchdog_status.error) {
+      log.error(`Watchdog error: ${watchdog_status.error}`)
+      warnings.push(`Watchdog not running`)
+    } else if(watchdog_status != 'ok') {
+      log.error(`Watchdog returned status: ${watchdog_status}`)
+      warnings.push(`Watchdog Error: ${watchdog_status}`)
+    }
+    
+    if(errors.length) {
+      result['errors'] = errors
+      result['status'] = 'error'
+    } else {
+      result['status'] = 'ok'
+    }
+    if(warnings.length) {
+      results['warnings'] = warnings
     }
     return result
   })
   
-  if(kms_status.error) {
-    log.error(`Error while trying to connect to KMS Server: ${kms_status.error}`)
-    errors.push(`Error while trying to connect to KMS Server`)
-  } else if(kms_status != 'ok') {
-    log.error(`KMS Server returns status ${kms_status}`)
-    errors.push(`KMS Server returns status ${kms_status}`)
-  } 
-
-  if(ipfs_status.error) {
-    log.error(`IPFS error ${ipfs_status.error}`)
-    errors.push(`IPFS challenge failed`)
-  }
   
-  if(info.error) {
-    log.error(`Error while getting info: ${info.error}`)
-    errors.push(`Error while getting info`)
-  }
-
-  if(watchdog_status.error) {
-    log.error(`Watchdog error: ${watchdog_status.error}`)
-    warnings.push(`Watchdog not running`)
-  } else if(watchdog_status != 'ok') {
-    log.error(`Watchdog returned status: ${watchdog_status}`)
-    warnings.push(`Watchdog Error: ${watchdog_status}`)
-  }
   
   const end = new Date()
   info['duration'] = end-start
@@ -98,16 +105,6 @@ async function broker_status(req, res) {
     info,
     chains: chain_infos
   }
-  if(errors.length) {
-    data['errors'] = errors
-    data['status'] = 'error'
-  } else {
-    data['status'] = 'ok'
-  }
-  if(warnings.length) {
-    data['warnings'] = warnings
-  }
-  
   res.send(data)
 }
 
