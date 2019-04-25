@@ -100,6 +100,9 @@ async function broker_status(req, res) {
   }
   if(errors.length) {
     data['errors'] = errors
+    data['status'] = 'error'
+  } else {
+    data['status'] = 'ok'
   }
   if(warnings.length) {
     data['warnings'] = warnings
