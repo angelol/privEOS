@@ -120,6 +120,7 @@ async function broker_read(req, res) {
 
 	const chain = chains.get_chain(body.chainId)
 	
+	/* Wait until the transaction with txid has propagated before continuing */
 	await Backend.get_accessgrant_trace(chain, dappcontract, requester, file, txid, timeout_seconds)
 	
 	const store_trace = await Backend.get_store_trace(chain, dappcontract, file, timeout_seconds)
