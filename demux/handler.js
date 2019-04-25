@@ -47,7 +47,7 @@ module.exports = mongo => {
         * of the privEOS data. Use this hash to retrieve the full data from
         * the temporary database and store it in IPFS.
         *
-        * As is common practive, we are using IPFS to not unnecessarily 
+        * As is common practice, we are using IPFS to not unnecessarily 
         * bloat the on-chain transactions with binary data. 
         */
       const hash = payload.data.data
