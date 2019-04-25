@@ -1,10 +1,5 @@
 apps:
   - script : index.js
-    cwd    : broker
-    name   : broker
-    watch  : ['.', '../common']
-    wait_ready: true
-  - script : index.js
     cwd    : demux
     name   : demux
     watch  : ['.', '../common']
