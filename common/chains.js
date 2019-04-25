@@ -4,6 +4,7 @@ const Mongo = require('../common/mongo')
 const log = require('../common/log')
 const _ = require('underscore')
 const assert = require('assert')
+const Bourne = require('@hapi/bourne')
 
 let defaultChainId
 if(config.defaultChainId) {
@@ -18,7 +19,7 @@ if(config.defaultChainId) {
 if(!config.chains) {
     config.chains = [
       // deep copy
-      JSON.parse(JSON.stringify(config))
+      Bourne.parse(JSON.stringify(config))
     ]
 }
 

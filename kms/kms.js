@@ -32,7 +32,6 @@ async function read(chainId, file, requester, dappcontract, data, txid, timeout_
   
   const hash = await getMultiHash(JSON.stringify(data))
   assert.equal(store_trace.data, hash)
-  // const data = JSON.parse(store_trace.data)
   const nodes = data.data
   log.debug("DATA: ", JSON.stringify(data, null, 2))
   const my_share = nodes.filter(x => x.node == chain.config.nodeAccount)[0]

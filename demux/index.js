@@ -2,12 +2,13 @@
 const config = require('../common/config')
 const log = require('../common/log')
 const Demux = require('./demux')
+const Bourne = require('@hapi/bourne')
 
 // Stay backwards compatible with the single-chain-style config format
 if(!config.chains) {
     config.chains = [
       // deep copy
-      JSON.parse(JSON.stringify(config))
+      Bourne.parse(JSON.stringify(config))
     ]
 }
 

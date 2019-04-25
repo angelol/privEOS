@@ -1,4 +1,5 @@
 const log = require('../log')
+const Bourne = require('@hapi/bourne')
 
 async function get_store_trace(chain, dappcontract, file) {
   const db = await chain.mongo.db()
@@ -14,7 +15,7 @@ async function get_store_trace(chain, dappcontract, file) {
     .limit(1)
     .toArray()
   const trace = items[0]
-  return JSON.parse(trace.act.data.data)
+  return Bourne.parse(trace.act.data.data)
 }
 
 async function get_accessgrant_trace(chain, user, file) {

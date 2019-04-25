@@ -11,7 +11,7 @@ const config = require('../common/config')
 const chains =  require('../common/chains')
 const { URL } = require('url')
 const { broker_status } = require('./status')
-
+const Bourne = require('@hapi/bourne')
 const { get_nodes, all_nodes, contract, fetch_from_ipfs } = require('./helpers')
 
 if(process.argv[2]) {
@@ -124,7 +124,7 @@ async function broker_read(req, res) {
 	const hash = store_trace.data
 	log.debug("hash: ", hash)
 	
-	const payload = JSON.parse(await fetch_from_ipfs(hash))
+	const payload = Bourne.parse(await fetch_from_ipfs(hash))
 	log.debug("payload: ", payload)
 	const nodes = await get_nodes(chain, payload)
 
