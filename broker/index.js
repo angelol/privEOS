@@ -12,6 +12,7 @@ const chains =  require('../common/chains')
 const { URL } = require('url')
 const { broker_status } = require('./status')
 const Bourne = require('@hapi/bourne')
+const schemas = require('./schemas')
 const { get_nodes, all_nodes, contract, fetch_from_ipfs } = require('./helpers')
 
 if(process.argv[2]) {
@@ -128,6 +129,12 @@ async function broker_read(req, res) {
 	
 	const payload = Bourne.parse(await fetch_from_ipfs(hash))
 	log.debug("payload: ", payload)
+	const result = schemas.validate_any(payload, schemas.valid_json_payloads_from_ipfs)
+	if(result.error) {
+		log.error("Invalid format: ", payload)
+		return res.send(400, "Bad request")
+	}
+	
 	const nodes = await get_nodes(chain, payload)
 
 	const promises = nodes.map(async node => {

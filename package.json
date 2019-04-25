@@ -5,6 +5,7 @@
   "repository": "git@github.com:rawrat/privEOS.git",
   "dependencies": {
     "@hapi/bourne": "^1.2.0",
+    "@hapi/joi": "^15.0.0",
     "axios": "^0.18.0",
     "bluebird": "^3.5.3",
     "demux-eos": "^3.1.0",
