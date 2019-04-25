@@ -237,8 +237,10 @@ function is_ok(obj) {
 }
 
 function get_chain(node_status, chain_id) {
-  const chain = node_status.chains.find(chain => chain.chainId == chain_id)
-  return chain
+  if (node_status && Array.isArray(node_status.chains)) {
+    return node_status.chains.find(chain => chain.chainId == chain_id)
+  }
+  return null
 }
 
 async function get_nodes(chain) {
