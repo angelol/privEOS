@@ -65,7 +65,7 @@ Make sure IPFS is automatically started:
     
 When editing the config file, make sure to enter a valid `httpEndpoint` for every chain you want to connect to and a matching `chainId`. Under `nodeAccount`, enter your EOS BP account that you will use to `regnode` with the privEOS contract. `dbName` is the name of the mongodb database that should be used for the off-chain index and needs to be unique. `contract` is the contract where the privEOS smart contract is deployed to (usually `priveosrules`).
 
-Please follow the [instructions to add a watchdog permission](https://github.com/rawrat/privEOS#add-watchdog-permission) and under `watchdogPermission`, enter your the private key of your newly generated `watchdog` permission. 
+Please follow the [instructions to add a watchdog permission](https://github.com/rawrat/privEOS#add-watchdog-permission) and under `watchdogPermission`, enter your the private key of your newly generated `watchdog` permission. You have to repeat that step for every chain.
 
 If you're following this guide, you don't need to touch the rest of the values.
 
@@ -97,9 +97,10 @@ Now let's install the encryption service under a different user.
     cd priveos-encryption-service
     npm install
     cp config.js-example config.js
-Add your private key to the config file
+Add your private keys for the chains you would like to support to the config file. The settings `currentPrivateKeys` is a map of chainId to the private key which means you can and should have a different private key for every chain.
 
     vi config.js
+
 Start service and check log output for potential error messages:
 
     pm2 start live.yml
