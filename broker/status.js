@@ -9,8 +9,17 @@ const assert = require('assert')
 const ipfsClient = require('ipfs-http-client')
 const { version } = require('../package.json')
 const log = require('../common/log')
+const cache = require('./cache')
+const Promise = require('bluebird')
 
 async function broker_status(req, res) {
+  const data = await cache.get_or_set_async('broker_status', async () => {
+    return await get_broker_status_data(req, res)
+  })
+  res.send(data)
+}
+
+async function get_broker_status_data(req, res) {
   const start = new Date()
   
   const [
@@ -115,8 +124,7 @@ async function broker_status(req, res) {
     data['status'] = 'error'
   }
   
-
-  res.send(data)
+  return data
 }
 
 async function get_info() {
