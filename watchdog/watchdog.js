@@ -99,19 +99,19 @@ class Watchdog {
   
   async approve(node) {
     if(this.needs_my_approval(node)) {
-      log.debug(`${this.chain.chainId} Node ${node.owner} needs my approval`)
+      log.info(`${this.chain.chainId} Node ${node.owner} needs my approval`)
       return this.execute_transaction(node, 'peerappr')
     } else {
-      log.debug(`${this.chain.chainId} Node ${node.owner} already approved by me`)
+      log.info(`${this.chain.chainId} Node ${node.owner} already approved by me`)
     }
   }
 
   async disapprove(node) {
     if(this.needs_my_disapproval(node)) {
-      log.debug(`${this.chain.chainId} Node ${node.owner} needs my disapproval`)
+      log.info(`${this.chain.chainId} Node ${node.owner} needs my disapproval`)
       return this.execute_transaction(node, 'peerdisappr')
     } else {
-      log.debug(`${this.chain.chainId} Node ${node.owner} already disapproved by me`)
+      log.info(`${this.chain.chainId} Node ${node.owner} already disapproved by me`)
     }
   }
   
