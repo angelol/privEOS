@@ -156,7 +156,7 @@ class Watchdog {
     }]
     try { 
       log.debug("Executing tx: ", JSON.stringify(actions, null, 2))
-      const res = this.eos.transaction({actions})
+      const res = await this.eos.transaction({actions})
       log.debug("EOS returned: ", res)
       this.status = 'ok'
       return res
