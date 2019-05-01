@@ -49,7 +49,7 @@ server.listen(port, "127.0.0.1", function() {
 async function main() {
   // console.log("Ohai main config.chains: ", config.chains[0])
   for(const chain of chains.adapters) {
-    console.log(`${chain.chainId} Starting watchdog`)
+    log.info(`${chain.config.chainId} Starting watchdog`)
     const watchdog = new Watchdog(chain)
     watchdog.run()
   }
