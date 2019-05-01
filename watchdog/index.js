@@ -48,11 +48,25 @@ server.listen(port, "127.0.0.1", function() {
 
 async function main() {
   // console.log("Ohai main config.chains: ", config.chains[0])
-  for(const chain of chains.adapters) {
-    log.info(`${chain.config.chainId} Starting watchdog`)
-    const watchdog = new Watchdog(chain)
-    watchdog.run()
+  log.info(`Starting watchdog`)
+  const delay = get_delay()
+  while(true) {
+    for(const chain of chains.adapters) {
+      const watchdog = new Watchdog(chain, delay)
+      await watchdog.run()
+    }
   }
+}
+
+/*
+ * One round over all chains should ideally not take more than a minute
+ * If we're checking 30 per chain, that makes for a delay of 2 seconds.
+ * Or if there are N chains: 2/N seconds.
+ */
+function get_delay() {
+  const N = chains.adapters.length
+  const minimum = 100 // make sure we're not going too crazy
+  return Math.max(Math.round(2000/N), minimum)
 }
 
 async function check_permissions(chain) {

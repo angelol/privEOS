@@ -11,42 +11,41 @@ const assert = require('assert')
 const cache = require('../common/cache')
 
 class Watchdog {
-  constructor(chain) {
+  constructor(chain, delay) {
     this.chain = chain.config
     this.eos = chain.eos
     this.approvals = []
     this.disapprovals = []
     this.status = 'ok'
+    this.delay = delay
   }
   
   async run() {
-    while(true) {
-      const watchdog_should_run = await this.should_watchdog_run()
-      if(!watchdog_should_run) {
-        log.info("Contract version is incompatible, skipping this round.")
-        await Promise.delay(10000)
-        continue
+    const watchdog_should_run = await this.should_watchdog_run()
+    if(!watchdog_should_run) {
+      log.info("Contract version is incompatible, skipping this round.")
+      await Promise.delay(10000)
+      return
+    }
+    
+    // 1. get nodes
+    const nodes = await this.get_nodes()
+    this.approvals = await this.get_approvals()
+    this.disapprovals = await this.get_disapprovals()
+    log.debug(`${this.chain.chainId} approvals: ${JSON.stringify(this.approvals)}`)
+    log.debug(`${this.chain.chainId} disapprovals: ${JSON.stringify(this.disapprovals)}`)
+    
+    for(const node of nodes) {
+      try {
+        await this.handle_node(node)
+        this.status = 'ok'
+      } catch(e) {
+        log.error(e)
+        if(this.status == 'ok') {
+          this.status = 'error while checking node'
+        } 
       }
-      
-      // 1. get nodes
-      const nodes = await this.get_nodes()
-      this.approvals = await this.get_approvals()
-      this.disapprovals = await this.get_disapprovals()
-      log.debug(`${this.chain.chainId} approvals: ${JSON.stringify(this.approvals)}`)
-      log.debug(`${this.chain.chainId} disapprovals: ${JSON.stringify(this.disapprovals)}`)
-      
-      for(const node of nodes) {
-        try {
-          await this.handle_node(node)
-          this.status = 'ok'
-        } catch(e) {
-          log.error(e)
-          if(this.status == 'ok') {
-            this.status = 'error while checking node'
-          } 
-        }
-        await Promise.delay(2000)
-      }
+      await Promise.delay(this.delay)
     }
   }
   
@@ -168,15 +167,8 @@ class Watchdog {
     }
   }
   
-  async get_node_status(url) {
-    const key = `node_status_${url.href}`
-    try {
-      const data = cache.get(key)
-      return data
-    } catch(e) {
-      const res = await axios.get(url.href)
-      return cache.set(key, res, 60)
-    }
+  get_node_status(url) {
+     return axios.get(url.href)
   }
   
   async is_node_okay(node) {
