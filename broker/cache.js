@@ -12,11 +12,20 @@ class Cache {
     return value
   }
   
+  async set_async(key, promise, timeout=3) {
+    const value = await promise
+    const expires = moment().add(timeout, 's')
+    this.store[key] = [value, expires]
+    return value
+  }
+  
   get(key) {
     const [value, expires] = this.store[key]
     if(moment() > expires) {
       delete this.store[key]
-      throw new Error('Expired')
+      const err = new Error('Expired')
+      err.expired_data = value
+      throw err
     } else {
       return value
     }
@@ -36,7 +45,15 @@ class Cache {
       const data = this.get(key)
       return data
     } catch(e) {
-      return this.set(key, await value_callable(), timeout)
+      /* dispatch cache-update to the background */
+      this.set_async(key, value_callable(), timeout)
+      
+      /*
+       * Prolong the life of the stale data until the "background task" has
+       * updated the cache to the new value. This prevents multiple parallel
+       * evaluations of `value_callable` upon cache expiration.
+       */
+      return this.set(key, e.expired_data, timeout)
     }
   }
 }
