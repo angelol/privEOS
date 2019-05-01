@@ -179,17 +179,18 @@ class Watchdog {
       const res = await this.get_node_status(url)
       const data = res.data
       const all_chains = data['chains']
-      let this_chain
       if(all_chains) {
         /* New Format */
-        this_chain = all_chains.find(x => x.chainId === this.chain.chainId)
+        const this_chain = all_chains.find(x => x.chainId === this.chain.chainId)
+        if(this_chain && this_chain.status === 'ok') {
+          okay = true
+        }
       } else {
-        /* Old Format without multiple chains */
-        this_chain = data
-      }
-      if(this_chain && this_chain.status === 'ok') {
-        okay = true
-      }
+        /* 
+         * Disapprove old Format without multiple chains 
+         */
+        okay = false
+      }      
     } catch(e) {
       log.debug(e)
       okay = false
