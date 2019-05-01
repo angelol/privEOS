@@ -25,7 +25,7 @@ async function broker_status(req, res) {
     wrap(check_watchdog)(),
   ])
 
-  const chain_specific_tests = await Promise.all(chains.adapters.map(async chain => {
+  const promises = chains.adapters.map(async chain => {
     const blocks_behind = await wrap(get_blocks_behind)(chain)
     const encryption_service_status = await wrap(test_encryption_service)(chain)
 
@@ -34,7 +34,8 @@ async function broker_status(req, res) {
       blocks_behind,
       encryption_service_status
     }
-  }))
+  })
+  const chain_specific_tests = await Promise.all(promises)
   
   
   const chain_infos = chain_specific_tests.map(info => {
