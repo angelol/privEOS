@@ -45,15 +45,20 @@ class Cache {
       const data = this.get(key)
       return data
     } catch(e) {
-      /* dispatch cache-update to the background */
-      this.set_async(key, value_callable(), timeout)
+      if(e.expired_data) {
+        /* dispatch cache-update to the background */
+        this.set_async(key, value_callable(), timeout)
+        
+        /*
+         * Prolong the life of the stale data until the "background task" has
+         * updated the cache to the new value. This prevents multiple parallel
+         * evaluations of `value_callable` upon cache expiration.
+         */
+        return this.set(key, e.expired_data, timeout)
+      } else {
+        return this.set(key, await value_callable(), timeout)
+      }
       
-      /*
-       * Prolong the life of the stale data until the "background task" has
-       * updated the cache to the new value. This prevents multiple parallel
-       * evaluations of `value_callable` upon cache expiration.
-       */
-      return this.set(key, e.expired_data, timeout)
     }
   }
 }
