@@ -9,7 +9,7 @@ const assert = require('assert')
 const ipfsClient = require('ipfs-http-client')
 const { version } = require('../package.json')
 const log = require('../common/log')
-const cache = require('./cache')
+const cache = require('../common/cache')
 
 async function broker_status(req, res) {
   const data = await cache.get_or_set_async('broker_status', get_broker_status_data)

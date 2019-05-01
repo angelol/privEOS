@@ -8,6 +8,7 @@ const config = require('../common/config')
 const Eos = require('eosjs')
 const eosjs_ecc = require('eosjs-ecc-priveos')
 const assert = require('assert')
+const cache = require('../common/cache')
 
 class Watchdog {
   constructor(chain) {
@@ -167,18 +168,30 @@ class Watchdog {
     }
   }
   
+  async get_node_status(url) {
+    const key = `node_status_${url.href}`
+    try {
+      const data = cache.get(key)
+      return data
+    } catch(e) {
+      const res = await axios.get(url.href)
+      return cache.set(key, res, 60)
+    }
+  }
+  
   async is_node_okay(node) {
     const url = new URL('/broker/status/', node.url)
     log.debug(`${this.chain.chainId} Trying ${url.href}`)
     let okay = false
     try {
-      const res = await axios.get(url.href)
+      const res = await this.get_node_status(url)
       const all_chains = res.data['chains']
       const this_chain = all_chains.find(x => x.chainId === this.chain.chainId)
       if(this_chain && this_chain.status === 'ok') {
         okay = true
       }
     } catch(e) {
+      log.debug(e)
       okay = false
     }
     return okay
