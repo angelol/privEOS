@@ -1,6 +1,6 @@
 'use strict'
 const axios = require('axios')
-axios.defaults.timeout = 3000
+axios.defaults.timeout = 5000
 const Promise = require('bluebird')
 const log = require('../common/log')
 const { URL } = require('url')
