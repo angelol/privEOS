@@ -13,7 +13,7 @@ Install the Let's Encrypt certbot, so we can use https for everything:
     add-apt-repository universe
     add-apt-repository ppa:certbot/certbot
     apt-get update
-    apt-get install python-certbot-nginx
+    apt-get install python-certbot-nginx build-essential
     
 Please install node.js 11 by following the instructions here: https://github.com/nodesource/distributions#installation-instructions. Unfortunately, Ubuntu comes with the ancient version 8 and we absolutely need nodejs 11.
     
@@ -91,28 +91,116 @@ To install pm2 startup script, run
 And execute the suggested command in the output as root.
 
 Now let's install the encryption service under a different user.
+```
+apt install build-essential
+adduser encryptionservice --disabled-password
+```
 
-    su - encryptionservice 
-    git clone https://github.com/rawrat/priveos-encryption-service.git
-    cd priveos-encryption-service
-    npm install
-    cp config.js-example config.js
-Add your private keys for the chains you would like to support to the config file. The settings `currentPrivateKeys` is a map of chainId to the private key which means you can and should have a different private key for every chain.
+This daemon runs with locked memory to prevent secrets from being swapped to disk. This means we need to increase the memlock limits for our new user by:
 
-    vi config.js
+```
+cat << EOF > /etc/security/limits.conf
+encryptionservice     soft    memlock         104857600
+encryptionservice     hard    memlock         104857600
+EOF
+```
+
+We can now go on with the installation:
+```
+su - encryptionservice 
+git clone https://github.com/rawrat/priveos-encryption-service.git
+cd priveos-encryption-service
+npm install
+cp config.js-example config.js
+```
+In the `config.js` please enter your current node public key for every chainId. 
+
+If you're upgrading from an earlier version, we found it necessary to remove the `node_modules` folder and re-running `npm install`. Bloody npm!
 
 Start service and check log output for potential error messages:
+```
+pm2 start
+pm2 log
+```
+If you're getting the error message `mlockall failed with error -12. Exiting.`, that means the memlock limits in `/etc/security/limits.conf` need to be increase (see above). After changing the values, you may need to logout and log back in as the `encryptionservice` user.
 
-    pm2 start live.yml
-    pm2 log
-    
 To install pm2 startup script, run
+```
+pm2 save
+pm2 startup
+```
+And execute the suggested command in the output as root. This command will install the systemd startup script under the following path: `/etc/systemd/system/pm2-encryptionservice.service`. We're gonna have to make a slight change to that startup script:
 
-    pm2 save
-    pm2 startup
-And execute the suggested command in the output as root. We should now have two PM2 processes running under different users.
+Please add 
 
-Now it would be a good idea to restart the server to make sure all the services will be started automatically.
+```
+LimitMEMLOCK=infinity
+```
+to the `[Service]` section of the file. So the file should look something like this example:
+
+```
+[Unit]
+Description=PM2 process manager
+Documentation=https://pm2.keymetrics.io/
+After=network.target
+
+[Service]
+Type=forking
+User=encryptionservice
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+LimitMEMLOCK=infinity
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/bin:/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+Environment=PM2_HOME=/home/encryptionservice/.pm2
+PIDFile=/home/encryptionservice/.pm2/pm2.pid
+Restart=on-failure
+
+ExecStart=/usr/lib/node_modules/pm2/bin/pm2 resurrect
+ExecReload=/usr/lib/node_modules/pm2/bin/pm2 reload all
+ExecStop=/usr/lib/node_modules/pm2/bin/pm2 kill
+
+[Install]
+WantedBy=multi-user.target
+
+```
+Please not the line `LimitMEMLOCK=infinity` which we manually added.
+
+Now it would be a good idea to restart the server to verify that the encryption-service will be started automatically.
+
+## What is the node public/private key?
+Each privEOS node requires a private key that is independent of any permission with the sole purpose of securely exchanging information with the users. When the user sends information to a node, it's encrypted with that public key (using ECDH), so only the node which is in possession of the respective private key is able to decrypt the data. 
+
+It is vitally important that this private key stays secret. It is in the responsibility of the node operator to make sure this key never gets compromised.
+
+## Usage
+The encryption-service consists of a daemon that listens on localhost for commands and a command line tool to perfom common tasks. 
+
+Once the daemon is running, we can start by setting a master passphrase:
+```
+./wallet setpassphrase
+```
+Now you can unlock the vault by:
+```
+./wallet unlock
+```
+Please note that the vault must be unlocked interactively by providing the secret passphrase every time the daemon is started. Please do NOT be tempted to store the passphrase on the server itself, this would open up a huge security hole! 
+
+The vault is now unlocked and we can now import our private key(s):
+```
+./wallet import
+```
+
+You can check the imported keys by:
+```
+./wallet list
+```
+For a full list of commands, please see:
+```
+./wallet --help
+```
+
+Once all the private keys matching the public keys configured in `config.js` are imported, the encryption-service is fully operational.
 
 ### Nginx setup
 The privEOS services are now running but for security reasons, they are only listening on localhost. We are using an Nginx reverse proxy to serve actual user requests. 
