@@ -4,6 +4,9 @@ const Bourne = require('@hapi/bourne')
 
 module.exports = {}
 
+/*
+ * The given data must be valid with at least one of the given schemas
+ */
 module.exports.validate_any = function(data, schemas) {
   const valid = schemas.some(schema => Joi.validate(data, schema).error === null)
   if(valid) {
