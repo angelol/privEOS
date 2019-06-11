@@ -47,6 +47,7 @@ system:
 	$(CLEOS_ENDPOINT) push action eosio.token create '["eosio", "10000000000.0000 EOS",0,0,0]' -p eosio.token
 	$(CLEOS_ENDPOINT) push action eosio.token issue '["eosio","1000000000.0000 EOS", "issue"]' -p eosio
 	$(CLEOS_ENDPOINT) set contract eosio $(EOS_CONTRACTS_DIR)/eosio.system -p eosio
+	$(CLEOS_ENDPOINT) push action eosio init '[0, "4,EOS"]' -p eosio
 
 setup:
 	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio $(CONTRACT_ACCOUNT) $(PUBLIC_KEY) $(PUBLIC_KEY)
