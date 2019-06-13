@@ -1,6 +1,6 @@
 {
   "name": "priveos-node",
-  "version": "v0.1.6-dirty",
+  "version": "v0.1.7",
   "main": "index.js",
   "repository": "git@github.com:rawrat/privEOS.git",
   "dependencies": {
