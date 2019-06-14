@@ -12,7 +12,9 @@ if(process.argv[2]) {
 console.log('config.chains', config.chains)
 
 var server = restify.createServer()
-server.use(restify.plugins.bodyParser())
+server.use(restify.plugins.bodyParser({
+	maxBodySize: 1024*1024,
+}))
 
 server.get('/kms/status/', async function(req, res, next) {
 	try { 

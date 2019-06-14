@@ -20,7 +20,9 @@ if(process.argv[2]) {
 }
 
 const server = restify.createServer()
-server.use(restify.plugins.bodyParser())
+server.use(restify.plugins.bodyParser({
+	maxBodySize: 1024*1024,
+}))
 
  
 const cors = corsMiddleware({
