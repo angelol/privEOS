@@ -1,5 +1,6 @@
 #include "price.cpp"
 #include "fee.cpp"
+#include "peerapprovals.cpp"
 
 ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data, const bool auditable, const symbol token, const bool contractpays) {
   require_auth(owner);
@@ -33,10 +34,10 @@ ACTION priveos::accessgrant(const name user, const name contract, const std::str
 ACTION priveos::regnode(const name owner, const public_key node_key, const std::string url) {
   require_auth(owner);
 
-  eosio_assert(node_key != public_key(), "public key should not be the default value");
-  eosio_assert(node_key.type == (uint32_t)0, "Only K1 Keys supported");
+  check(node_key != public_key(), "public key should not be the default value");
+  check(node_key.type == (uint32_t)0, "Only K1 Keys supported");
 #ifndef LOCAL
-  eosio_assert(url.substr(0, 8) == std::string("https://"), "URL parameter must be a valid https URL");
+  check(url.substr(0, 8) == std::string("https://"), "URL parameter must be a valid https URL");
 #endif
   
   const auto node_idx = nodes.find(owner.value);
@@ -91,7 +92,7 @@ ACTION priveos::admunreg(const name owner) {
 ACTION priveos::setprice(const name node, const asset price, const std::string action) {
   nodes.get(node.value, "node not found.");
   currencies.get(price.symbol.code().raw(), "Token not accepted");
-  eosio_assert(price.amount >= 0, "Price must be >= 0");
+  check(price.amount >= 0, "Price must be >= 0");
   
   if(action == store_action_name) {
     store_pricefeed_table pricefeeds(_self, price.symbol.code().raw());
@@ -100,7 +101,7 @@ ACTION priveos::setprice(const name node, const asset price, const std::string a
     read_pricefeed_table pricefeeds(_self, price.symbol.code().raw());
     update_pricefeed(node, price, action, pricefeeds);
   } else {
-    eosio_assert(false, "Invalid action name");
+    check(false, "Invalid action name");
   }
 }
 
@@ -139,7 +140,7 @@ void priveos::transfer(const name from, const name to, const asset quantity, con
 
 
 extern "C" {
-  [[noreturn]] void apply(uint64_t receiver, uint64_t code, uint64_t action) {
+  void apply(uint64_t receiver, uint64_t code, uint64_t action) {
     if (action == "transfer"_n.value && code != receiver) {
       execute_action(eosio::name(receiver), eosio::name(code), &priveos::transfer);
     }

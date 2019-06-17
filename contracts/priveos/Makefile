@@ -5,7 +5,7 @@ EOS_ENDPOINT?=http://localhost:8888
 CLEOS_ENDPOINT=${CLEOS} -u ${EOS_ENDPOINT}
 
 build:
-	 eosio-cpp -D=LOCAL -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
+	 eosio-cpp -I. -D=LOCAL -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
 	
 deploy: build
 	$(CLEOS_ENDPOINT) set contract $(CONTRACT_ACCOUNT) ../$(CPP_IN)

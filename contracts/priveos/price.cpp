@@ -44,3 +44,54 @@ void priveos::update_price_table(const name node, const asset price, T& prices) 
     });
   }
 }
+
+const asset priveos::get_read_fee(symbol currency) {
+  const auto price = read_prices.get(currency.code().raw(), "Token not accepted");
+  return price.money;
+}
+
+const asset priveos::get_store_fee(symbol currency) {
+  const auto price = store_prices.get(currency.code().raw(), "Token not accepted");
+  return price.money;
+}
+
+void priveos::add_balance(name user, asset value) {
+  balances_table balances(_self, user.value);
+  const auto user_it = balances.find(value.symbol.code().raw());      
+  check(user_it != balances.end(), "Balance table entry does not exist, call prepare first");
+  balances.modify(user_it, user, [&](auto& bal){
+      bal.funds += value;
+  });
+}
+
+void priveos::sub_balance(name user, asset value) {
+  if(value.amount == 0) {
+    return;
+  }
+  balances_table balances(_self, user.value);
+  const auto& user_balance = balances.get(value.symbol.code().raw(), "User has no balance");
+  check(user_balance.funds >= value, "Overdrawn balance");
+  
+  if(user_balance.funds == value) {
+    balances.erase(user_balance);
+  } else {
+    balances.modify(user_balance, user, [&](auto& bal){
+        bal.funds -= value;
+    });
+  }
+}
+
+int64_t priveos::median(std::vector<int64_t>& v) {
+  const size_t s = v.size();
+  if(s == 0) {
+    return 0;
+  } else if(s == 1) {
+    return v[0];
+  }    
+  std::sort(v.begin(), v.end());
+  if(s % 2 == 0) {
+    return (v[s/2-1] + v[s/2])/2;
+  } else {
+    return v[s/2];
+  }
+}
