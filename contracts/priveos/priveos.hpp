@@ -8,7 +8,7 @@
 #include <eosio/asset.hpp>
 #include <eosio/symbol.hpp>
 #include <eosio/system.hpp>
-
+#include "string.hpp"
 
 using namespace eosio;
 
@@ -27,10 +27,14 @@ CONTRACT priveos : public eosio::contract {
       eosio::public_key   node_key;
       std::string         url;
       bool                is_active = false;
+      uint64_t            files = 0;
       
-      uint64_t primary_key()const { return owner.value; }      
+      uint64_t primary_key()const { return owner.value; }
+      uint64_t by_files()const { return files; }      
     };
-    typedef multi_index<"nodes"_n, nodeinfo> nodes_table;
+    typedef multi_index<"nodes"_n, nodeinfo,
+      indexed_by< "byfiles"_n, const_mem_fun<nodeinfo, uint64_t,  &nodeinfo::by_files> >
+    > nodes_table;
     nodes_table nodes;
 
     TABLE store_pricefeed {
