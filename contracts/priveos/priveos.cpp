@@ -124,7 +124,7 @@ ACTION priveos::prepare(const name user, const symbol currency) {
   }
 }
 
-
+[[eosio::on_notify("*::transfer")]] 
 void priveos::transfer(const name from, const name to, const asset quantity, const std::string memo) {
   // only respond to incoming transfers
   if (from == _self || to != _self) {
@@ -134,23 +134,3 @@ void priveos::transfer(const name from, const name to, const asset quantity, con
   validate_asset(quantity);
   add_balance(from, quantity);
 }
-
-// EOSIO_DISPATCH( priveos, (store)(accessgrant)(regnode)(unregnode)(setprice)(addcurrency) )
-
-
-
-extern "C" {
-  void apply(uint64_t receiver, uint64_t code, uint64_t action) {
-    if (action == "transfer"_n.value && code != receiver) {
-      execute_action(eosio::name(receiver), eosio::name(code), &priveos::transfer);
-    }
-    
-    if (code == receiver) {
-      switch (action) { 
-        EOSIO_DISPATCH_HELPER(priveos, (store)(accessgrant)(regnode)(unregnode)(setprice)(addcurrency)(prepare)(peerappr)(peerdisappr)(admunreg) ) 
-      }    
-    }
-    eosio_exit(0);
-    }
-}
-
