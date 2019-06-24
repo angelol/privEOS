@@ -32,9 +32,9 @@ CONTRACT priveos : public eosio::contract {
       uint64_t primary_key()const { return owner.value; }
       uint64_t by_files()const { return files; }      
     };
-    typedef multi_index<"nodes"_n, nodeinfo,
+    using nodes_table = multi_index<"nodes"_n, nodeinfo,
       indexed_by< "byfiles"_n, const_mem_fun<nodeinfo, uint64_t,  &nodeinfo::by_files> >
-    > nodes_table;
+    >;
     nodes_table nodes;
 
     TABLE store_pricefeed {
@@ -42,7 +42,7 @@ CONTRACT priveos : public eosio::contract {
       asset price;
       uint64_t primary_key() const { return node.value; }
     };
-    typedef multi_index<"storepricef"_n, store_pricefeed> store_pricefeed_table;
+    using store_pricefeed_table = multi_index<"storepricef"_n, store_pricefeed>;
 
     
     TABLE read_pricefeed {
@@ -50,7 +50,7 @@ CONTRACT priveos : public eosio::contract {
       asset price;
       uint64_t primary_key() const { return node.value; }
     };
-    typedef multi_index<"readpricef"_n, read_pricefeed> read_pricefeed_table;
+    using read_pricefeed_table = multi_index<"readpricef"_n, read_pricefeed>;
 
     /*
      * Price for storing items (charged by the store action)
@@ -59,7 +59,7 @@ CONTRACT priveos : public eosio::contract {
       asset money;
       uint64_t primary_key() const { return money.symbol.code().raw(); }
     };
-    typedef multi_index<"storeprice"_n, storeprice> storeprice_table;
+    using storeprice_table = multi_index<"storeprice"_n, storeprice>;
     storeprice_table store_prices;
 
 
@@ -70,7 +70,7 @@ CONTRACT priveos : public eosio::contract {
       asset money;
       uint64_t primary_key() const { return money.symbol.code().raw(); }
     };
-    typedef multi_index<"readprice"_n, readprice> readprice_table;
+    using readprice_table = multi_index<"readprice"_n, readprice>;
     readprice_table read_prices;
 
     
@@ -78,14 +78,14 @@ CONTRACT priveos : public eosio::contract {
         asset funds;
         uint64_t primary_key() const { return funds.symbol.code().raw(); }        
     };    
-    typedef multi_index<"balances"_n, balance> balances_table;
+    using balances_table = multi_index<"balances"_n, balance>;
 
     TABLE currency_t {
       symbol currency;
       name contract;
       uint64_t primary_key() const { return currency.code().raw(); }  
     };
-    typedef multi_index<"currencies"_n, currency_t> currencies_table;
+    using currencies_table = multi_index<"currencies"_n, currency_t>;
     currencies_table currencies;
     
     TABLE peerapproval {
@@ -96,7 +96,7 @@ CONTRACT priveos : public eosio::contract {
       uint64_t primary_key() const { return node.value; } 
       bool is_expired() const { return (now() - created_at) > FIVE_MINUTES; }
     };
-    typedef multi_index<"peerapproval"_n, peerapproval> peerapproval_table;
+    using peerapproval_table = multi_index<"peerapproval"_n, peerapproval>;
     peerapproval_table peerapprovals;
     
     TABLE peerdisapproval {
@@ -107,7 +107,7 @@ CONTRACT priveos : public eosio::contract {
       uint64_t primary_key() const { return node.value; } 
       bool is_expired() const { return (now() - created_at) > FIVE_MINUTES; }
     };
-    typedef multi_index<"peerdisappr"_n, peerdisapproval> peerdisapproval_table;
+    using peerdisapproval_table = multi_index<"peerdisappr"_n, peerdisapproval>;
     peerdisapproval_table peerdisapprovals;
 
     
