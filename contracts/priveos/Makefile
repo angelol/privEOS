@@ -75,19 +75,19 @@ regnodes:
 	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx5", "$(PK_NODE_5)", "http://localhost:8005"]' -p testnodexxx5
 
 watchdogpermissions:
-	$(CLEOS_ENDPOINT) set account permission testnodexxx1 watchdog $(PK_NODE_1) active
+	$(CLEOS_ENDPOINT) set account permission testnodexxx1 watchdog $(WATCHDOG_KEY) active
 	$(CLEOS_ENDPOINT) set action permission testnodexxx1 priveosrules peerappr watchdog
 	$(CLEOS_ENDPOINT) set action permission testnodexxx1 priveosrules peerdisappr watchdog
-	$(CLEOS_ENDPOINT) set account permission testnodexxx2 watchdog $(PK_NODE_1) active
+	$(CLEOS_ENDPOINT) set account permission testnodexxx2 watchdog $(WATCHDOG_KEY) active
 	$(CLEOS_ENDPOINT) set action permission testnodexxx2 priveosrules peerappr watchdog
 	$(CLEOS_ENDPOINT) set action permission testnodexxx2 priveosrules peerdisappr watchdog
-	$(CLEOS_ENDPOINT) set account permission testnodexxx3 watchdog $(PK_NODE_1) active
+	$(CLEOS_ENDPOINT) set account permission testnodexxx3 watchdog $(WATCHDOG_KEY) active
 	$(CLEOS_ENDPOINT) set action permission testnodexxx3 priveosrules peerappr watchdog
 	$(CLEOS_ENDPOINT) set action permission testnodexxx3 priveosrules peerdisappr watchdog
-	$(CLEOS_ENDPOINT) set account permission testnodexxx4 watchdog $(PK_NODE_1) active
+	$(CLEOS_ENDPOINT) set account permission testnodexxx4 watchdog $(WATCHDOG_KEY) active
 	$(CLEOS_ENDPOINT) set action permission testnodexxx4 priveosrules peerappr watchdog
 	$(CLEOS_ENDPOINT) set action permission testnodexxx4 priveosrules peerdisappr watchdog
-	$(CLEOS_ENDPOINT) set account permission testnodexxx5 watchdog $(PK_NODE_1) active
+	$(CLEOS_ENDPOINT) set account permission testnodexxx5 watchdog $(WATCHDOG_KEY) active
 	$(CLEOS_ENDPOINT) set action permission testnodexxx5 priveosrules peerappr watchdog
 	$(CLEOS_ENDPOINT) set action permission testnodexxx5 priveosrules peerdisappr watchdog
 	
@@ -126,8 +126,8 @@ setprice:
 
 
 showpricefeed:
-	$(CLEOS_ENDPOINT) get table $(CONTRACT_ACCOUNT) 4,EOS storepricef
-	$(CLEOS_ENDPOINT) get table $(CONTRACT_ACCOUNT) 4,EOS readpricef
+	$(CLEOS_ENDPOINT) get scope -t storepricef $(CONTRACT_ACCOUNT)
+	$(CLEOS_ENDPOINT) get scope -t readpricef $(CONTRACT_ACCOUNT)
 		
 	
 showprice:
@@ -142,14 +142,22 @@ showcurrency:
 
 prepare:
 	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) prepare '["$(ALICE)", "4,EOS"]' -p $(ALICE)
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) prepare '["$(BOB)", "4,EOS"]' -p $(BOB)
 	
 deposit:
 	$(CLEOS_ENDPOINT) transfer $(ALICE) $(CONTRACT_ACCOUNT) "1.0000 EOS" -p $(ALICE)
+	$(CLEOS_ENDPOINT) transfer $(BOB) $(CONTRACT_ACCOUNT) "1.0000 EOS" -p $(BOB)
 
 showbalances:
 	$(CLEOS_ENDPOINT) get table $(CONTRACT_ACCOUNT) $(ALICE) balances
 	$(CLEOS_ENDPOINT) get table $(CONTRACT_ACCOUNT) $(BOB) balances
 
+vote:
+	$(CLEOS_ENDPOINT) push action ${CONTRACT_ACCOUNT} vote '["$(ALICE)", ["testnodexxx2", "testnodexxx3", "testnodexxx1"]]' -p $(ALICE)
+	
+showvotes:
+	$(CLEOS_ENDPOINT) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) voters
 		
+		# cleos push action eosio voteproducer '["voter", "proxy", ["producers"]]'
 clean:
 	rm -f $(CPP_IN).wast $(CPP_IN).wasm $(CPP_IN).abi 

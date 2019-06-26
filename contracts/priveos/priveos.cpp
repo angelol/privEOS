@@ -4,7 +4,6 @@
 
 ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data, const bool auditable, const symbol token, const bool contractpays) {
   require_auth(owner);
-  
   /**
     * We need to notify the app contract because this transaction might charge 
     * a fee to the app. The app can implement validity checks in this 
@@ -12,12 +11,12 @@ ACTION priveos::store(const name owner, const name contract, const std::string f
     */
   require_recipient(contract);
   
-  charge_store_fee(owner, contract, token, contractpays);  
+  charge_store_fee(owner, contract, token, contractpays);
+  increment_filecount(contract);
 }
     
 ACTION priveos::accessgrant(const name user, const name contract, const std::string file, const public_key public_key, const symbol token, const bool contractpays) {
   require_auth(user);
-  
   /**
     * We need to notify the app contract for 2 reasons:
     
@@ -25,6 +24,9 @@ ACTION priveos::accessgrant(const name user, const name contract, const std::str
     * 2) The app can decide who gets access to this file in the notification. 
     *    If permission should not be granted to this user, the app contract 
     *    needs to raise an error here.
+    * Note that the caller can supply any contract they want. This smart contract
+    * does not enforce that the contract is the right contract that the
+    * file was stored with. The nodes are checking this off-chain. 
     */
   require_recipient(contract);
     
@@ -122,6 +124,26 @@ ACTION priveos::prepare(const name user, const symbol currency) {
         bal.funds = asset{0, currency};
     });
   }
+}
+
+ACTION priveos::vote(const name dappcontract, std::vector<name> nodes) {
+  require_auth(dappcontract);
+  
+  std::sort(nodes.begin(), nodes.end());
+
+  const auto it = voters.find(dappcontract.value);
+  if(it == voters.end()) {
+    voters.emplace(dappcontract, [&](auto& voterinfo) {
+      voterinfo.dappcontract = dappcontract;
+      voterinfo.nodes = nodes;
+    });
+  } else {
+    voters.modify(it, dappcontract, [&](auto& voterinfo) {
+      voterinfo.dappcontract = dappcontract;
+      voterinfo.nodes = nodes;
+    });
+  }
+  
 }
 
 [[eosio::on_notify("*::transfer")]] 

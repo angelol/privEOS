@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "test": "mocha test.js"
+  },
   "dependencies": {
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "eosjs": "^20.0.0",
     "eosjs-ecc-priveos": "^4.0.7",
     "priveos": "^0.2.2",
     "underscore": "^1.9.1",

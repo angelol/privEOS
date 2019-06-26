@@ -9,13 +9,32 @@ const _ = require('underscore')
 const uuidv4 = require('uuid/v4')
 const Priveos = require('priveos')
 
+
+const { Api, JsonRpc, RpcError } = require('eosjs')
+const { JsSignatureProvider } = require('eosjs/dist/eosjs-jssig')
+const { TextEncoder, TextDecoder } = require('util')
+const fetch = require('node-fetch')
+const rpc = new JsonRpc('http://localhost:8888', { fetch })
+function get_eos2(user) {
+  const keyProvider = [user.privateKey]
+  const signatureProvider = new JsSignatureProvider(keyProvider)
+  const eos2 = new Api({ 
+    rpc: new JsonRpc('http://localhost:8888', { fetch }),
+    signatureProvider, 
+    textDecoder: new TextDecoder(), 
+    textEncoder: new TextEncoder() 
+  })
+  return eos2
+}
+
+
 const WASM = 'priveos.wasm'
 const ABI = 'priveos.abi'
 const contractAccount = eoslime.Account.load('priveosrules', '5KXtuBpLc6Y9Q8Q8s8CQm2G7L98bV8PK1ZKnSKvNeoiuhZw6uDH')
 
 describe('Test', function () {
   // Increase mocha(testing framework) time, otherwise tests fails
-  this.timeout(15000)
+  this.timeout(60000)
     
   let alice, bob, contract, nodes, dappcontract
   before(async () => {
@@ -35,7 +54,7 @@ describe('Test', function () {
     
     contract = await eoslime.CleanDeployer.deploy(WASM, ABI, cpuAmount, netAmount, ramBytes)
     
-    nodes = await eoslime.Account.createRandoms(5)
+    nodes = await eoslime.Account.createRandoms(50)
     let port = 8001
     for(const node of nodes) {
       await node.buyBandwidth(cpuAmount, netAmount, eoslime.Account.provider.defaultAccount)
@@ -119,11 +138,52 @@ describe('Test', function () {
     }])
   })
   
+  it('voting required', async () => {
+    const key = Priveos.encryption.generateKey()
+    const identifier = uuidv4()
+    await expect(
+      contract.store(alice.name, dappcontract.name, identifier, key, 0, "4,EOS", 0, {from: alice})
+    ).to.be.rejectedWith(`Contract ${dappcontract.name} has not voted yet`)
+  })
+  
+  it('voting', async () => {
+    const voted_nodes = _.shuffle(nodes.map(x => x.name)).slice(0, 30)
+    console.log("Voted_notes: ", voted_nodes)
+    const actions = [
+        {
+            account: contract.name,
+            name: "vote",
+            authorization: [dappcontract.permissions.active],
+            data: {dappcontract: dappcontract.name, nodes: voted_nodes},
+        }
+    ]
+    const eos2 = get_eos2(dappcontract)
+    
+    await eos2.transact({actions}, {
+      blocksBehind: 3,
+      expireSeconds: 30,
+    })
+
+    const res = await rpc.get_table_rows({json:true, scope: contract.name, code: contract.name, table: 'voters', limit:100})
+    
+    
+    const sorted_nodes = _.sortBy(voted_nodes)
+    const expected_value = [{ dappcontract: dappcontract.name, nodes: sorted_nodes}]
+    console.log("votes table: ", JSON.stringify(res.rows, null, 2))
+    console.log("expected_value: ", JSON.stringify(expected_value))
+    expect(res.rows).to.deep.equal(expected_value)
+  })
+  
   it('User stores key (user pays)', async () => {    
     // const name owner, const name contract, const std::string file, const std::string data, const bool auditable, const symbol token, const bool contractpays
     const key = Priveos.encryption.generateKey()
     const identifier = uuidv4()
-    await contract.store(alice.name, dappcontract.name, identifier, key, 0, "4,EOS", 0, {from: alice})
+    const tx_result = await contract.store(alice.name, dappcontract.name, identifier, key, 0, "4,EOS", 0, {from: alice})
+    console.log("tx_result.processed.receipt.cpu_usage_us: " , tx_result.processed.receipt.cpu_usage_us)
+    console.log("tx_result: ", JSON.stringify(tx_result, null, 2))
+
+    const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'nodes', limit:100})
+    console.log("After first store: ", res.rows)
     
   })
   
@@ -140,6 +200,10 @@ describe('Test', function () {
     
     await contract.store(alice.name, dappcontract.name, identifier, key, 0, "4,EOS", 1, {from: alice})
     
+    const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'nodes', limit:100})
+
+    console.log("After second store: ", res.rows)
+
   })
   
   it('Accessgrant', async () => {

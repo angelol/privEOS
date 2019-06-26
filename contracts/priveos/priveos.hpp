@@ -15,12 +15,28 @@ using namespace eosio;
 CONTRACT priveos : public eosio::contract {
   using contract::contract;
   public:
-    priveos(name self,name code, datastream<const char*> ds) : eosio::contract(self,code,ds), nodes(_self, _self.value), read_prices(_self, _self.value), store_prices(_self, _self.value), currencies(_self, _self.value), peerapprovals(_self, _self.value), peerdisapprovals(_self, _self.value){}
+    priveos(name self,name code, datastream<const char*> ds) : eosio::contract(self,code,ds),
+      nodes(_self, _self.value), 
+      read_prices(_self, _self.value), 
+      store_prices(_self, _self.value), 
+      currencies(_self, _self.value), 
+      peerapprovals(_self, _self.value), 
+      peerdisapprovals(_self, _self.value),
+      voters(_self, _self.value)
+      {}
     
     const std::string accessgrant_action_name{"accessgrant"};
     const std::string store_action_name{"store"};    
     const static uint32_t FIVE_MINUTES{5*60};
     
+    TABLE voterinfo {
+      name                dappcontract;
+      std::vector<name>   nodes;
+      uint32_t            offset = 0;
+      uint64_t primary_key()const { return dappcontract.value; }
+    };
+    using voter_table = multi_index<"voters"_n, voterinfo>;
+    voter_table voters;
     
     TABLE nodeinfo {
       name        owner;
@@ -170,6 +186,8 @@ CONTRACT priveos : public eosio::contract {
       const symbol currency
     );
     
+    ACTION vote(const name dappcontract, std::vector<name> nodes);
+    
     void transfer(const name from, const name to, const asset quantity, const std::string memo);
     
     void validate_asset(const asset quantity) {
@@ -225,8 +243,21 @@ CONTRACT priveos : public eosio::contract {
     void disable_node(const nodeinfo& node);
     uint32_t peers_needed();
 
-    
-    
+    void increment_filecount(const name dappcontract) {
+      const auto voterinfo = voters.get(dappcontract.value, fmt("Contract {} has not voted yet.", dappcontract.to_string()));
+      
+      for(const auto owner : voterinfo.nodes) {
+        const auto node_idx = nodes.find(owner.value);
+        if(node_idx != nodes.end()) {
+          nodes.modify(node_idx, same_payer, [&](auto& info) {
+            print_f("Incrementing file count %", info.owner);
+            info.files++;
+          });
+        } else {
+          print_f("End iterator");
+        }
+      }
+    }
     
     static uint32_t now() {
       return current_time_point().sec_since_epoch();
