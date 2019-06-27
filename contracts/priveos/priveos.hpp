@@ -9,6 +9,7 @@
 #include <eosio/symbol.hpp>
 #include <eosio/system.hpp>
 #include "string.hpp"
+#include "sampling.hpp"
 
 using namespace eosio;
 
@@ -43,10 +44,10 @@ CONTRACT priveos : public eosio::contract {
       eosio::public_key   node_key;
       std::string         url;
       bool                is_active = false;
-      uint64_t            files = 0;
+      double              files = 0.0;
       
       uint64_t primary_key()const { return owner.value; }
-      uint64_t by_files()const { return files; }      
+      uint64_t by_files()const { return static_cast<uint64_t>(files); }      
     };
     using nodes_table = multi_index<"nodes"_n, nodeinfo,
       indexed_by< "byfiles"_n, const_mem_fun<nodeinfo, uint64_t,  &nodeinfo::by_files> >
@@ -191,8 +192,8 @@ CONTRACT priveos : public eosio::contract {
     void transfer(const name from, const name to, const asset quantity, const std::string memo);
     
     void validate_asset(const asset quantity) {
-      check(quantity.amount > 0, "Deposit amount must be > 0");
-      const auto& curr = currencies.get(quantity.symbol.code().raw(), "Currency not accepted");
+      check(quantity.amount > 0, "PrivEOS: Deposit amount must be > 0");
+      const auto& curr = currencies.get(quantity.symbol.code().raw(), "PrivEOS: Currency not accepted");
       
       /* If we are in a notification action that was initiated by 
        * require_recipient in the eosio.token contract,
@@ -201,7 +202,7 @@ CONTRACT priveos : public eosio::contract {
        * that should be the "eosio.token" account.
        * Make sure we're checking that against the known contract account. 
        */
-      check(curr.contract == get_first_receiver(), "We're not so easily fooled");
+      check(curr.contract == get_first_receiver(), fmt("PrivEOS: Token contract should be {} but is {}. We're not so easily fooled.", curr.contract.to_string(), get_first_receiver().to_string()));
     }
     
     template<typename T>
@@ -244,19 +245,26 @@ CONTRACT priveos : public eosio::contract {
     uint32_t peers_needed();
 
     void increment_filecount(const name dappcontract) {
-      const auto voterinfo = voters.get(dappcontract.value, fmt("Contract {} has not voted yet.", dappcontract.to_string()));
+      const auto voterinfo_it = voters.find(dappcontract.value);
+      check(voterinfo_it != voters.end(), fmt("PrivEOS: Contract {} has not voted yet.", dappcontract.to_string()));
+      const auto voterinfo = *voterinfo_it;
+      uint64_t step{3};
       
-      for(const auto owner : voterinfo.nodes) {
+      const auto callback = [&](name owner, double sampling_factor) {
         const auto node_idx = nodes.find(owner.value);
         if(node_idx != nodes.end()) {
           nodes.modify(node_idx, same_payer, [&](auto& info) {
-            print_f("Incrementing file count %", info.owner);
-            info.files++;
+            print_f("Incrementing file count % by %", info.owner, sampling_factor);
+            info.files += sampling_factor;
           });
-        } else {
-          print_f("End iterator");
         }
-      }
+      };
+      Sampling<name> x{voterinfo.offset, voterinfo.nodes, step, callback};
+      x.run();
+      
+      voters.modify(voterinfo_it, same_payer, [&](auto& voterinfo) {
+        voterinfo.offset += step;
+      });
     }
     
     static uint32_t now() {

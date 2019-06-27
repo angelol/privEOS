@@ -85,7 +85,7 @@ describe('Test', function () {
         node_key: node.key.public_key,
         url: node.url,
         is_active: 0,
-        files: 0,
+        files: "0.00000000000000000",
       })
     }
     expected_rows = _.sortBy(expected_rows, x => x.owner)
@@ -168,7 +168,7 @@ describe('Test', function () {
     
     
     const sorted_nodes = _.sortBy(voted_nodes)
-    const expected_value = [{ dappcontract: dappcontract.name, nodes: sorted_nodes}]
+    const expected_value = [{ dappcontract: dappcontract.name, nodes: sorted_nodes, offset: 0}]
     console.log("votes table: ", JSON.stringify(res.rows, null, 2))
     console.log("expected_value: ", JSON.stringify(expected_value))
     expect(res.rows).to.deep.equal(expected_value)
