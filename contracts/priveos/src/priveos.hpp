@@ -8,10 +8,23 @@
 #include <eosio/asset.hpp>
 #include <eosio/symbol.hpp>
 #include <eosio/system.hpp>
+#include <eosio/singleton.hpp>
 #include "string.hpp"
 #include "sampling.hpp"
 
 using namespace eosio;
+
+/* eosio::check overload that allows giving a format string for more 
+ * helpful error messages.
+ */
+template<typename... Args>
+inline void check(bool pred, const string& format, Args const& ... args) {
+  if(!pred) {
+    const char* msg = fmt(format, args...);
+    check(pred, msg);    
+  }
+}
+
 
 CONTRACT priveos : public eosio::contract {
   using contract::contract;
@@ -23,12 +36,89 @@ CONTRACT priveos : public eosio::contract {
       currencies(_self, _self.value), 
       peerapprovals(_self, _self.value), 
       peerdisapprovals(_self, _self.value),
-      voters(_self, _self.value)
+      voters(_self, _self.value),
+      global_singleton(_self, _self.value),
+      feebalances(_self, _self.value),
+      free_balance_singleton(_self, _self.value),
+      founder_balances(_self, _self.value),
+      delegations(_self, _self.value)
       {}
+    
+    static constexpr symbol priveos_symbol{"PRIVEOS", 4};
+    static constexpr name priveos_token_contract{"priveostoken"};
     
     const std::string accessgrant_action_name{"accessgrant"};
     const std::string store_action_name{"store"};    
     const static uint32_t FIVE_MINUTES{5*60};
+    
+    /**
+      * PRIVEOS TOKEN STAKING
+      */
+    TABLE freebal {
+      asset funds;
+    };
+    typedef singleton<"freebal"_n, freebal> free_balance_table;
+    free_balance_table free_balance_singleton;
+    
+    TABLE founderbal {
+      name        founder;
+      asset       funds;
+      uint32_t    locked_until; // seconds since unix epoch
+      
+      uint64_t primary_key() const { return founder.value; }        
+    };
+      
+    typedef multi_index<"founderbal"_n, founderbal> founderbal_table;
+    founderbal_table founder_balances;
+    
+    TABLE delegation {
+      name        user;
+      asset       funds;
+        
+      uint64_t primary_key() const { return user.value; }        
+    };
+    typedef multi_index<"delegation"_n, delegation> delegations_table;
+    delegations_table delegations;
+    
+    ACTION priveoslock(const name user, const asset quantity, const uint32_t locked_until);
+    ACTION priveoswithd(const name user, const asset quantity);
+    ACTION delegate(const name user, const asset value);
+    ACTION undelegate(const name user, const asset value);
+    
+    void free_priveos_balance_add(const asset quantity);
+    void free_priveos_balance_sub(const asset quantity);
+    void add_locked_balance(const name user, const asset value, const uint32_t locked_until);
+    void consistency_check();
+  
+    /* END PRIVEOS TOKEN STAKING */
+    
+    /* All fees that the contract collects get tracked here */
+    TABLE feebal {
+      asset funds;
+      
+      uint64_t primary_key() const { return funds.symbol.code().raw(); }
+    };
+    using feebal_table = multi_index<"feebal"_n, feebal>;
+    feebal_table feebalances;
+    
+    TABLE nodepayinfo {
+      time_point    last_claimed_at;
+      asset         last_claim_balance; 
+    };
+    using nodepay_table = multi_index<"nodepay"_n, nodepayinfo>;
+    
+    TABLE global {
+      uint64_t unique_files = 0;
+      
+      /* unique file multiplied by the number of nodes it is stored on 
+       * double instead of int due to sampling */
+      double files = 0.0;
+      
+      uint64_t registered_nodes = 0;
+      uint64_t active_nodes = 0;
+    };
+    using global_table = singleton<"global"_n, global>;
+    global_table global_singleton;
     
     TABLE voterinfo {
       name                dappcontract;
@@ -188,11 +278,11 @@ CONTRACT priveos : public eosio::contract {
     );
     
     ACTION vote(const name dappcontract, std::vector<name> nodes);
+    ACTION claimrewards(const name owner);
     
     void transfer(const name from, const name to, const asset quantity, const std::string memo);
     
     void validate_asset(const asset quantity) {
-      check(quantity.amount > 0, "PrivEOS: Deposit amount must be > 0");
       const auto& curr = currencies.get(quantity.symbol.code().raw(), "PrivEOS: Currency not accepted");
       
       /* If we are in a notification action that was initiated by 
@@ -202,7 +292,7 @@ CONTRACT priveos : public eosio::contract {
        * that should be the "eosio.token" account.
        * Make sure we're checking that against the known contract account. 
        */
-      check(curr.contract == get_first_receiver(), fmt("PrivEOS: Token contract should be {} but is {}. We're not so easily fooled.", curr.contract.to_string(), get_first_receiver().to_string()));
+      check(curr.contract == get_first_receiver(), "PrivEOS: Token contract should be {} but is {}. We're not so easily fooled.", curr.contract.to_string(), get_first_receiver().to_string());
     }
     
     template<typename T>
@@ -235,6 +325,7 @@ CONTRACT priveos : public eosio::contract {
     const asset get_store_fee(symbol currency);
     void add_balance(name user, asset value);
     void sub_balance(name user, asset value);
+    void add_fee_balance(asset value);
     int64_t median(std::vector<int64_t>& v);
       
     // peeraprovals
@@ -246,25 +337,45 @@ CONTRACT priveos : public eosio::contract {
 
     void increment_filecount(const name dappcontract) {
       const auto voterinfo_it = voters.find(dappcontract.value);
-      check(voterinfo_it != voters.end(), fmt("PrivEOS: Contract {} has not voted yet.", dappcontract.to_string()));
+      check(voterinfo_it != voters.end(), "PrivEOS: Contract {} has not voted yet.", dappcontract.to_string());
       const auto voterinfo = *voterinfo_it;
-      uint64_t step{3};
       
+      // update filecount for all nodes involved
+      uint64_t step{3};
+      double n_files{0.0};
       const auto callback = [&](name owner, double sampling_factor) {
         const auto node_idx = nodes.find(owner.value);
         if(node_idx != nodes.end()) {
-          nodes.modify(node_idx, same_payer, [&](auto& info) {
-            print_f("Incrementing file count % by %", info.owner, sampling_factor);
-            info.files += sampling_factor;
-          });
+          const auto node = *node_idx;
+          if(node.is_active) {
+            nodes.modify(node_idx, same_payer, [&](auto& info) {
+              // print_f("Incrementing file count % by %", info.owner, sampling_factor);
+              info.files += sampling_factor;
+              n_files += sampling_factor;
+            });
+          }
         }
       };
       Sampling<name> x{voterinfo.offset, voterinfo.nodes, step, callback};
-      x.run();
+      const auto offset = x.run();
+      
+      // update global file stats
+      auto stats = global_singleton.get_or_default(global {});
+      stats.unique_files += 1;
+      stats.files += n_files;
+      global_singleton.set(stats, _self);
       
       voters.modify(voterinfo_it, same_payer, [&](auto& voterinfo) {
-        voterinfo.offset += step;
+        voterinfo.offset = offset;
       });
+    }
+    
+    uint32_t get_voting_min_nodes() {
+      return 3;
+    }
+    
+    static uint32_t roundrobin_rand(uint32_t m) {
+      return now() % m;
     }
     
     static uint32_t now() {
@@ -272,5 +383,5 @@ CONTRACT priveos : public eosio::contract {
     }
 };
 
-
+ 
 

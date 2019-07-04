@@ -102,9 +102,15 @@ void priveos::was_disapproved_by(const name disapprover, const priveos::nodeinfo
 void priveos::activate_node(const nodeinfo& node) {
   const auto node_idx = nodes.find(node.owner.value);
   if(node_idx != nodes.end()) {
-    nodes.modify(node_idx, same_payer, [&](auto& info) {
-      info.is_active = true;
-    });
+    if(!node_idx->is_active) {
+      nodes.modify(node_idx, same_payer, [&](auto& info) {
+        info.is_active = true;
+      });
+      
+      auto stats = global_singleton.get_or_default(global {});
+      stats.active_nodes += 1;
+      global_singleton.set(stats, _self);
+    }
   }
   
   // if there are any incomplete disapprovals, clear them out
@@ -117,9 +123,15 @@ void priveos::activate_node(const nodeinfo& node) {
 void priveos::disable_node(const nodeinfo& node) {
   const auto node_idx = nodes.find(node.owner.value);
   if(node_idx != nodes.end()) {
-    nodes.modify(node_idx, same_payer, [&](auto& info) {
-      info.is_active = false;
-    });
+    if(node_idx->is_active) {
+      nodes.modify(node_idx, same_payer, [&](auto& info) {
+        info.is_active = false;
+      });
+      
+      auto stats = global_singleton.get();
+      stats.active_nodes -= 1;
+      global_singleton.set(stats, _self);
+    }
   }
   
   // if there are any incomplete approvals, clear them out

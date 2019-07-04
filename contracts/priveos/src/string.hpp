@@ -1,4 +1,3 @@
-
 using namespace std;
 
 inline vector<string> split(const string &s, const string &delim)
@@ -39,3 +38,4 @@ inline const char *fmt(const string& format, Args const& ... args){
   }
   return res.c_str();
 }
+

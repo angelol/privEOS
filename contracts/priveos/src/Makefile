@@ -155,6 +155,9 @@ showbalances:
 vote:
 	$(CLEOS_ENDPOINT) push action ${CONTRACT_ACCOUNT} vote '["$(ALICE)", ["testnodexxx2", "testnodexxx3", "testnodexxx1"]]' -p $(ALICE)
 	
+testrand:
+	$(CLEOS_ENDPOINT) push action ${CONTRACT_ACCOUNT} testrand '["$(CONTRACT_ACCOUNT)"]' -p $(CONTRACT_ACCOUNT)
+	
 showvotes:
 	$(CLEOS_ENDPOINT) get table $(CONTRACT_ACCOUNT) $(CONTRACT_ACCOUNT) voters
 		

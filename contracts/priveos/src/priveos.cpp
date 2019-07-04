@@ -1,6 +1,7 @@
 #include "price.cpp"
 #include "fee.cpp"
 #include "peerapprovals.cpp"
+#include "staking.cpp"
 
 ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data, const bool auditable, const symbol token, const bool contractpays) {
   require_auth(owner);
@@ -10,7 +11,7 @@ ACTION priveos::store(const name owner, const name contract, const std::string f
     * notification as a way to prevent abuse.
     */
   require_recipient(contract);
-  
+
   charge_store_fee(owner, contract, token, contractpays);
   increment_filecount(contract);
 }
@@ -37,7 +38,7 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
   require_auth(owner);
 
   check(node_key != public_key(), "public key should not be the default value");
-  check(node_key.type == (uint32_t)0, "Only K1 Keys supported");
+  check(node_key.type == uint32_t{0}, "Only K1 Keys supported");
 #ifndef LOCAL
   check(url.substr(0, 8) == std::string("https://"), "URL parameter must be a valid https URL");
 #endif
@@ -57,6 +58,10 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
       info.url = url;
       info.is_active = false;
     });
+    
+    auto stats = global_singleton.get_or_default(global {});
+    stats.registered_nodes += 1;
+    global_singleton.set(stats, _self);
   }  
 }
 
@@ -80,7 +85,13 @@ ACTION priveos::peerdisappr(const name sender, const name owner) {
 ACTION priveos::unregnode(const name owner) {
   require_auth(owner);
   const auto itr = nodes.find(owner.value);
+  disable_node(*itr);
   nodes.erase(itr);
+  
+  
+  auto stats = global_singleton.get_or_default(global {});
+  stats.registered_nodes -= 1;
+  global_singleton.set(stats, _self);
 }
 
 ACTION priveos::admunreg(const name owner) {
@@ -109,9 +120,16 @@ ACTION priveos::setprice(const name node, const asset price, const std::string a
 
 ACTION priveos::addcurrency(const symbol currency, const name contract) {
   require_auth(_self);
+  
+  /* From now on, we're ready to accept this currency */
   currencies.emplace(_self, [&](auto& c) {
     c.currency = currency;
     c.contract = contract;
+  });
+  
+  /* Create an entry in the fee-tracking table */
+  feebalances.emplace(_self, [&](auto &bal) {
+    bal.funds = asset{0, currency};
   });
 }
 
@@ -129,6 +147,9 @@ ACTION priveos::prepare(const name user, const symbol currency) {
 ACTION priveos::vote(const name dappcontract, std::vector<name> nodes) {
   require_auth(dappcontract);
   
+  const auto min_nodes = get_voting_min_nodes();
+  check(nodes.size() >= min_nodes, "PrivEOS: You need to vote for at least {} nodes.", std::to_string(min_nodes));
+  
   std::sort(nodes.begin(), nodes.end());
 
   const auto it = voters.find(dappcontract.value);
@@ -136,23 +157,48 @@ ACTION priveos::vote(const name dappcontract, std::vector<name> nodes) {
     voters.emplace(dappcontract, [&](auto& voterinfo) {
       voterinfo.dappcontract = dappcontract;
       voterinfo.nodes = nodes;
+      voterinfo.offset = roundrobin_rand(nodes.size());
     });
   } else {
     voters.modify(it, dappcontract, [&](auto& voterinfo) {
       voterinfo.dappcontract = dappcontract;
       voterinfo.nodes = nodes;
+      voterinfo.offset = roundrobin_rand(nodes.size());
     });
   }
   
 }
 
+ACTION priveos::claimrewards(const name owner) {
+  //  
+}
+
 [[eosio::on_notify("*::transfer")]] 
 void priveos::transfer(const name from, const name to, const asset quantity, const std::string memo) {
+  check(quantity.is_valid(), "PrivEOS: Invalid quantity");
+  check(quantity.amount > 0, "PrivEOS: Deposit amount must be > 0");
+  
   // only respond to incoming transfers
   if (from == _self || to != _self) {
     return;
   }
   
-  validate_asset(quantity);
-  add_balance(from, quantity);
+  if(quantity.symbol == priveos_symbol) {
+    /* This is just for PRIVEOS tokens */
+    check(get_first_receiver() == priveos_token_contract, "PrivEOS: Sorry, we don't take any fake tokens.");
+    free_priveos_balance_add(quantity);    
+  } else {
+    /* This is for tokens of any kind (e.g. as deposits towards fee payments) */
+    
+    const auto& curr = currencies.get(quantity.symbol.code().raw(), "PrivEOS: Currency not accepted");
+    /* If we are in a notification action that was initiated by 
+     * require_recipient in the eosio.token contract,
+     * get_first_receiver() is the account where the token contract 
+     * is deployed. So for EOS tokens,
+     * that should be the "eosio.token" account.
+     * Make sure we're checking that against the known contract account. 
+     */
+    check(curr.contract == get_first_receiver(), "PrivEOS: Token contract should be {} but is {}. We're not so easily fooled.", curr.contract.to_string(), get_first_receiver().to_string());
+    add_balance(from, quantity);  
+  }
 }
