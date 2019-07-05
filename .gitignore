@@ -10,3 +10,7 @@ config-local.conf
 /contracts/priveos/priveos.wasm
 /contracts/priveos/wallet-password.txt
 /yarn-error.log
+/contracts/priveos/src/priveos.wasm
+/contracts/priveos/src/priveos.abi
+/contracts/priveos/src/eosio.token.wasm
+/contracts/priveos/src/eosio.token.abi
