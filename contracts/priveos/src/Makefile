@@ -6,9 +6,12 @@ CLEOS_ENDPOINT=${CLEOS} -u ${EOS_ENDPOINT}
 
 build:
 	 eosio-cpp -I. -D=LOCAL -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
-	
+
+token:
+	 eosio-cpp -I. -abigen eosio.token.cpp -o eosio.token.wasm 
+
 deploy: build
-	$(CLEOS_ENDPOINT) set contract $(CONTRACT_ACCOUNT) ../$(CPP_IN)
+	$(CLEOS_ENDPOINT) set contract $(CONTRACT_ACCOUNT) ../src $(CPP_IN).wasm $(CPP_IN).abi
 
 init:
 	make system
@@ -42,6 +45,7 @@ system:
 	$(CLEOS_ENDPOINT) create account eosio eosio.saving $(PUBLIC_KEY) $(PUBLIC_KEY)
 	$(CLEOS_ENDPOINT) create account eosio eosio.stake $(PUBLIC_KEY) $(PUBLIC_KEY)
 	$(CLEOS_ENDPOINT) create account eosio eosio.vpay $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS_ENDPOINT) create account eosio eosio.rex $(PUBLIC_KEY) $(PUBLIC_KEY)
 	$(CLEOS_ENDPOINT) set contract eosio.token $(EOS_CONTRACTS_DIR)/eosio.token -p eosio.token
 	$(CLEOS_ENDPOINT) set contract eosio.msig $(EOS_CONTRACTS_DIR)/eosio.msig -p eosio.msig
 	$(CLEOS_ENDPOINT) push action eosio.token create '["eosio", "10000000000.0000 EOS",0,0,0]' -p eosio.token

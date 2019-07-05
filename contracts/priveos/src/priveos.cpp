@@ -89,7 +89,7 @@ ACTION priveos::unregnode(const name owner) {
   nodes.erase(itr);
   
   
-  auto stats = global_singleton.get_or_default(global {});
+  auto stats = global_singleton.get();
   stats.registered_nodes -= 1;
   global_singleton.set(stats, _self);
 }
@@ -148,7 +148,7 @@ ACTION priveos::vote(const name dappcontract, std::vector<name> nodes) {
   require_auth(dappcontract);
   
   const auto min_nodes = get_voting_min_nodes();
-  check(nodes.size() >= min_nodes, "PrivEOS: You need to vote for at least {} nodes.", std::to_string(min_nodes));
+  check(nodes.size() >= min_nodes, "PrivEOS: You need to vote for at least {} nodes.", min_nodes);
   
   std::sort(nodes.begin(), nodes.end());
 
@@ -177,6 +177,7 @@ ACTION priveos::claimrewards(const name owner) {
 void priveos::transfer(const name from, const name to, const asset quantity, const std::string memo) {
   check(quantity.is_valid(), "PrivEOS: Invalid quantity");
   check(quantity.amount > 0, "PrivEOS: Deposit amount must be > 0");
+  check(is_account(from), "PrivEOS: The account {} does not exist.");
   
   // only respond to incoming transfers
   if (from == _self || to != _self) {
@@ -185,7 +186,7 @@ void priveos::transfer(const name from, const name to, const asset quantity, con
   
   if(quantity.symbol == priveos_symbol) {
     /* This is just for PRIVEOS tokens */
-    check(get_first_receiver() == priveos_token_contract, "PrivEOS: Sorry, we don't take any fake tokens.");
+    check(get_first_receiver() == priveos_token_contract, "PrivEOS: Sorry, we don't take any fake tokens. Contract should be {} but is {}", priveos_token_contract, get_first_receiver());
     free_priveos_balance_add(quantity);    
   } else {
     /* This is for tokens of any kind (e.g. as deposits towards fee payments) */
@@ -198,7 +199,7 @@ void priveos::transfer(const name from, const name to, const asset quantity, con
      * that should be the "eosio.token" account.
      * Make sure we're checking that against the known contract account. 
      */
-    check(curr.contract == get_first_receiver(), "PrivEOS: Token contract should be {} but is {}. We're not so easily fooled.", curr.contract.to_string(), get_first_receiver().to_string());
+    check(curr.contract == get_first_receiver(), "PrivEOS: Token contract should be {} but is {}. We're not so easily fooled.", curr.contract, get_first_receiver());
     add_balance(from, quantity);  
   }
 }

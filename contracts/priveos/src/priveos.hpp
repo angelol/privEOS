@@ -45,14 +45,20 @@ CONTRACT priveos : public eosio::contract {
       {}
     
     static constexpr symbol priveos_symbol{"PRIVEOS", 4};
-    static constexpr name priveos_token_contract{"priveostoken"};
     
+#ifdef TOKENCONTRACT // allows specifying the token contract during compile for unittests
+#define STR_EXPAND(tok) #tok
+#define STR(tok) STR_EXPAND(tok)
+    static constexpr name priveos_token_contract{STR(TOKENCONTRACT)};
+#else
+    static constexpr name priveos_token_contract{"priveostoken"};
+#endif
     const std::string accessgrant_action_name{"accessgrant"};
     const std::string store_action_name{"store"};    
     const static uint32_t FIVE_MINUTES{5*60};
     
     /**
-      * PRIVEOS TOKEN STAKING
+      * PRIVEOS TOKEN STAKING (implemented in staking.cpp)
       */
     TABLE freebal {
       asset funds;
@@ -80,14 +86,15 @@ CONTRACT priveos : public eosio::contract {
     typedef multi_index<"delegation"_n, delegation> delegations_table;
     delegations_table delegations;
     
-    ACTION priveoslock(const name user, const asset quantity, const uint32_t locked_until);
-    ACTION priveoswithd(const name user, const asset quantity);
+    ACTION stake(const name user, const asset quantity, const uint32_t locked_until);
+    ACTION unstake(const name user, const asset quantity);
     ACTION delegate(const name user, const asset value);
     ACTION undelegate(const name user, const asset value);
     
     void free_priveos_balance_add(const asset quantity);
     void free_priveos_balance_sub(const asset quantity);
     void add_locked_balance(const name user, const asset value, const uint32_t locked_until);
+    void sub_locked_balance(const name user, const asset value);
     void consistency_check();
   
     /* END PRIVEOS TOKEN STAKING */
@@ -282,19 +289,6 @@ CONTRACT priveos : public eosio::contract {
     
     void transfer(const name from, const name to, const asset quantity, const std::string memo);
     
-    void validate_asset(const asset quantity) {
-      const auto& curr = currencies.get(quantity.symbol.code().raw(), "PrivEOS: Currency not accepted");
-      
-      /* If we are in a notification action that was initiated by 
-       * require_recipient in the eosio.token contract,
-       * get_first_receiver() is the account where the token contract 
-       * is deployed. So for EOS tokens,
-       * that should be the "eosio.token" account.
-       * Make sure we're checking that against the known contract account. 
-       */
-      check(curr.contract == get_first_receiver(), "PrivEOS: Token contract should be {} but is {}. We're not so easily fooled.", curr.contract.to_string(), get_first_receiver().to_string());
-    }
-    
     template<typename T>
     void update_pricefeed(
       const name node, 
@@ -337,7 +331,7 @@ CONTRACT priveos : public eosio::contract {
 
     void increment_filecount(const name dappcontract) {
       const auto voterinfo_it = voters.find(dappcontract.value);
-      check(voterinfo_it != voters.end(), "PrivEOS: Contract {} has not voted yet.", dappcontract.to_string());
+      check(voterinfo_it != voters.end(), "PrivEOS: Contract {} has not voted yet.", dappcontract);
       const auto voterinfo = *voterinfo_it;
       
       // update filecount for all nodes involved

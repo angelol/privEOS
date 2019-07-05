@@ -1,6 +1,9 @@
 const assert = require('assert')
 const eoslime = require('eoslime').init('local')
 const eosjs_ecc = require('eosjs-ecc-priveos')
+const util = require('util')
+const exec = util.promisify(require('child_process').exec);
+const Bluebird = require('bluebird')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
@@ -9,7 +12,6 @@ const _ = require('underscore')
 const uuidv4 = require('uuid/v4')
 const Priveos = require('priveos')
 const helpers = require('./test.helpers')
-
 const { Api, JsonRpc, RpcError } = require('eosjs')
 const { JsSignatureProvider } = require('eosjs/dist/eosjs-jssig')
 const { TextEncoder, TextDecoder } = require('util')
@@ -19,44 +21,46 @@ const rpc = new JsonRpc('http://localhost:8888', { fetch })
 const accessgrant_price = "0.0100 EOS"
 const store_price = "0.0200 EOS"
 
-function get_eos2(user) {
-  const keyProvider = [user.privateKey]
-  const signatureProvider = new JsSignatureProvider(keyProvider)
-  const eos2 = new Api({ 
-    rpc: new JsonRpc('http://localhost:8888', { fetch }),
-    signatureProvider, 
-    textDecoder: new TextDecoder(), 
-    textEncoder: new TextEncoder() 
-  })
-  return eos2
-}
-
-
 const WASM = 'src/priveos.wasm'
 const ABI = 'src/priveos.abi'
+
+const TOKEN_WASM = 'src/eosio.token.wasm'
+const TOKEN_ABI = 'src/eosio.token.abi'
+
 const contractAccount = eoslime.Account.load('priveosrules', '5KXtuBpLc6Y9Q8Q8s8CQm2G7L98bV8PK1ZKnSKvNeoiuhZw6uDH')
 
 describe('Test', function () {
   // Increase mocha(testing framework) time, otherwise tests fails
   this.timeout(60000)
     
-  let alice, bob, contract, nodes, dappcontract
+  let alice, bob, contract, nodes, dappcontract, priveos_token_contract, slantagwallet
   before(async () => {
     console.log("Before called")
     const cpuAmount = "1.0000 EOS"
     const netAmount = "1.0000 EOS"
     const ramBytes = 2048*1024
-    let accounts = await eoslime.Account.createRandoms(3);
+    let accounts = await eoslime.Account.createRandoms(4);
     alice = accounts[0]
     bob = accounts[1]
     dappcontract = accounts[2]
+    slantagwallet = accounts[3]
+    console.log("slantagwallet is: ", slantagwallet.name)
     for(const x of accounts) {
       await eoslime.Account.provider.defaultAccount.send(x, "10.0000")
       await x.buyBandwidth(cpuAmount, netAmount, eoslime.Account.provider.defaultAccount)
     }
     
+    // deploy priveos token
+    priveos_token_contract = await eoslime.CleanDeployer.deploy(TOKEN_WASM, TOKEN_ABI, {}, cpuAmount, netAmount, ramBytes)
+    console.log("Token contract deployed to: ", priveos_token_contract.executor.name)
     
-    contract = await eoslime.CleanDeployer.deploy(WASM, ABI, cpuAmount, netAmount, ramBytes)
+    const command = `eosio-cpp -I. -DLOCAL -DTOKENCONTRACT=${priveos_token_contract.executor.name} -abigen priveos.cpp -o priveos.wasm`
+    console.log("Command: ", command)
+    const { stdout, stderr } = await exec(command, {cwd: './src'})
+    console.log(stdout, stderr)
+    
+    contract = await eoslime.CleanDeployer.deploy(WASM, ABI, {inline: true}, cpuAmount, netAmount, ramBytes)
+    console.log("Contract deployed to ", contract.executor.name)
     
     nodes = await eoslime.Account.createRandoms(10)
     let port = 8001
@@ -68,6 +72,8 @@ describe('Test', function () {
       node.key = {private_key, public_key}
       node.url = `http://localhost:${port++}`
     }
+    
+    
   });
   
   beforeEach(async () => {
@@ -135,7 +141,7 @@ describe('Test', function () {
       "files": "0.00000000000000000",
       "registered_nodes": 9,
       "active_nodes": 0
-    });
+    })
     
     await contract.regnode(node.name, node.key.public_key, node.url, {from: node})
     
@@ -144,7 +150,7 @@ describe('Test', function () {
       "files": "0.00000000000000000",
       "registered_nodes": 10,
       "active_nodes": 0
-    });
+    })
   })
   
   it('Currency', async () => {
@@ -261,13 +267,13 @@ describe('Test', function () {
         {
             account: contract.name,
             name: "vote",
-            authorization: [dappcontract.permissions.active],
+            authorization: [dappcontract.executiveAuthority],
             data: {dappcontract: dappcontract.name, nodes: voted_nodes},
         }
     ]
     /* We have to use eosjs2 for this as the old one doesn't support 
      * sending std::vector<name> as parameter */
-    const eos2 = get_eos2(dappcontract)
+    const eos2 = helpers.get_eos2(dappcontract)
     
     await eos2.transact({actions}, {
       blocksBehind: 3,
@@ -290,9 +296,9 @@ describe('Test', function () {
   
   it('User stores key (user pays)', async () => {    
     // const name owner, const name contract, const std::string file, const std::string data, const bool auditable, const symbol token, const bool contractpays
-    const key = Priveos.encryption.generateKey()
+    const data = "some_ipfs_hash"
     const identifier = uuidv4()
-    const tx_result = await contract.store(alice.name, dappcontract.name, identifier, key, 0, "4,EOS", 0, {from: alice})
+    const tx_result = await contract.store(alice.name, dappcontract.name, identifier, data, 0, "4,EOS", 0, {from: alice})
     // console.log("tx_result.processed.receipt.cpu_usage_us: " , tx_result.processed.receipt.cpu_usage_us)
     // console.log("tx_result: ", JSON.stringify(tx_result, null, 2))
 
@@ -307,7 +313,7 @@ describe('Test', function () {
   
   it('User stores key (contract pays)', async () => {    
     // const name owner, const name contract, const std::string file, const std::string data, const bool auditable, const symbol token, const bool contractpays
-    const data = "some string"
+    const data = "some_ipfs_hash"
     const identifier = "identifier"
     await expect(
       contract.store(alice.name, dappcontract.name, identifier, data, 0, "4,EOS", 1, {from: alice})
@@ -339,8 +345,80 @@ describe('Test', function () {
       "files": "10.00000000000000000",
       "registered_nodes": 10,
       "active_nodes": 10
-    });
+    })
     
+    
+  })
+  
+  it('Issue priveos token', async() => {
+    await priveos_token_contract.create(priveos_token_contract.executor.name, "1000.0000 PRIVEOS")
+    await priveos_token_contract.issue(priveos_token_contract.name, "1000.0000 PRIVEOS", "Issue total supply all at once")
+    
+    await helpers.token_send(priveos_token_contract.executor, priveos_token_contract.executor, slantagwallet, "1000.0000 PRIVEOS")    
+    const balance = await rpc.get_currency_balance(priveos_token_contract.executor.name, slantagwallet.name, "PRIVEOS")
+    expect(balance[0]).to.equal("1000.0000 PRIVEOS")
+    
+    await helpers.token_send(priveos_token_contract.executor, slantagwallet, contract.executor, "800.0000 PRIVEOS")
+    const balance2 = await rpc.get_currency_balance(priveos_token_contract.executor.name, contract.executor.name, "PRIVEOS")
+    expect(balance2[0]).to.equal("800.0000 PRIVEOS")
+    const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    expect(res.rows[0].funds).to.equal("800.0000 PRIVEOS")
+      
+    await contract.delegate(alice.name, "200.0000 PRIVEOS")
+    const res2 = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    expect(res2.rows[0].funds).to.equal("600.0000 PRIVEOS")
+    
+    const res3 = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'delegation', limit:100})
+    expect(res3.rows).to.deep.include({
+      user: alice.name,
+      funds: "200.0000 PRIVEOS",
+    })
+    
+    const res4 = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    expect(res4.rows[0].funds).to.equal("600.0000 PRIVEOS")
+  })
+  
+  it('Priveos founder tokens', async() => {
+    const locked_until = Math.round((new Date()).getTime()/1000) + 5
+    await contract.stake(bob.name, "10.0000 PRIVEOS", locked_until)
+    const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    expect(res.rows[0].funds).to.equal("590.0000 PRIVEOS")
+    
+    const res2 = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'founderbal', limit:100})
+    expect(res2.rows).to.deep.include({
+      founder: bob.name,
+      funds: "10.0000 PRIVEOS",
+      locked_until,
+    })
+    
+    const balance = await rpc.get_currency_balance(priveos_token_contract.executor.name, bob.name, "PRIVEOS")
+    expect(balance).to.be.empty
+    
+    await expect(
+      contract.unstake(bob.name, "1.0000 PRIVEOS", {from: bob})
+    ).to.be.rejectedWith("Funds have not yet become unlocked")
+    await Bluebird.delay(6000)
+    
+    await contract.unstake(bob.name, "1.0000 PRIVEOS", {from: bob})
+    
+    const balance2 = await rpc.get_currency_balance(priveos_token_contract.executor.name, bob.name, "PRIVEOS")
+    expect(balance2[0]).to.equal("1.0000 PRIVEOS")
+    
+    await contract.unstake(bob.name, "2.0000 PRIVEOS", {from: bob})
+    
+    const balance3 = await rpc.get_currency_balance(priveos_token_contract.executor.name, bob.name, "PRIVEOS")
+    expect(balance3[0]).to.equal("3.0000 PRIVEOS")
+    
+    await expect(
+      contract.unstake(bob.name, "8.0000 PRIVEOS", {from: bob})
+    ).to.be.rejectedWith('Overdrawn balance. User has only 7.0000 PRIVEOS but is trying to withdraw 8.0000 PRIVEOS')
+    
+    await contract.unstake(bob.name, "7.0000 PRIVEOS", {from: bob})
+    const balance4 = await rpc.get_currency_balance(priveos_token_contract.executor.name, bob.name, "PRIVEOS")
+    expect(balance4[0]).to.equal("10.0000 PRIVEOS")
+    
+    const res3 = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'founderbal', limit:100})
+    expect(res3.rows).to.be.empty
     
   })
 

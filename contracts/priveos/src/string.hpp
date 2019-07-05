@@ -18,6 +18,17 @@ inline vector<string> split(const string &s, const string &delim)
   return v;
 }
 
+template<typename T>
+inline string toString(T x) {
+  if constexpr(is_same<T, string>::value) {
+    return x;
+  } else if constexpr(is_same<T, eosio::name>::value || is_same<T, eosio::asset>::value){
+    return x.to_string();
+  } else {
+    return to_string(x);
+  }
+} 
+
 /**
   * Lightweight format string function that does not depend on iostream 
   * or snprintf. Returns plain char* so it can be used to beautify 
@@ -26,7 +37,7 @@ inline vector<string> split(const string &s, const string &delim)
 template<typename... Args>
 inline const char *fmt(const string& format, Args const& ... args){
   string res{};
-  string v[] = { args... };
+  string v[] = { toString(args)... };
   const auto format_s = split(format, "{}");
   auto begin = std::begin(v);
   for(const auto n : format_s) {

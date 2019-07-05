@@ -22,7 +22,7 @@ void priveos::charge_read_fee(const name user, const name contract, const symbol
 
 void priveos::add_fee_balance(asset value) {
   const auto bal_it = feebalances.find(value.symbol.code().raw()); 
-  check(bal_it != feebalances.end(), "PrivEOS: Feebalance table entry does not exist for asset {}.", value.to_string());
+  check(bal_it != feebalances.end(), "PrivEOS: Feebalance table entry does not exist for asset {}.", value);
   
   feebalances.modify(bal_it, same_payer, [&](auto& bal){
       bal.funds += value;

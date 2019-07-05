@@ -1,20 +1,16 @@
 #include <eosio/eosio.hpp>
-#include <eosio/crypto.hpp>
-#include <eosio/asset.hpp>
-#include <eosio/symbol.hpp>
-#include <eosio/system.hpp>
 #include "eosio.token.hpp"
 
-ACTION priveos::priveoslock(const name user, const asset quantity, const uint32_t locked_until) {
+ACTION priveos::stake(const name user, const asset quantity, const uint32_t locked_until) {
   require_auth(_self);
   free_priveos_balance_sub(quantity);
   add_locked_balance(user, quantity, locked_until);
   consistency_check();
 }
 
-ACTION priveos::priveoswithd(const name user, const asset quantity) {
+ACTION priveos::unstake(const name user, const asset quantity) {
   require_auth(user);
-  sub_balance(user, quantity);
+  sub_locked_balance(user, quantity);
   
   action(
     permission_level{_self, "active"_n},
@@ -68,7 +64,7 @@ ACTION priveos::undelegate(const name user, const asset value) {
 
 
 void priveos::free_priveos_balance_add(const asset quantity) {
-  check(quantity.symbol == priveos_symbol, "Only PRIVEOS tokens allowed");
+  check(quantity.symbol == priveos_symbol, "PrivEOS: Only PRIVEOS tokens allowed");
   auto bal = free_balance_singleton.get_or_default(
     freebal {
       .funds = asset{0, priveos_symbol}
@@ -80,16 +76,15 @@ void priveos::free_priveos_balance_add(const asset quantity) {
 } 
 
 void priveos::free_priveos_balance_sub(const asset quantity) {
-  check(quantity.symbol == priveos_symbol, "Only PRIVEOS tokens allowed");
+  check(quantity.symbol == priveos_symbol, "PrivEOS: Only PRIVEOS tokens allowed");
   auto bal = free_balance_singleton.get();
-  check(bal.funds >= quantity, "Trying to overdraw free balance");
+  check(bal.funds >= quantity, "PrivEOS: Trying to overdraw free balance");
   bal.funds -= quantity;
   free_balance_singleton.set(bal, _self);
 }
 
 void priveos::add_locked_balance(const name user, const asset value, const uint32_t locked_until) {
-  check(value.symbol == priveos_symbol, "Only PRIVEOS tokens allowed");
-
+  check(value.symbol == priveos_symbol, "PrivEOS: Only PRIVEOS tokens allowed");
   auto user_it = founder_balances.find(user.value);      
   if(user_it == founder_balances.end()) {
     founder_balances.emplace(_self, [&](auto& bal){
@@ -99,9 +94,24 @@ void priveos::add_locked_balance(const name user, const asset value, const uint3
     });
   } else {
     const auto bal = *user_it;
-    check(bal.locked_until == locked_until, "The locked_until values don't match");
+    check(bal.locked_until == locked_until, "PrivEOS: The locked_until values don't match");
     founder_balances.modify(user_it, _self, [&](auto& bal){
         bal.funds += value;
+    });
+  }
+}
+
+void priveos::sub_locked_balance(const name user, const asset value) {
+  check(value.symbol == priveos_symbol, "PrivEOS: Only PRIVEOS tokens allowed");
+  const auto& user_balance = founder_balances.get(user.value, "PrivEOS: User has no balance");
+  check(user_balance.locked_until < now(), "PrivEOS: Funds have not yet become unlocked");
+  check(user_balance.funds >= value, "PrivEOS: Overdrawn balance. User has only {} but is trying to withdraw {}", user_balance.funds, value);
+  
+  if(user_balance.funds == value) {
+    founder_balances.erase(user_balance);
+  } else {
+    founder_balances.modify(user_balance, user, [&](auto& bal){
+        bal.funds -= value;
     });
   }
 }
