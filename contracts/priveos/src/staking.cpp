@@ -25,7 +25,7 @@ ACTION priveos::unstake(const name user, const asset quantity) {
     */
 }
 
-void priveos::delegate(const name user, const asset value) {
+ACTION priveos::delegate(const name user, const asset value) {
   require_auth(_self);
   free_priveos_balance_sub(value);
   

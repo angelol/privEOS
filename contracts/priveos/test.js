@@ -294,6 +294,31 @@ describe('Test', function () {
     // expect(res.rows).to.deep.equal(expected_value)
   })
   
+  it('voting for unregistered node should throw', async () => {
+    const voted_nodes = _.shuffle(nodes.map(x => x.name)).slice(0, 5)
+    
+    voted_nodes.push(alice.name)
+    
+    const actions = [
+        {
+            account: contract.name,
+            name: "vote",
+            authorization: [dappcontract.executiveAuthority],
+            data: {dappcontract: dappcontract.name, nodes: voted_nodes},
+        }
+    ]
+    
+    const eos2 = helpers.get_eos2(dappcontract)
+    
+    expect(
+      eos2.transact({actions}, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      })
+    ).to.be.rejectedWith(`You're trying to vote for ${alice.name} which is not a registered node`)
+    
+  })
+  
   it('User stores key (user pays)', async () => {    
     // const name owner, const name contract, const std::string file, const std::string data, const bool auditable, const symbol token, const bool contractpays
     const data = "some_ipfs_hash"

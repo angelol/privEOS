@@ -5,6 +5,9 @@
 
 ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data, const bool auditable, const symbol token, const bool contractpays) {
   require_auth(owner);
+  check(file.size() <= 256, "file has more than 256 bytes");
+  check(data.size() <= 256, "data has more than 256 bytes");
+  
   /**
     * We need to notify the app contract because this transaction might charge 
     * a fee to the app. The app can implement validity checks in this 
@@ -18,6 +21,8 @@ ACTION priveos::store(const name owner, const name contract, const std::string f
     
 ACTION priveos::accessgrant(const name user, const name contract, const std::string file, const public_key public_key, const symbol token, const bool contractpays) {
   require_auth(user);
+  check(file.size() <= 256, "file has more than 256 bytes");
+  
   /**
     * We need to notify the app contract for 2 reasons:
     
@@ -39,6 +44,7 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
 
   check(node_key != public_key(), "public key should not be the default value");
   check(node_key.type == uint32_t{0}, "Only K1 Keys supported");
+  check(url.size() <= 256, "url has more than 256 bytes");
 #ifndef LOCAL
   check(url.substr(0, 8) == std::string("https://"), "URL parameter must be a valid https URL");
 #endif
@@ -103,6 +109,8 @@ ACTION priveos::admunreg(const name owner) {
 }
 
 ACTION priveos::setprice(const name node, const asset price, const std::string action) {
+  require_auth(node);
+  
   nodes.get(node.value, "node not found.");
   currencies.get(price.symbol.code().raw(), "Token not accepted");
   check(price.amount >= 0, "Price must be >= 0");
@@ -144,26 +152,31 @@ ACTION priveos::prepare(const name user, const symbol currency) {
   }
 }
 
-ACTION priveos::vote(const name dappcontract, std::vector<name> nodes) {
+ACTION priveos::vote(const name dappcontract, std::vector<name> votees) {
   require_auth(dappcontract);
-  
+  check(votees.size() <= max_votes, "PrivEOS: Please try to vote for not more than {} nodes.", max_votes);
+    
   const auto min_nodes = get_voting_min_nodes();
-  check(nodes.size() >= min_nodes, "PrivEOS: You need to vote for at least {} nodes.", min_nodes);
+  check(votees.size() >= min_nodes, "PrivEOS: You need to vote for at least {} nodes.", min_nodes);
   
-  std::sort(nodes.begin(), nodes.end());
+  for(const auto& node : votees) {
+    check(nodes.find(node.value) != nodes.end(), "PrivEOS: You're trying to vote for {} which is not a registered node.", node);
+  }
+
+  std::sort(votees.begin(), votees.end());
 
   const auto it = voters.find(dappcontract.value);
   if(it == voters.end()) {
     voters.emplace(dappcontract, [&](auto& voterinfo) {
       voterinfo.dappcontract = dappcontract;
-      voterinfo.nodes = nodes;
-      voterinfo.offset = roundrobin_rand(nodes.size());
+      voterinfo.nodes = votees;
+      voterinfo.offset = roundrobin_rand(votees.size());
     });
   } else {
     voters.modify(it, dappcontract, [&](auto& voterinfo) {
       voterinfo.dappcontract = dappcontract;
-      voterinfo.nodes = nodes;
-      voterinfo.offset = roundrobin_rand(nodes.size());
+      voterinfo.nodes = votees;
+      voterinfo.offset = roundrobin_rand(votees.size());
     });
   }
   
@@ -178,7 +191,8 @@ void priveos::transfer(const name from, const name to, const asset quantity, con
   check(quantity.is_valid(), "PrivEOS: Invalid quantity");
   check(quantity.amount > 0, "PrivEOS: Deposit amount must be > 0");
   check(is_account(from), "PrivEOS: The account {} does not exist.");
-  
+  check(memo.size() <= 256, "memo has more than 256 bytes");
+
   // only respond to incoming transfers
   if (from == _self || to != _self) {
     return;

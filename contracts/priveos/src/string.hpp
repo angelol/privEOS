@@ -4,26 +4,28 @@ inline vector<string> split(const string &s, const string &delim)
 {
   vector<string> v{};
   if (delim.empty()) {
-    v.push_back(move(s));
+    v.push_back(s);
     return v;
   }
   string::size_type i = 0;
   string::size_type j = s.find(delim);
   while(j != std::string::npos) {
-    v.push_back(move(s.substr(i, j - i)));
+    v.push_back(s.substr(i, j - i));
     i = j + delim.length();
     j = s.find(delim, i);
   }
-  v.push_back(move(s.substr(i, s.length() - i)));
+  v.push_back(s.substr(i, s.length() - i));
   return v;
 }
 
 template<typename T>
-inline string toString(T x) {
+inline string toString(const T& x) {
   if constexpr(is_same<T, string>::value) {
     return x;
   } else if constexpr(is_same<T, eosio::name>::value || is_same<T, eosio::asset>::value){
     return x.to_string();
+  } else if constexpr(is_same<T, eosio::symbol>::value) {
+    return x.code().to_string();
   } else {
     return to_string(x);
   }

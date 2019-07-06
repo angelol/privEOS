@@ -30,18 +30,18 @@ CONTRACT priveos : public eosio::contract {
   using contract::contract;
   public:
     priveos(name self,name code, datastream<const char*> ds) : eosio::contract(self,code,ds),
-      nodes(_self, _self.value), 
-      read_prices(_self, _self.value), 
-      store_prices(_self, _self.value), 
-      currencies(_self, _self.value), 
-      peerapprovals(_self, _self.value), 
-      peerdisapprovals(_self, _self.value),
-      voters(_self, _self.value),
-      global_singleton(_self, _self.value),
-      feebalances(_self, _self.value),
       free_balance_singleton(_self, _self.value),
       founder_balances(_self, _self.value),
-      delegations(_self, _self.value)
+      delegations(_self, _self.value),
+      feebalances(_self, _self.value),
+      global_singleton(_self, _self.value),
+      voters(_self, _self.value),
+      nodes(_self, _self.value), 
+      store_prices(_self, _self.value), 
+      read_prices(_self, _self.value), 
+      currencies(_self, _self.value), 
+      peerapprovals(_self, _self.value), 
+      peerdisapprovals(_self, _self.value)
       {}
     
     static constexpr symbol priveos_symbol{"PRIVEOS", 4};
@@ -290,12 +290,7 @@ CONTRACT priveos : public eosio::contract {
     void transfer(const name from, const name to, const asset quantity, const std::string memo);
     
     template<typename T>
-    void update_pricefeed(
-      const name node, 
-      const asset price, 
-      const std::string action, 
-      T& pricefeeds
-    );
+    void update_pricefeed(const name node, const asset price, const std::string action, T& pricefeeds);
     
   private:
     // price functions
@@ -303,39 +298,32 @@ CONTRACT priveos : public eosio::contract {
     void charge_store_fee(const name user, const name contract, const symbol& token, const bool contractpays);
     void charge_read_fee(const name user, const name contract, const symbol& token, const bool contractpays);
     template<typename T>
-    void propagate_price_change(
-      const name node, 
-      const asset price, 
-      const std::string action, 
-      T& pricefeeds
-    );
+    void propagate_price_change(const name& node, const asset& price, const std::string& action, T& pricefeeds);
+    
     template<typename T>
-    void update_price_table(
-      const name node,
-      const asset price,
-      T& prices
-    );
-    const asset get_read_fee(symbol currency);
-    const asset get_store_fee(symbol currency);
-    void add_balance(name user, asset value);
-    void sub_balance(name user, asset value);
+    void update_price_table(const name& node, const asset& price, T& prices);
+    
+    const asset get_read_fee(const symbol& currency);
+    const asset get_store_fee(const symbol& currency);
+    void add_balance(const name& user, const asset& value);
+    void sub_balance(const name& user, const asset& value);
     void add_fee_balance(asset value);
     int64_t median(std::vector<int64_t>& v);
       
     // peeraprovals
-    void was_approved_by(const name approver, const priveos::nodeinfo& node);
-    void was_disapproved_by(const name approver, const priveos::nodeinfo& node);
+    void was_approved_by(const name& approver, const nodeinfo& node);
+    void was_disapproved_by(const name& approver, const nodeinfo& node);
     void activate_node(const nodeinfo& node);
     void disable_node(const nodeinfo& node);
     uint32_t peers_needed();
 
-    void increment_filecount(const name dappcontract) {
+    void increment_filecount(const name& dappcontract) {
       const auto voterinfo_it = voters.find(dappcontract.value);
       check(voterinfo_it != voters.end(), "PrivEOS: Contract {} has not voted yet.", dappcontract);
       const auto voterinfo = *voterinfo_it;
       
       // update filecount for all nodes involved
-      uint64_t step{3};
+      uint32_t step{3};
       double n_files{0.0};
       const auto callback = [&](name owner, double sampling_factor) {
         const auto node_idx = nodes.find(owner.value);
@@ -350,9 +338,9 @@ CONTRACT priveos : public eosio::contract {
           }
         }
       };
-      Sampling<name> x{voterinfo.offset, voterinfo.nodes, step, callback};
-      const auto offset = x.run();
       
+      const auto offset = sampling<name>(voterinfo.offset, voterinfo.nodes, step, callback);
+
       // update global file stats
       auto stats = global_singleton.get_or_default(global {});
       stats.unique_files += 1;
@@ -364,10 +352,12 @@ CONTRACT priveos : public eosio::contract {
       });
     }
     
+    const uint32_t max_votes{30};
     uint32_t get_voting_min_nodes() {
       return 3;
     }
     
+    /* There is no real randomness anyway, no point in trying to do anything fancy */
     static uint32_t roundrobin_rand(uint32_t m) {
       return now() % m;
     }

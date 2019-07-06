@@ -18,12 +18,12 @@ void priveos::update_pricefeed(const name node, const asset price, const std::st
 }
 
 template<typename T>
-void priveos::propagate_price_change(const name node, const asset price, const std::string action, T& pricefeeds) {
+void priveos::propagate_price_change(const name& node, const asset& price, const std::string& action, T& pricefeeds) {
   std::vector<int64_t> vec;
   for(const auto& pf : pricefeeds) {
     vec.push_back(pf.price.amount);        
   }
-  asset median_price = asset{median(vec), price.symbol};  
+  const auto median_price = asset{median(vec), price.symbol};  
   if(action == accessgrant_action_name) {
     update_price_table(node, median_price, read_prices);
   } else if(action == store_action_name) {
@@ -32,7 +32,7 @@ void priveos::propagate_price_change(const name node, const asset price, const s
 }
 
 template<typename T>
-void priveos::update_price_table(const name node, const asset price, T& prices) {
+void priveos::update_price_table(const name& node, const asset& price, T& prices) {
   const auto& itr = prices.find(price.symbol.code().raw());
   if(itr != prices.end()) {
     prices.modify(itr, node, [&](auto& p) {
@@ -45,17 +45,17 @@ void priveos::update_price_table(const name node, const asset price, T& prices) 
   }
 }
 
-const asset priveos::get_read_fee(symbol currency) {
-  const auto price = read_prices.get(currency.code().raw(), "Token not accepted");
+const asset priveos::get_read_fee(const symbol& currency) {
+  const auto price = read_prices.get(currency.code().raw(), fmt("PrivEOS: Token {} not accepted", currency));
   return price.money;
 }
 
-const asset priveos::get_store_fee(symbol currency) {
-  const auto price = store_prices.get(currency.code().raw(), "Token not accepted");
+const asset priveos::get_store_fee(const symbol& currency) {
+  const auto price = store_prices.get(currency.code().raw(), fmt("PrivEOS: Token {} not accepted", currency));
   return price.money;
 }
 
-void priveos::add_balance(name user, asset value) {
+void priveos::add_balance(const name& user, const asset& value) {
   balances_table balances(_self, user.value);
   const auto user_it = balances.find(value.symbol.code().raw());      
   check(user_it != balances.end(), "PrivEOS: Balance table entry does not exist for user {}, call prepare first", user);
@@ -64,13 +64,13 @@ void priveos::add_balance(name user, asset value) {
   });
 }
 
-void priveos::sub_balance(name user, asset value) {
+void priveos::sub_balance(const name& user, const asset& value) {
   if(value.amount == 0) {
     return;
   }
   balances_table balances(_self, user.value);
   const auto& user_balance = balances.get(value.symbol.code().raw(), fmt("PrivEOS: User {} has no balance", user));
-  check(user_balance.funds >= value, "Overdrawn balance");
+  check(user_balance.funds >= value, "PrivEOS: Overdrawn balance");
   
   if(user_balance.funds == value) {
     balances.erase(user_balance);
@@ -82,7 +82,7 @@ void priveos::sub_balance(name user, asset value) {
 }
 
 int64_t priveos::median(std::vector<int64_t>& v) {
-  const size_t s = v.size();
+  const auto s = v.size();
   if(s == 0) {
     return 0;
   } else if(s == 1) {

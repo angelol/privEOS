@@ -1,5 +1,5 @@
 
-void priveos::was_approved_by(const name approver, const priveos::nodeinfo& node) {
+void priveos::was_approved_by(const name& approver, const nodeinfo& node) {
   if(node.is_active) {
     // no point in approving this node if it's already active
     return;
@@ -50,7 +50,7 @@ void priveos::was_approved_by(const name approver, const priveos::nodeinfo& node
   }
 }
 
-void priveos::was_disapproved_by(const name disapprover, const priveos::nodeinfo& node) {
+void priveos::was_disapproved_by(const name& disapprover, const nodeinfo& node) {
   if(!node.is_active) {
     // no point in disapproving this node if it's already deactivated
     return;
