@@ -268,7 +268,7 @@ describe('Test', function () {
             account: contract.name,
             name: "vote",
             authorization: [dappcontract.executiveAuthority],
-            data: {dappcontract: dappcontract.name, nodes: voted_nodes},
+            data: {dappcontract: dappcontract.name, votees: voted_nodes},
         }
     ]
     /* We have to use eosjs2 for this as the old one doesn't support 
@@ -304,7 +304,7 @@ describe('Test', function () {
             account: contract.name,
             name: "vote",
             authorization: [dappcontract.executiveAuthority],
-            data: {dappcontract: dappcontract.name, nodes: voted_nodes},
+            data: {dappcontract: dappcontract.name, votees: voted_nodes},
         }
     ]
     
@@ -446,6 +446,5 @@ describe('Test', function () {
     expect(res3.rows).to.be.empty
     
   })
-
 
 })

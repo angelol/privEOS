@@ -284,8 +284,9 @@ CONTRACT priveos : public eosio::contract {
       const symbol currency
     );
     
-    ACTION vote(const name dappcontract, std::vector<name> nodes);
-    ACTION claimrewards(const name owner);
+    ACTION vote(const name dappcontract, std::vector<name> votees);
+    ACTION dacrewards(const name user);
+    ACTION noderewards(const name user);
     
     void transfer(const name from, const name to, const asset quantity, const std::string memo);
     

@@ -182,8 +182,15 @@ ACTION priveos::vote(const name dappcontract, std::vector<name> votees) {
   
 }
 
-ACTION priveos::claimrewards(const name owner) {
-  //  
+// PRIVEOS token holders can call this to withdraw their share of the fees
+ACTION priveos::dacrewards(const name user) {
+  require_auth(user);
+}
+
+// Nodes can call this to withdraw their share of the fees
+ACTION priveos::noderewards(const name user) {
+  require_auth(user);
+  
 }
 
 [[eosio::on_notify("*::transfer")]] 
