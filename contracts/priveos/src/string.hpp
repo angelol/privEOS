@@ -38,17 +38,17 @@ inline string toString(const T& x) {
   */
 template<typename... Args>
 inline const char *fmt(const string& format, Args const& ... args){
-  string res{};
+  string *res = new string{};
   string v[] = { toString(args)... };
   const auto format_s = split(format, "{}");
   auto begin = std::begin(v);
   for(const auto n : format_s) {
-    res += n;
+    *res += n;
     if(begin == std::end(v)) {
       break;
     }
-    res += *begin++;
+    *res += *begin++;
   }
-  return res.c_str();
+  return res->c_str();
 }
 
