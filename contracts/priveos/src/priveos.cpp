@@ -114,13 +114,14 @@ ACTION priveos::setprice(const name node, const asset price, const std::string a
   
   nodes.get(node.value, "node not found.");
   currencies.get(price.symbol.code().raw(), "Token not accepted");
-  check(price.amount >= 0, "Price must be >= 0");
+  check(price.amount >= 0, "Price must be non-negative.");
+  check(price.is_valid(), "PrivEOS: Invalid price");
   
   if(action == store_action_name) {
-    store_pricefeed_table pricefeeds(_self, price.symbol.code().raw());
+    store_pricefeed_table pricefeeds{_self, price.symbol.code().raw()};
     update_pricefeed(node, price, action, pricefeeds);    
   } else if(action == accessgrant_action_name) {
-    read_pricefeed_table pricefeeds(_self, price.symbol.code().raw());
+    read_pricefeed_table pricefeeds{_self, price.symbol.code().raw()};
     update_pricefeed(node, price, action, pricefeeds);
   } else {
     check(false, "Invalid action name");
@@ -130,15 +131,20 @@ ACTION priveos::setprice(const name node, const asset price, const std::string a
 ACTION priveos::addcurrency(const symbol currency, const name contract) {
   require_auth(_self);
   
+  check(currencies.find(currency.code().raw()) == currencies.end(), "PrivEOS: Currency {} already exists.");
+  
   /* From now on, we're ready to accept this currency */
   currencies.emplace(_self, [&](auto& c) {
     c.currency = currency;
     c.contract = contract;
   });
   
+  check(feebalances.find(currency.code().raw()) == feebalances.end(), "PrivEOS: feebalance entry already exists. This should not be possible.");
+  
   /* Create an entry in the fee-tracking table */
   feebalances.emplace(_self, [&](auto &bal) {
     bal.funds = asset{0, currency};
+    bal.lifetime = asset{0, currency};
   });
 }
 
@@ -187,17 +193,20 @@ ACTION priveos::vote(const name dappcontract, std::vector<name> votees) {
 ACTION priveos::dacrewards(const name user, const symbol currency) {
   require_auth(user);
   
-  const auto current_balance = feebalances.get(currency.code().raw(), fmt("PrivEOS: There is no balance found for {}", currency)).funds;
+  const auto current_lifetime_balance = feebalances.get(currency.code().raw(), fmt("PrivEOS: There is no balance found for {}", currency)).lifetime;
   
-  print_f("current_balance: % ", current_balance);
+  print_f("current_lifetime_balance: % ", current_lifetime_balance);
   asset last_claim_balance{0, currency};
-  holderpay_table h{_self, user.value};
-  const auto it = h.find(currency.code().raw());
-  if(it != h.end()) {
+  holderpay_table holderpay{_self, user.value};
+  const auto it = holderpay.find(currency.code().raw());
+  if(it != holderpay.end()) {
     last_claim_balance = it->last_claim_balance;
   }
   print_f("last_claim_balance: % ", last_claim_balance);
-  const auto whole = std::min(current_balance - last_claim_balance, asset{0, currency});
+  
+  check(current_lifetime_balance > last_claim_balance, "PrivEOS: There is nothing to withdraw, please try again later.");
+  
+  const auto whole = current_lifetime_balance - last_claim_balance;
   print_f("whole: % ", whole);
   
   /** 
@@ -229,8 +238,35 @@ ACTION priveos::dacrewards(const name user, const symbol currency) {
   print_f("my_share: % ", my_share);
     
   asset withdrawal_amount{0, currency};
-  withdrawal_amount.amount = static_cast<int64_t>(static_cast<double>(current_balance.amount) * my_share);
+  // static_cast always rounds down, which is exactly what we need
+  withdrawal_amount.amount = static_cast<int64_t>(static_cast<double>(whole.amount) * my_share);
   print_f("withdrawal_amount: % ", withdrawal_amount);
+  
+  check(withdrawal_amount.amount > 0, "PrivEOS: Withdrawal amount is too small, please try again later.");
+  
+  sub_fee_balance(withdrawal_amount);
+  
+  const auto holderpay_it = holderpay.find(currency.code().raw());
+  if(holderpay_it == holderpay.end()) {
+    holderpay.emplace(user, [&](auto& x) {
+      x.last_claimed_at = current_time_point();
+      x.last_claim_balance = current_lifetime_balance;
+    });
+  } else {
+    holderpay.modify(holderpay_it, user, [&](auto& x) {
+      x.last_claimed_at = current_time_point();
+      x.last_claim_balance = current_lifetime_balance;
+    });
+  }
+
+  const auto token_contract = currencies.get(currency.code().raw()).contract;  
+  action(
+    permission_level{_self, "active"_n},
+    token_contract,
+    "transfer"_n,
+    std::make_tuple(_self, user, withdrawal_amount, "DAC Rewards"s)
+  ).send();
+
 }
 
 // Nodes can call this to withdraw their share of the fees

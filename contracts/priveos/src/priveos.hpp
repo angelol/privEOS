@@ -103,6 +103,12 @@ CONTRACT priveos : public eosio::contract {
     TABLE feebal {
       asset funds;
       
+      /**
+        * The sum of fees collected since the beginning. Does not decrease
+        * when someone withdraws their fee rewards.
+        */
+      asset lifetime;
+      
       uint64_t primary_key() const { return funds.symbol.code().raw(); }
     };
     using feebal_table = multi_index<"feebal"_n, feebal>;
@@ -301,13 +307,13 @@ CONTRACT priveos : public eosio::contract {
     void transfer(const name from, const name to, const asset quantity, const std::string memo);
     
     template<typename T>
-    void update_pricefeed(const name node, const asset price, const std::string action, T& pricefeeds);
+    void update_pricefeed(const name& node, const asset& price, const std::string& action, T& pricefeeds);
     
   private:
     // price functions
-    void charge_fee(const name user, const name contract, const asset& fee, const bool contractpays);
-    void charge_store_fee(const name user, const name contract, const symbol& token, const bool contractpays);
-    void charge_read_fee(const name user, const name contract, const symbol& token, const bool contractpays);
+    void charge_fee(const name& user, const name& contract, const asset& fee, const bool contractpays);
+    void charge_store_fee(const name& user, const name& contract, const symbol& token, const bool contractpays);
+    void charge_read_fee(const name& user, const name& contract, const symbol& token, const bool contractpays);
     template<typename T>
     void propagate_price_change(const name& node, const asset& price, const std::string& action, T& pricefeeds);
     
@@ -318,7 +324,9 @@ CONTRACT priveos : public eosio::contract {
     const asset get_store_fee(const symbol& currency);
     void add_balance(const name& user, const asset& value);
     void sub_balance(const name& user, const asset& value);
-    void add_fee_balance(asset value);
+    void add_fee_balance(const asset& value);
+    void sub_fee_balance(const asset& value);
+
     int64_t median(std::vector<int64_t>& v);
       
     // peeraprovals
