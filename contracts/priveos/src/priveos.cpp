@@ -189,6 +189,7 @@ ACTION priveos::dacrewards(const name user, const symbol currency) {
   
   const auto current_balance = feebalances.get(currency.code().raw(), fmt("PrivEOS: There is no balance found for {}", currency)).funds;
   
+  print_f("current_balance: % ", current_balance);
   asset last_claim_balance{0, currency};
   holderpay_table h{_self, user.value};
   const auto it = h.find(currency.code().raw());
@@ -224,9 +225,12 @@ ACTION priveos::dacrewards(const name user, const symbol currency) {
   print_f("my_tokens: % ", my_tokens);
   const auto token_supply = token::get_supply(priveos_token_contract, priveos_symbol.code());
   print_f("token_supply: % ", token_supply);
-  const int64_t my_share = my_tokens / token_supply;
+  const auto my_share = static_cast<double>(my_tokens.amount) / static_cast<double>(token_supply.amount);
   print_f("my_share: % ", my_share);
-
+    
+  asset withdrawal_amount{0, currency};
+  withdrawal_amount.amount = static_cast<int64_t>(static_cast<double>(current_balance.amount) * my_share);
+  print_f("withdrawal_amount: % ", withdrawal_amount);
 }
 
 // Nodes can call this to withdraw their share of the fees
