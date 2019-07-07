@@ -146,6 +146,17 @@ namespace eosio {
             const auto& ac = accountstable.get( sym_code.raw() );
             return ac.balance;
          }
+         
+         static asset get_balance( const name& token_contract_account, const name& owner, const symbol& sym )
+         {
+            accounts accountstable( token_contract_account, owner.value );
+            asset user_balance{0, sym};
+            const auto it = accountstable.find( sym.code().raw() );
+            if(it != accountstable.end()) {
+              user_balance = it->balance;
+            }
+            return user_balance;
+         }
 
          using create_action = eosio::action_wrapper<"create"_n, &token::create>;
          using issue_action = eosio::action_wrapper<"issue"_n, &token::issue>;
