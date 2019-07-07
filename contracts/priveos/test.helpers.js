@@ -51,3 +51,10 @@ module.exports.token_send = async function(token_contract, from, to, amount, mem
   })
 }
 
+module.exports.add_founder = async function(token_contract, contract, account, amount, locked_until) {
+  const stake_amount = amount/2;
+  const hold_amount = amount/2;
+  await contract.stake(account.name, `${stake_amount.toFixed(4)} PRIVEOS`, locked_until)
+  await module.exports.token_send(token_contract, contract.executor, account, `${hold_amount.toFixed(4)} PRIVEOS`);
+  
+}

@@ -55,7 +55,7 @@ CONTRACT priveos : public eosio::contract {
 #endif
     const std::string accessgrant_action_name{"accessgrant"};
     const std::string store_action_name{"store"};    
-    const static uint32_t FIVE_MINUTES{5*60};
+    static constexpr uint32_t FIVE_MINUTES{5*60};
     
     /**
       * PRIVEOS TOKEN STAKING (implemented in staking.cpp)
@@ -108,9 +108,19 @@ CONTRACT priveos : public eosio::contract {
     using feebal_table = multi_index<"feebal"_n, feebal>;
     feebal_table feebalances;
     
-    TABLE nodepayinfo {
+    TABLE holderpayinfo {
       time_point    last_claimed_at;
       asset         last_claim_balance; 
+      
+      uint64_t primary_key() const { return last_claim_balance.symbol.code().raw(); }
+    };
+    using holderpay_table = multi_index<"holderpay"_n, holderpayinfo>;
+    
+    TABLE nodepayinfo {
+      time_point    last_claimed_at;
+      asset         last_claim_balance;
+      
+      uint64_t primary_key() const { return last_claim_balance.symbol.code().raw(); } 
     };
     using nodepay_table = multi_index<"nodepay"_n, nodepayinfo>;
     
@@ -285,8 +295,8 @@ CONTRACT priveos : public eosio::contract {
     );
     
     ACTION vote(const name dappcontract, std::vector<name> votees);
-    ACTION dacrewards(const name user);
-    ACTION noderewards(const name user);
+    ACTION dacrewards(const name user, const symbol currency);
+    ACTION noderewards(const name user, const symbol currency);
     
     void transfer(const name from, const name to, const asset quantity, const std::string memo);
     
@@ -367,6 +377,7 @@ CONTRACT priveos : public eosio::contract {
     static uint32_t now() {
       return current_time_point().sec_since_epoch();
     }
+    
 };
 
  

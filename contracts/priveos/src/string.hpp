@@ -7,8 +7,8 @@ inline vector<string> split(const string &s, const string &delim)
     v.push_back(s);
     return v;
   }
-  string::size_type i = 0;
-  string::size_type j = s.find(delim);
+  string::size_type i{0};
+  string::size_type j{s.find(delim)};
   while(j != std::string::npos) {
     v.push_back(s.substr(i, j - i));
     i = j + delim.length();

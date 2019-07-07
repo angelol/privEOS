@@ -2,6 +2,7 @@
 #include "fee.cpp"
 #include "peerapprovals.cpp"
 #include "staking.cpp"
+#include "eosio.token.hpp"
 
 ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data, const bool auditable, const symbol token, const bool contractpays) {
   require_auth(owner);
@@ -183,12 +184,53 @@ ACTION priveos::vote(const name dappcontract, std::vector<name> votees) {
 }
 
 // PRIVEOS token holders can call this to withdraw their share of the fees
-ACTION priveos::dacrewards(const name user) {
+ACTION priveos::dacrewards(const name user, const symbol currency) {
   require_auth(user);
+  
+  const auto current_balance = feebalances.get(currency.code().raw(), fmt("PrivEOS: There is no balance found for {}", currency)).funds;
+  
+  asset last_claim_balance{0, currency};
+  holderpay_table h{_self, user.value};
+  const auto it = h.find(currency.code().raw());
+  if(it != h.end()) {
+    last_claim_balance = it->last_claim_balance;
+  }
+  print_f("last_claim_balance: % ", last_claim_balance);
+  const auto whole = std::min(current_balance - last_claim_balance, asset{0, currency});
+  print_f("whole: % ", whole);
+  
+  /** 
+    * determine full balance of user
+    * token holdings can consist of either:
+    * 1) Staked tokens
+    * 2) Tokens the user holds in his account
+    * 3) Tokens that have been delegated to the user
+    * We have to consider all of the above types.
+    */
+  asset staked_tokens{0, priveos_symbol};
+  const auto founderbal_it = founder_balances.find(user.value);
+  if(founderbal_it != founder_balances.end()) {
+    staked_tokens = founderbal_it->funds;
+  }
+  print_f("staked_tokens: % ", staked_tokens);
+  const auto held_tokens = token::get_balance(priveos_token_contract, user, priveos_symbol);
+  print_f("held_tokens: % ", held_tokens);
+  asset delegated_tokens{0, priveos_symbol};
+  const auto delegation_it = delegations.find(user.value);
+  if(delegation_it != delegations.end()) {
+    delegated_tokens = delegation_it->funds;
+  }
+  const auto my_tokens = staked_tokens + held_tokens + delegated_tokens;
+  print_f("my_tokens: % ", my_tokens);
+  const auto token_supply = token::get_supply(priveos_token_contract, priveos_symbol.code());
+  print_f("token_supply: % ", token_supply);
+  const int64_t my_share = my_tokens / token_supply;
+  print_f("my_share: % ", my_share);
+
 }
 
 // Nodes can call this to withdraw their share of the fees
-ACTION priveos::noderewards(const name user) {
+ACTION priveos::noderewards(const name user, const symbol currency) {
   require_auth(user);
   
 }
@@ -198,12 +240,26 @@ void priveos::transfer(const name from, const name to, const asset quantity, con
   check(quantity.is_valid(), "PrivEOS: Invalid quantity");
   check(quantity.amount > 0, "PrivEOS: Deposit amount must be > 0");
   check(is_account(from), "PrivEOS: The account {} does not exist.");
-  check(memo.size() <= 256, "memo has more than 256 bytes");
-
-  // only respond to incoming transfers
+  check(memo.size() <= 256, "PrivEOS: memo has more than 256 bytes");
+  check(from != to, "cannot transfer to self" );
+  
+  if (from == _self && to != _self) {
+    if(quantity.symbol == priveos_symbol) {
+      check(get_first_receiver() == priveos_token_contract, "PrivEOS: Contract mismatch. Nice try, 1337 haxx0r");
+      // somebody is trying to send out PRIVEOS tokens
+      // so we need to update our bookkeeping table
+      free_priveos_balance_sub(quantity);
+    }
+    // if this is not PRIVEOS transfer, we're not interested and just ignore it
+    return;
+  }
+  
   if (from == _self || to != _self) {
     return;
   }
+  // below this line only incoming transfers
+  
+  check(from != _self && to == _self, "PrivEOS: This part of the code should only respond to incoming transfers.");
   
   if(quantity.symbol == priveos_symbol) {
     /* This is just for PRIVEOS tokens */
