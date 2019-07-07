@@ -154,7 +154,7 @@ ACTION priveos::prepare(const name user, const symbol currency) {
 
 ACTION priveos::vote(const name dappcontract, std::vector<name> votees) {
   require_auth(dappcontract);
-  check(votees.size() <= max_votes, "PrivEOS: Please try to vote for not more than {} nodes.", max_votes);
+  check(votees.size() <= max_votes, "PrivEOS: Please vote for not more than {} nodes.", max_votes);
     
   const auto min_nodes = get_voting_min_nodes();
   check(votees.size() >= min_nodes, "PrivEOS: You need to vote for at least {} nodes.", min_nodes);

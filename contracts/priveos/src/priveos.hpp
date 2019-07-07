@@ -340,6 +340,7 @@ CONTRACT priveos : public eosio::contract {
         }
       };
       
+      check(voterinfo.nodes.size() <= max_votes, "PrivEOS: It should not have been possible to vote for more than {} nodes but you voted for {}", max_votes, voterinfo.nodes.size());
       const auto offset = sampling<name>(voterinfo.offset, voterinfo.nodes, step, callback);
 
       // update global file stats
@@ -353,8 +354,8 @@ CONTRACT priveos : public eosio::contract {
       });
     }
     
-    const uint32_t max_votes{30};
-    uint32_t get_voting_min_nodes() {
+    static constexpr uint32_t max_votes{30};
+    uint32_t get_voting_min_nodes() const{
       return 3;
     }
     

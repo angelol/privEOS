@@ -3,7 +3,8 @@
 template<typename T>
 uint32_t sampling(const uint32_t offset, const std::vector<T>& v, const uint32_t step_size, std::function<void(T a, double b)> callback) {
   const auto len = v.size();
-
+  eosio::check(len <= 30, "PrivEOS: You can only vote for up to 30 nodes. So where does this come from?");
+  
   const auto sampling_factor = static_cast<double>(len) / static_cast<double>(step_size);
 
   if(step_size >= len) {
@@ -15,6 +16,12 @@ uint32_t sampling(const uint32_t offset, const std::vector<T>& v, const uint32_t
   }
   const auto a = offset % len;
   const auto b = (a + step_size) % len;
+  
+  /**
+    * There is an implicit signedness conversion going on below. 
+    * This is not a problem because all values are bound by the v.size()
+    * which is limited to priveos::max_votes (which is 30).
+    */
   if(b < a) {
     // loop from a to end
     for (auto it = (v.begin() + a); it != v.end(); it++) {
