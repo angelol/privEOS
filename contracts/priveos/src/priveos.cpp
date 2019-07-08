@@ -68,7 +68,7 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
     
     auto stats = global_singleton.get_or_default(global {});
     stats.registered_nodes += 1;
-    global_singleton.set(stats, _self);
+    global_singleton.set(stats, get_self());
   }  
 }
 
@@ -98,11 +98,11 @@ ACTION priveos::unregnode(const name owner) {
   
   auto stats = global_singleton.get();
   stats.registered_nodes -= 1;
-  global_singleton.set(stats, _self);
+  global_singleton.set(stats, get_self());
 }
 
 ACTION priveos::admunreg(const name owner) {
-  require_auth(_self);
+  require_auth(get_self());
   const auto& node = nodes.get(owner.value, "owner not found");
   nodes.modify(node, same_payer, [&](nodeinfo& info) {
     info.is_active = false;
@@ -118,10 +118,10 @@ ACTION priveos::setprice(const name node, const asset price, const std::string a
   check(price.is_valid(), "PrivEOS: Invalid price");
   
   if(action == store_action_name) {
-    store_pricefeed_table pricefeeds{_self, price.symbol.code().raw()};
+    store_pricefeed_table pricefeeds{get_self(), price.symbol.code().raw()};
     update_pricefeed(node, price, action, pricefeeds);    
   } else if(action == accessgrant_action_name) {
-    read_pricefeed_table pricefeeds{_self, price.symbol.code().raw()};
+    read_pricefeed_table pricefeeds{get_self(), price.symbol.code().raw()};
     update_pricefeed(node, price, action, pricefeeds);
   } else {
     check(false, "Invalid action name");
@@ -129,12 +129,12 @@ ACTION priveos::setprice(const name node, const asset price, const std::string a
 }
 
 ACTION priveos::addcurrency(const symbol currency, const name contract) {
-  require_auth(_self);
+  require_auth(get_self());
   
   check(currencies.find(currency.code().raw()) == currencies.end(), "PrivEOS: Currency {} already exists.");
   
   /* From now on, we're ready to accept this currency */
-  currencies.emplace(_self, [&](auto& c) {
+  currencies.emplace(get_self(), [&](auto& c) {
     c.currency = currency;
     c.contract = contract;
   });
@@ -142,7 +142,7 @@ ACTION priveos::addcurrency(const symbol currency, const name contract) {
   check(feebalances.find(currency.code().raw()) == feebalances.end(), "PrivEOS: feebalance entry already exists. This should not be possible.");
   
   /* Create an entry in the fee-tracking table */
-  feebalances.emplace(_self, [&](auto &bal) {
+  feebalances.emplace(get_self(), [&](auto &bal) {
     bal.funds = asset{0, currency};
     bal.lifetime = asset{0, currency};
   });
@@ -150,7 +150,7 @@ ACTION priveos::addcurrency(const symbol currency, const name contract) {
 
 ACTION priveos::prepare(const name user, const symbol currency) {
   require_auth(user);
-  balances_table balances(_self, user.value);      
+  balances_table balances(get_self(), user.value);      
   const auto it = balances.find(currency.code().raw());
   if(it == balances.end()) {
     balances.emplace(user, [&](auto& bal){
@@ -197,7 +197,7 @@ ACTION priveos::dacrewards(const name user, const symbol currency) {
   
   print_f("current_lifetime_balance: % ", current_lifetime_balance);
   asset last_claim_balance{0, currency};
-  holderpay_table holderpay{_self, user.value};
+  holderpay_table holderpay{get_self(), user.value};
   const auto it = holderpay.find(currency.code().raw());
   if(it != holderpay.end()) {
     last_claim_balance = it->last_claim_balance;
@@ -261,10 +261,10 @@ ACTION priveos::dacrewards(const name user, const symbol currency) {
 
   const auto token_contract = currencies.get(currency.code().raw()).contract;  
   action(
-    permission_level{_self, "active"_n},
+    permission_level{get_self(), "active"_n},
     token_contract,
     "transfer"_n,
-    std::make_tuple(_self, user, withdrawal_amount, "DAC Rewards"s)
+    std::make_tuple(get_self(), user, withdrawal_amount, "DAC Rewards"s)
   ).send();
 
 }
@@ -283,7 +283,7 @@ void priveos::transfer(const name from, const name to, const asset quantity, con
   check(memo.size() <= 256, "PrivEOS: memo has more than 256 bytes");
   check(from != to, "cannot transfer to self" );
   
-  if (from == _self && to != _self) {
+  if (from == get_self() && to != get_self()) {
     if(quantity.symbol == priveos_symbol) {
       check(get_first_receiver() == priveos_token_contract, "PrivEOS: Contract mismatch. Nice try, 1337 haxx0r");
       // somebody is trying to send out PRIVEOS tokens
@@ -294,12 +294,12 @@ void priveos::transfer(const name from, const name to, const asset quantity, con
     return;
   }
   
-  if (from == _self || to != _self) {
+  if (from == get_self() || to != get_self()) {
     return;
   }
   // below this line only incoming transfers
   
-  check(from != _self && to == _self, "PrivEOS: This part of the code should only respond to incoming transfers.");
+  check(from != get_self() && to == get_self(), "PrivEOS: This part of the code should only respond to incoming transfers.");
   
   if(quantity.symbol == priveos_symbol) {
     /* This is just for PRIVEOS tokens */

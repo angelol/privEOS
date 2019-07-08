@@ -2,7 +2,7 @@
 #include "eosio.token.hpp"
 
 ACTION priveos::stake(const name user, const asset quantity, const uint32_t locked_until) {
-  require_auth(_self);
+  require_auth(get_self());
   free_priveos_balance_sub(quantity);
   add_locked_balance(user, quantity, locked_until);
   consistency_check();
@@ -13,10 +13,10 @@ ACTION priveos::unstake(const name user, const asset quantity) {
   sub_locked_balance(user, quantity);
   
   action(
-    permission_level{_self, "active"_n},
+    permission_level{get_self(), "active"_n},
     priveos_token_contract,
     "transfer"_n,
-    std::make_tuple(_self, user, quantity, std::string("Withdrawal"))
+    std::make_tuple(get_self(), user, quantity, std::string("Withdrawal"))
   ).send();
 
   /**
@@ -26,17 +26,17 @@ ACTION priveos::unstake(const name user, const asset quantity) {
 }
 
 ACTION priveos::delegate(const name user, const asset value) {
-  require_auth(_self);
+  require_auth(get_self());
   free_priveos_balance_sub(value);
   
   auto user_it = delegations.find(user.value);      
   if(user_it == delegations.end()) {
-    delegations.emplace(_self, [&](auto& bal){
+    delegations.emplace(get_self(), [&](auto& bal){
         bal.user = user;
         bal.funds = value;
     });
   } else {
-    delegations.modify(user_it, _self, [&](auto& bal){
+    delegations.modify(user_it, get_self(), [&](auto& bal){
         bal.funds += value;
     });
   }
@@ -45,7 +45,7 @@ ACTION priveos::delegate(const name user, const asset value) {
 }
 
 ACTION priveos::undelegate(const name user, const asset value) {
-  require_auth(_self);
+  require_auth(get_self());
   free_priveos_balance_add(value);
   
   const auto& user_balance = delegations.get(user.value, "User has no balance");
@@ -72,7 +72,7 @@ void priveos::free_priveos_balance_add(const asset quantity) {
   );
 
   bal.funds += quantity;
-  free_balance_singleton.set(bal, _self);
+  free_balance_singleton.set(bal, get_self());
 } 
 
 void priveos::free_priveos_balance_sub(const asset quantity) {
@@ -80,14 +80,14 @@ void priveos::free_priveos_balance_sub(const asset quantity) {
   auto bal = free_balance_singleton.get();
   check(bal.funds >= quantity, "PrivEOS: Trying to overdraw free balance");
   bal.funds -= quantity;
-  free_balance_singleton.set(bal, _self);
+  free_balance_singleton.set(bal, get_self());
 }
 
 void priveos::add_locked_balance(const name user, const asset value, const uint32_t locked_until) {
   check(value.symbol == priveos_symbol, "PrivEOS: Only PRIVEOS tokens allowed");
   auto user_it = founder_balances.find(user.value);      
   if(user_it == founder_balances.end()) {
-    founder_balances.emplace(_self, [&](auto& bal){
+    founder_balances.emplace(get_self(), [&](auto& bal){
         bal.founder = user;
         bal.funds = value;
         bal.locked_until = locked_until;
@@ -95,7 +95,7 @@ void priveos::add_locked_balance(const name user, const asset value, const uint3
   } else {
     const auto bal = *user_it;
     check(bal.locked_until == locked_until, "PrivEOS: The locked_until values don't match");
-    founder_balances.modify(user_it, _self, [&](auto& bal){
+    founder_balances.modify(user_it, get_self(), [&](auto& bal){
         bal.funds += value;
     });
   }

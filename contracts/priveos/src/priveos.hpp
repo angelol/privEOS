@@ -30,18 +30,18 @@ CONTRACT priveos : public eosio::contract {
   using contract::contract;
   public:
     priveos(name self,name code, datastream<const char*> ds) : eosio::contract(self,code,ds),
-      free_balance_singleton(_self, _self.value),
-      founder_balances(_self, _self.value),
-      delegations(_self, _self.value),
-      feebalances(_self, _self.value),
-      global_singleton(_self, _self.value),
-      voters(_self, _self.value),
-      nodes(_self, _self.value), 
-      store_prices(_self, _self.value), 
-      read_prices(_self, _self.value), 
-      currencies(_self, _self.value), 
-      peerapprovals(_self, _self.value), 
-      peerdisapprovals(_self, _self.value)
+      free_balance_singleton(get_self(), get_self().value),
+      founder_balances(get_self(), get_self().value),
+      delegations(get_self(), get_self().value),
+      feebalances(get_self(), get_self().value),
+      global_singleton(get_self(), get_self().value),
+      voters(get_self(), get_self().value),
+      nodes(get_self(), get_self().value), 
+      store_prices(get_self(), get_self().value), 
+      read_prices(get_self(), get_self().value), 
+      currencies(get_self(), get_self().value), 
+      peerapprovals(get_self(), get_self().value), 
+      peerdisapprovals(get_self(), get_self().value)
       {}
     
     static constexpr symbol priveos_symbol{"PRIVEOS", 4};
@@ -365,7 +365,7 @@ CONTRACT priveos : public eosio::contract {
       auto stats = global_singleton.get_or_default(global {});
       stats.unique_files += 1;
       stats.files += n_files;
-      global_singleton.set(stats, _self);
+      global_singleton.set(stats, get_self());
       
       voters.modify(voterinfo_it, same_payer, [&](auto& voterinfo) {
         voterinfo.offset = offset;

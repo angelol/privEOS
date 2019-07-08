@@ -109,7 +109,7 @@ void priveos::activate_node(const nodeinfo& node) {
       
       auto stats = global_singleton.get_or_default(global {});
       stats.active_nodes += 1;
-      global_singleton.set(stats, _self);
+      global_singleton.set(stats, get_self());
     }
   }
   
@@ -130,7 +130,7 @@ void priveos::disable_node(const nodeinfo& node) {
       
       auto stats = global_singleton.get();
       stats.active_nodes -= 1;
-      global_singleton.set(stats, _self);
+      global_singleton.set(stats, get_self());
     }
   }
   

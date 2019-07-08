@@ -58,7 +58,7 @@ const asset priveos::get_store_fee(const symbol& currency) {
 }
 
 void priveos::add_balance(const name& user, const asset& value) {
-  balances_table balances(_self, user.value);
+  balances_table balances(get_self(), user.value);
   const auto user_it = balances.find(value.symbol.code().raw());      
   check(user_it != balances.end(), "PrivEOS: Balance table entry does not exist for user {}, call prepare first", user);
   balances.modify(user_it, user, [&](auto& bal){
@@ -70,7 +70,7 @@ void priveos::sub_balance(const name& user, const asset& value) {
   if(value.amount == 0) {
     return;
   }
-  balances_table balances(_self, user.value);
+  balances_table balances(get_self(), user.value);
   const auto& user_balance = balances.get(value.symbol.code().raw(), fmt("PrivEOS: User {} has no balance", user));
   check(user_balance.funds >= value, "PrivEOS: Overdrawn balance");
   
