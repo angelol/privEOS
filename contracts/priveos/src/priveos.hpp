@@ -56,6 +56,9 @@ CONTRACT priveos : public eosio::contract {
     const std::string accessgrant_action_name{"accessgrant"};
     const std::string store_action_name{"store"};    
     static constexpr uint32_t FIVE_MINUTES{5*60};
+    static constexpr uint32_t top_nodes{30};
+    static constexpr uint32_t max_votes{top_nodes};
+
     
     /**
       * PRIVEOS TOKEN STAKING (implemented in staking.cpp)
@@ -139,6 +142,7 @@ CONTRACT priveos : public eosio::contract {
       
       uint64_t registered_nodes = 0;
       uint64_t active_nodes = 0;
+      bool dac_activated = false;
     };
     using global_table = singleton<"global"_n, global>;
     global_table global_singleton;
@@ -160,10 +164,14 @@ CONTRACT priveos : public eosio::contract {
       double              files = 0.0;
       
       uint64_t primary_key()const { return owner.value; }
-      uint64_t by_files()const { return static_cast<uint64_t>(files); }      
+      
+      uint64_t by_files_descending()const { 
+        const auto files_uint = static_cast<uint64_t>(files); 
+        return numeric_limits<uint64_t>::max() - files_uint;
+      }
     };
     using nodes_table = multi_index<"nodes"_n, nodeinfo,
-      indexed_by< "byfiles"_n, const_mem_fun<nodeinfo, uint64_t,  &nodeinfo::by_files> >
+      indexed_by< "byfiles"_n, const_mem_fun<nodeinfo, uint64_t,  &nodeinfo::by_files_descending> >
     >;
     nodes_table nodes;
 
@@ -290,6 +298,11 @@ CONTRACT priveos : public eosio::contract {
       const std::string action
     );
     
+    ACTION admsetprice(
+      const asset price, 
+      const std::string action
+    );
+    
     ACTION addcurrency(
       const symbol currency,
       const name contract
@@ -309,6 +322,7 @@ CONTRACT priveos : public eosio::contract {
     template<typename T>
     void update_pricefeed(const name& node, const asset& price, const std::string& action, T& pricefeeds);
     
+    ACTION test(const name owner);
   private:
     // price functions
     void charge_fee(const name& user, const name& contract, const asset& fee, const bool contractpays);
@@ -340,6 +354,7 @@ CONTRACT priveos : public eosio::contract {
       const auto voterinfo_it = voters.find(dappcontract.value);
       check(voterinfo_it != voters.end(), "PrivEOS: Contract {} has not voted yet.", dappcontract);
       const auto voterinfo = *voterinfo_it;
+      check(voterinfo.nodes.size() <= max_votes, "PrivEOS: It should not have been possible to vote for more than {} nodes but you voted for {}", max_votes, voterinfo.nodes.size());
       
       // update filecount for all nodes involved
       uint32_t step{3};
@@ -358,7 +373,6 @@ CONTRACT priveos : public eosio::contract {
         }
       };
       
-      check(voterinfo.nodes.size() <= max_votes, "PrivEOS: It should not have been possible to vote for more than {} nodes but you voted for {}", max_votes, voterinfo.nodes.size());
       const auto offset = sampling<name>(voterinfo.offset, voterinfo.nodes, step, callback);
 
       // update global file stats
@@ -372,7 +386,6 @@ CONTRACT priveos : public eosio::contract {
       });
     }
     
-    static constexpr uint32_t max_votes{30};
     uint32_t get_voting_min_nodes() const{
       return 3;
     }
@@ -384,6 +397,33 @@ CONTRACT priveos : public eosio::contract {
     
     static uint32_t now() {
       return current_time_point().sec_since_epoch();
+    }
+    
+    bool is_top_node(const nodeinfo& node_i) const {
+      return is_top_node(node_i.owner);
+    }
+    
+    bool is_top_node(const name& owner) const {
+      const auto idx = nodes.template get_index<"byfiles"_n>();
+      auto it = idx.begin();
+      
+      for(uint32_t i{0}; i < top_nodes; i++) {
+        if(it == idx.end()) {
+          break;
+        }
+        if(it->owner == owner) {
+          print_f("Node % is a match at % ", it->owner, i);
+          return true;
+        }
+        it++;
+      }
+      print_f("No match found");
+      return false;
+    }
+    
+    bool has_dac_been_activated() {
+      const auto s = global_singleton.get_or_default(global {});
+      return s.dac_activated;
     }
     
 };

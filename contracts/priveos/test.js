@@ -32,7 +32,7 @@ const contractAccount = eoslime.Account.load('priveosrules', '5KXtuBpLc6Y9Q8Q8s8
 let alice, bob, contract, nodes, dappcontract, priveos_token_contract, slantagwallet
 
 
-describe('Test', function () {
+describe('Test before DAC activation', function () {
   // Increase mocha(testing framework) time, otherwise tests fails
   this.timeout(60000)
     
@@ -113,6 +113,7 @@ describe('Test', function () {
     expect(await helpers.global_stats(contract)).to.deep.equal({
       "unique_files": 0,
       "files": "0.00000000000000000",
+      "dac_activated": 0,
       "registered_nodes": 10,
       "active_nodes": 0
     });
@@ -141,6 +142,7 @@ describe('Test', function () {
     expect(await helpers.global_stats(contract)).to.deep.equal({
       "unique_files": 0,
       "files": "0.00000000000000000",
+      "dac_activated": 0,
       "registered_nodes": 9,
       "active_nodes": 0
     })
@@ -151,6 +153,7 @@ describe('Test', function () {
       "unique_files": 0,
       "files": "0.00000000000000000",
       "registered_nodes": 10,
+      "dac_activated": 0,
       "active_nodes": 0
     })
   })
@@ -164,13 +167,16 @@ describe('Test', function () {
     }])
   })
   
+  
   it('Set price', async () => {
-    for(const node of nodes) {
-      node.store_price = store_price
-      node.accessgrant_price = accessgrant_price
-      await contract.setprice(node.name, node.store_price, "store", {from: node})
-      await contract.setprice(node.name, node.accessgrant_price, "accessgrant", {from: node})
-    }
+    const node = nodes[0];
+    await expect(
+      contract.setprice(node.name, "0.1000 EOS", "store", {from: node})
+    ).to.be.rejectedWith(`DAC has not been activated yet`)
+    
+    await contract.admsetprice(store_price, "store")
+    await contract.admsetprice(accessgrant_price, "accessgrant")
+    
     let res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'readprice', limit:100})
 
     expect(res.rows).to.deep.equal([{
@@ -204,6 +210,7 @@ describe('Test', function () {
     expect(await helpers.global_stats(contract)).to.deep.equal({
       "unique_files": 0,
       "files": "0.00000000000000000",
+      "dac_activated": 0,
       "registered_nodes": 10,
       "active_nodes": 10
     });
@@ -221,6 +228,7 @@ describe('Test', function () {
       "unique_files": 0,
       "files": "0.00000000000000000",
       "registered_nodes": 10,
+      "dac_activated": 0,
       "active_nodes": 9,
     });
     
@@ -234,6 +242,7 @@ describe('Test', function () {
       "unique_files": 0,
       "files": "0.00000000000000000",
       "registered_nodes": 10,
+      "dac_activated": 0,
       "active_nodes": 10,
     });
   })
@@ -370,6 +379,7 @@ describe('Test', function () {
     expect(await helpers.global_stats(contract)).to.deep.equal({
       "unique_files": 2,
       "files": "10.00000000000000000",
+      "dac_activated": 0,
       "registered_nodes": 10,
       "active_nodes": 10
     })
@@ -482,5 +492,34 @@ describe('Token holder rewards', function () {
 
     
   })
-
+  
+  it('XXX', async () => {
+    await contract.test(nodes[0].name)
+  })
 })
+
+
+// describe('After DAC activation', function() {
+// 
+//   it("Set price", async () => {      
+//     for(const node of nodes) {
+//       node.store_price = store_price
+//       node.accessgrant_price = accessgrant_price
+//       await contract.setprice(node.name, node.store_price, "store", {from: node})
+//       await contract.setprice(node.name, node.accessgrant_price, "accessgrant", {from: node})
+//     }
+//     let res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'readprice', limit:100})
+// 
+//     expect(res.rows).to.deep.equal([{
+//       "money": "0.0100 EOS"
+//     }])
+// 
+//     res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'storeprice', limit:100})
+// 
+//     expect(res.rows).to.deep.equal([{
+//       "money": "0.0200 EOS"
+//     }])
+// 
+//   })
+// 
+// })

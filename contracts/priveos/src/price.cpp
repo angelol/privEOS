@@ -32,16 +32,16 @@ void priveos::propagate_price_change(const name& node, const asset& price, const
 }
 
 template<typename T>
-void priveos::update_price_table(const name& node, const asset& price, T& prices) {
+void priveos::update_price_table(const name& payer, const asset& price, T& prices) {
   check(price.amount >= 0, "PrivEOS: Price must be non-negative.");
   check(price.is_valid(), "PrivEOS: Invalid price");
   const auto& itr = prices.find(price.symbol.code().raw());
   if(itr != prices.end()) {
-    prices.modify(itr, node, [&](auto& p) {
+    prices.modify(itr, payer, [&](auto& p) {
       p.money = price;
     });
   } else {
-    prices.emplace(node, [&](auto& p) {
+    prices.emplace(payer, [&](auto& p) {
       p.money = price;
     });
   }

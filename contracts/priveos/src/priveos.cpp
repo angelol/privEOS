@@ -44,10 +44,10 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
   require_auth(owner);
 
   check(node_key != public_key(), "public key should not be the default value");
-  check(node_key.type == uint32_t{0}, "Only K1 Keys supported");
+  check(node_key.type == 0u, "Only K1 Keys supported");
   check(url.size() <= 256, "url has more than 256 bytes");
 #ifndef LOCAL
-  check(url.substr(0, 8) == std::string("https://"), "URL parameter must be a valid https URL");
+  check(url.substr(0u, 8u) == "https://"s, "URL parameter must be a valid https URL");
 #endif
   
   const auto node_idx = nodes.find(owner.value);
@@ -67,7 +67,7 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
     });
     
     auto stats = global_singleton.get_or_default(global {});
-    stats.registered_nodes += 1;
+    stats.registered_nodes += 1u;
     global_singleton.set(stats, get_self());
   }  
 }
@@ -78,6 +78,7 @@ ACTION priveos::peerappr(const name sender, const name owner) {
   
   nodes.get(sender.value, "Sender must be a registered node");
   const auto &node = nodes.get(owner.value, "Owner must be a registered node");
+  check(is_top_node(node), "You're outside of the top {}", top_nodes);
   was_approved_by(sender, node);
 }
 
@@ -86,6 +87,7 @@ ACTION priveos::peerdisappr(const name sender, const name owner) {
   
   nodes.get(sender.value, "Sender must be a registered node");
   const auto &node = nodes.get(owner.value, "Owner must be a registered node");
+  check(is_top_node(node), "You're outside of the top {}", top_nodes);
   was_disapproved_by(sender, node);
 }
     
@@ -97,7 +99,7 @@ ACTION priveos::unregnode(const name owner) {
   
   
   auto stats = global_singleton.get();
-  stats.registered_nodes -= 1;
+  stats.registered_nodes -= 1u;
   global_singleton.set(stats, get_self());
 }
 
@@ -111,11 +113,14 @@ ACTION priveos::admunreg(const name owner) {
 
 ACTION priveos::setprice(const name node, const asset price, const std::string action) {
   require_auth(node);
+  check(has_dac_been_activated(), "DAC has not been activated yet. Please try again later.");
+  check(price.is_valid(), "PrivEOS: Invalid price");
+  check(price.amount >= 0, "Price must be non-negative.");
   
   nodes.get(node.value, "node not found.");
+  check(is_top_node(node), "You're outside of the top {}", top_nodes);
   currencies.get(price.symbol.code().raw(), "Token not accepted");
-  check(price.amount >= 0, "Price must be non-negative.");
-  check(price.is_valid(), "PrivEOS: Invalid price");
+  
   
   if(action == store_action_name) {
     store_pricefeed_table pricefeeds{get_self(), price.symbol.code().raw()};
@@ -128,10 +133,27 @@ ACTION priveos::setprice(const name node, const asset price, const std::string a
   }
 }
 
+ACTION priveos::admsetprice(const asset price, const std::string action) {
+  require_auth(get_self());
+  check(!has_dac_been_activated(), "DAC has already been activated. This action is obsolete.");
+  check(price.is_valid(), "PrivEOS: Invalid price");
+  check(price.amount >= 0, "Price must be non-negative.");
+  currencies.get(price.symbol.code().raw(), "Token not accepted");
+  
+  if(action == store_action_name) {
+    update_price_table(get_self(), price, store_prices);
+  } else if(action == accessgrant_action_name) {
+    update_price_table(get_self(), price, read_prices);
+  } else {
+    check(false, "Invalid action name");
+  }
+}
+
+
 ACTION priveos::addcurrency(const symbol currency, const name contract) {
   require_auth(get_self());
   
-  check(currencies.find(currency.code().raw()) == currencies.end(), "PrivEOS: Currency {} already exists.");
+  check(currencies.find(currency.code().raw()) == currencies.end(), "PrivEOS: Currency {} already exists.", currency);
   
   /* From now on, we're ready to accept this currency */
   currencies.emplace(get_self(), [&](auto& c) {
@@ -273,6 +295,11 @@ ACTION priveos::dacrewards(const name user, const symbol currency) {
 ACTION priveos::noderewards(const name user, const symbol currency) {
   require_auth(user);
   
+}
+
+ACTION priveos::test(const name owner) {
+  is_top_node(owner);
+  // print_f("% is top node: %", owner, is_top_node(owner));
 }
 
 [[eosio::on_notify("*::transfer")]] 

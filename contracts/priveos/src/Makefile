@@ -53,6 +53,9 @@ system:
 	$(CLEOS_ENDPOINT) set contract eosio $(EOS_CONTRACTS_DIR)/eosio.system -p eosio
 	$(CLEOS_ENDPOINT) push action eosio init '[0, "4,EOS"]' -p eosio
 
+xxx:
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) test '["testnodexxx1"]'  -p $(CONTRACT_ACCOUNT)
+
 setup:
 	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio $(CONTRACT_ACCOUNT) $(PUBLIC_KEY) $(PUBLIC_KEY)
 	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio dappcontract $(PUBLIC_KEY) $(PUBLIC_KEY)
@@ -117,7 +120,10 @@ approve:
 disapprove:
 	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) peerdisappr '["testnodexxx1", "testnodexxx2"]' -p testnodexxx1
 
-
+admsetprice:
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) admsetprice '["0.0100 EOS", "accessgrant"]' -p $(CONTRACT_ACCOUNT)
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) admsetprice '["0.0200 EOS", "store"]' -p $(CONTRACT_ACCOUNT)
+	
 setprice:
 	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx1", "1000.0000 EUR", "accessgrant"]' -p testnodexxx1
 	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) setprice '["testnodexxx1", "0.0000 EOS", "store"]' -p testnodexxx1
