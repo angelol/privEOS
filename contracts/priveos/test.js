@@ -465,8 +465,8 @@ describe('Token holder rewards', function () {
   it('Withdraw token holder reward', async () => {
     await contract.dacrewards(bob.name, "4,EOS", {from: bob})
     
-    // need to wait 3 seconds before sending second identical tx
-    Bluebird.delay(3000)
+    // need to wait before sending second identical tx
+    Bluebird.delay(6001)
 
     await expect(
       contract.dacrewards(bob.name, "4,EOS", {from: bob})
@@ -476,7 +476,7 @@ describe('Token holder rewards', function () {
     const public_key = eosjs_ecc.privateToPublic(private_key)
     await contract.accessgrant(alice.name, dappcontract.name, "xxx", public_key, "4,EOS", 1, {from: alice})
     
-    Bluebird.delay(3000)
+    Bluebird.delay(6001)
     
     await contract.dacrewards(bob.name, "4,EOS", {from: bob})
 
