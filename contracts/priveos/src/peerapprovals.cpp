@@ -142,11 +142,6 @@ void priveos::disable_node(const nodeinfo& node) {
 }
 
 uint32_t priveos::peers_needed() {
-  uint32_t active_nodes{0};
-  for(const auto& node: nodes) {
-    if(node.is_active) {
-      active_nodes++;
-    }
-  }
-  return active_nodes/2 + 1;
+  auto stats = global_singleton.get_or_default(global {});
+  return stats.active_nodes/2 + 1;
 }
