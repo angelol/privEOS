@@ -94,6 +94,7 @@ ACTION priveos::peerdisappr(const name sender, const name owner) {
 ACTION priveos::unregnode(const name owner) {
   require_auth(owner);
   const auto itr = nodes.find(owner.value);
+  check(itr == nodes.end(), "User {} is not registered as node", owner); 
   disable_node(*itr);
   nodes.erase(itr);
   
@@ -113,7 +114,6 @@ ACTION priveos::admunreg(const name owner) {
 
 ACTION priveos::setprice(const name node, const asset price, const std::string action) {
   require_auth(node);
-  check(has_dac_been_activated(), "DAC has not been activated yet. Please try again later.");
   check(price.is_valid(), "PrivEOS: Invalid price");
   check(price.amount >= 0, "Price must be non-negative.");
   
