@@ -19,6 +19,16 @@ void priveos::update_pricefeed(const name& node, const asset& price, const std::
 
 template<typename T>
 void priveos::propagate_price_change(const name& node, const asset& price, const std::string& action, T& pricefeeds) {
+  if(!has_dac_been_activated()) {
+    /**
+      * DAC has not yet been activated. That means users can set their 
+      * price feeds but price change will not come into effect until 
+      * the DAC is activated. 
+      * Before DAC activation, only _self can set prices using
+      * the priveos::admsetprice action.
+      */
+      return;
+  }
   std::vector<int64_t> vec;
   for(const auto& pf : pricefeeds) {
     vec.push_back(pf.price.amount);        
