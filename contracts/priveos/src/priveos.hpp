@@ -119,17 +119,19 @@ CONTRACT priveos : public eosio::contract {
     
     TABLE holderpayinfo {
       time_point    last_claimed_at;
-      asset         last_claim_balance; 
+      asset         last_claim_balance;
+      name          user; 
       
-      uint64_t primary_key() const { return last_claim_balance.symbol.code().raw(); }
+      uint64_t primary_key() const { return user.value; }
     };
     using holderpay_table = multi_index<"holderpay"_n, holderpayinfo>;
     
     TABLE nodepayinfo {
       time_point    last_claimed_at;
       asset         last_claim_balance;
+      name          user;
       
-      uint64_t primary_key() const { return last_claim_balance.symbol.code().raw(); } 
+      uint64_t primary_key() const { return user.value; }
     };
     using nodepay_table = multi_index<"nodepay"_n, nodepayinfo>;
     

@@ -94,7 +94,7 @@ ACTION priveos::peerdisappr(const name sender, const name owner) {
 ACTION priveos::unregnode(const name owner) {
   require_auth(owner);
   const auto itr = nodes.find(owner.value);
-  check(itr == nodes.end(), "User {} is not registered as node", owner); 
+  check(itr != nodes.end(), "User {} is not registered as node", owner); 
   disable_node(*itr);
   nodes.erase(itr);
   
@@ -219,8 +219,8 @@ ACTION priveos::dacrewards(const name user, const symbol currency) {
   
   print_f("current_lifetime_balance: % ", current_lifetime_balance);
   asset last_claim_balance{0, currency};
-  holderpay_table holderpay{get_self(), user.value};
-  const auto it = holderpay.find(currency.code().raw());
+  holderpay_table holderpay{get_self(), currency.code().raw()};
+  const auto it = holderpay.find(user.value);
   if(it != holderpay.end()) {
     last_claim_balance = it->last_claim_balance;
   }
@@ -268,17 +268,16 @@ ACTION priveos::dacrewards(const name user, const symbol currency) {
   
   sub_fee_balance(withdrawal_amount);
   
-  const auto holderpay_it = holderpay.find(currency.code().raw());
+  const auto holderpay_it = holderpay.find(user.value);
+  const auto inserter = [&](auto& x) {
+    x.last_claimed_at = current_time_point();
+    x.last_claim_balance = current_lifetime_balance;
+    x.user = user;
+  };
   if(holderpay_it == holderpay.end()) {
-    holderpay.emplace(user, [&](auto& x) {
-      x.last_claimed_at = current_time_point();
-      x.last_claim_balance = current_lifetime_balance;
-    });
+    holderpay.emplace(user, inserter);
   } else {
-    holderpay.modify(holderpay_it, user, [&](auto& x) {
-      x.last_claimed_at = current_time_point();
-      x.last_claim_balance = current_lifetime_balance;
-    });
+    holderpay.modify(holderpay_it, user, inserter);
   }
 
   const auto token_contract = currencies.get(currency.code().raw()).contract;  
