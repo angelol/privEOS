@@ -29,8 +29,9 @@ const TOKEN_ABI = 'src/eosio.token.abi'
 
 const contractAccount = eoslime.Account.load('priveosrules', '5KXtuBpLc6Y9Q8Q8s8CQm2G7L98bV8PK1ZKnSKvNeoiuhZw6uDH')
 
-let alice, bob, contract, nodes, dappcontract, priveos_token_contract, slantagwallet
+let alice, bob, contract, nodes, dappcontract, priveos_token_contract, node_token_contract, slantagwallet
 
+const epsilon = 0.001
 
 describe('Test before DAC activation', function () {
   // Increase mocha(testing framework) time, otherwise tests fails
@@ -54,7 +55,11 @@ describe('Test before DAC activation', function () {
     
     // deploy priveos token
     priveos_token_contract = await eoslime.CleanDeployer.deploy(TOKEN_WASM, TOKEN_ABI, {}, cpuAmount, netAmount, ramBytes)
-    console.log("Token contract deployed to: ", priveos_token_contract.executor.name)
+    console.log("PrivEOS Token contract deployed to: ", priveos_token_contract.executor.name)
+    
+    // deploy node token
+    // node_token_contract = await eoslime.CleanDeployer.deploy(TOKEN_WASM, TOKEN_ABI, {}, cpuAmount, netAmount, ramBytes)
+    // console.log("Node Token contract deployed to: ", node_token_contract.executor.name)
     
     const command = `eosio-cpp -I. -DLOCAL -DTOKENCONTRACT=${priveos_token_contract.executor.name} -abigen priveos.cpp -o priveos.wasm`
     console.log("Command: ", command)
@@ -171,6 +176,10 @@ describe('Test before DAC activation', function () {
     res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
     expect(res.rows[0].funds).to.equal("600.0000 PRIVEOS")
     
+  })
+  
+  it('Create node token', async() => {
+    await priveos_token_contract.create(contract.executor.name, "461168601842738.0000 NODET")
   })
   
   
@@ -443,6 +452,9 @@ describe('Test before DAC activation', function () {
   
   it('User stores key (user pays)', async () => {    
     // const name owner, const name contract, const std::string file, const std::string data, const bool auditable, const symbol token, const bool contractpays
+    let node_token_balance = await rpc.get_currency_balance(priveos_token_contract.executor.name, contract.executor.name, "NODET")
+    expect(node_token_balance[0]).to.be.undefined
+    
     const data = "some_ipfs_hash"
     const identifier = uuidv4()
     const tx_result = await contract.store(alice.name, dappcontract.name, identifier, data, 0, "4,EOS", 0, {from: alice})
@@ -454,7 +466,8 @@ describe('Test before DAC activation', function () {
     
     expect(await helpers.fee_balance(contract)).to.equal(store_price)
     
-    
+    node_token_balance = await rpc.get_currency_balance(priveos_token_contract.executor.name, contract.executor.name, "NODET")
+    expect(helpers.asset_equal_epsilon(node_token_balance[0], "5.0000 NODET")).to.be.true
     
   })
   
@@ -476,6 +489,11 @@ describe('Test before DAC activation', function () {
     // console.log("After second store: ", res.rows)
     
     expect(await helpers.fee_balance(contract)).to.equal("0.0400 EOS")
+    
+    const node_token_balance = await rpc.get_currency_balance(priveos_token_contract.executor.name, contract.executor.name, "NODET")
+    
+    expect(helpers.asset_equal_epsilon(node_token_balance[0], "10.0000 NODET")).to.be.true
+
   })
   
   it('Accessgrant', async () => {
@@ -487,15 +505,15 @@ describe('Test before DAC activation', function () {
     // console.log("bal_res.rows: ", JSON.stringify(bal_res.rows, null, 2))
     expect(await helpers.fee_balance(contract)).to.equal("0.0500 EOS")
     
-    expect(await helpers.global_stats(contract)).to.deep.equal({
+    const gstats = await helpers.global_stats(contract)
+    expect(gstats).to.include({
       "unique_files": 2,
-      "files": "10.00000000000000000",
+      // "files": "10.00000000000000000",
       "dac_activated": 0,
       "registered_nodes": 10,
       "active_nodes": 10
     })
-    
-    
+    expect(parseFloat(gstats.files)).to.be.closeTo(10, epsilon)
   })
   
   

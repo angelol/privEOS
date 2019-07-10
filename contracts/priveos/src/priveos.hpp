@@ -11,6 +11,7 @@
 #include <eosio/singleton.hpp>
 #include "string.hpp"
 #include "sampling.hpp"
+#include <cmath>
 
 using namespace eosio;
 
@@ -34,6 +35,7 @@ CONTRACT priveos : public eosio::contract {
       node_delegation_singleton(get_self(), get_self().value),
       founder_balances(get_self(), get_self().value),
       delegations(get_self(), get_self().value),
+      nodetoken_balances(get_self(), get_self().value),
       feebalances(get_self(), get_self().value),
       global_singleton(get_self(), get_self().value),
       voters(get_self(), get_self().value),
@@ -46,6 +48,8 @@ CONTRACT priveos : public eosio::contract {
       {}
     
     static constexpr symbol priveos_symbol{"PRIVEOS", 4};
+    static constexpr symbol nodetoken_symbol{"NODET", 4};
+
     
 #ifdef TOKENCONTRACT // allows specifying the token contract during compile for unittests
 #define STR_EXPAND(tok) #tok
@@ -149,6 +153,21 @@ CONTRACT priveos : public eosio::contract {
       uint64_t primary_key()const { return funds.symbol.code().raw(); }
     };
     using nodebal_table = multi_index<"nodebal"_n, nodebal>;
+    
+    /**
+      * Every time a file share is store with a node, this particular node
+      * get a token. That token is staked with the priveos contract.
+      * This table keeps track of how many tokens each node has staked.
+      */
+    TABLE nodetokenbal {
+      name        owner;
+      asset       funds;
+      
+      uint64_t primary_key() const { return owner.value; }        
+    };
+      
+    typedef multi_index<"nodetokenbal"_n, nodetokenbal> nodetokenbal_table;
+    nodetokenbal_table nodetoken_balances;
     
     TABLE global {
       uint64_t unique_files = 0;
@@ -366,6 +385,17 @@ CONTRACT priveos : public eosio::contract {
     void activate_node(const nodeinfo& node);
     void disable_node(const nodeinfo& node);
     uint32_t peers_needed();
+    
+    void nodetoken_balance_add(const name &owner, const asset& amount) {
+      const auto it = nodetoken_balances.find(owner.value);
+      check(amount.amount >= 0, "PrivEOS: Nodetoken amount to be added must be non-negative");
+      check(it != nodetoken_balances.end(), "PrivEOS: nodetoken_balances entry does not yet exist for {}", owner);
+      nodetoken_balances.modify(it, same_payer, [&](auto &x) {
+        x.owner = owner;
+        x.funds += amount;
+      });
+      
+    }
 
     void increment_filecount(const name& dappcontract) {
       const auto voterinfo_it = voters.find(dappcontract.value);
@@ -376,16 +406,21 @@ CONTRACT priveos : public eosio::contract {
       // update filecount for all nodes involved
       uint32_t step{3};
       double n_files{0.0};
+      asset nodet_tokens_added{0, nodetoken_symbol};
       const auto callback = [&](name owner, double sampling_factor) {
         const auto node_idx = nodes.find(owner.value);
         if(node_idx != nodes.end()) {
           const auto node = *node_idx;
           if(node.is_active) {
             nodes.modify(node_idx, same_payer, [&](auto& info) {
-              // print_f("Incrementing file count % by %", info.owner, sampling_factor);
-              info.files += sampling_factor;
-              n_files += sampling_factor;
+              // round this the same way as we are the amount of node tokens
+              const auto rounded = std::round(sampling_factor*10000.0)/10000.0;
+              info.files += rounded;
+              n_files += rounded;
             });
+            const asset x{static_cast<int64_t>(std::round(sampling_factor*10000.0)), nodetoken_symbol};
+            nodetoken_balance_add(owner, x);
+            nodet_tokens_added += x;
           }
         }
       };
@@ -401,6 +436,14 @@ CONTRACT priveos : public eosio::contract {
       voters.modify(voterinfo_it, same_payer, [&](auto& voterinfo) {
         voterinfo.offset = offset;
       });
+      
+      action(
+        permission_level{get_self(), "active"_n},
+        priveos_token_contract,
+        "issue"_n,
+        std::make_tuple(get_self(), nodet_tokens_added, ""s)
+      ).send();
+      
     }
     
     uint32_t get_voting_min_nodes() const{

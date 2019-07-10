@@ -58,3 +58,11 @@ module.exports.add_founder = async function(token_contract, contract, account, a
   await module.exports.token_send(token_contract, contract.executor, account, `${hold_amount.toFixed(4)} PRIVEOS`);
   
 }
+
+
+module.exports.asset_equal_epsilon = function(a, b) {
+  console.log("Ohai asset_equal")
+  const epsilon = 0.001
+  console.log(`parseFloat(a): ${parseFloat(a)} parseFloat(b): ${parseFloat(b)}`)
+  return ((parseFloat(a) - parseFloat(b)) <= epsilon)
+}

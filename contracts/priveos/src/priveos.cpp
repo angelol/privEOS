@@ -92,6 +92,14 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
     auto stats = global_singleton.get();
     stats.registered_nodes += 1u;
     global_singleton.set(stats, get_self());
+    
+    // allocate memory
+    if(nodetoken_balances.find(owner.value) == nodetoken_balances.end()) {
+      nodetoken_balances.emplace(owner, [&](auto& x) {
+        x.owner = owner;
+        x.funds = asset{0, nodetoken_symbol};
+      });
+    }
   }  
 }
 
@@ -320,8 +328,9 @@ ACTION priveos::noderewards(const name user, const symbol currency) {
 }
 
 ACTION priveos::test(const name owner) {
-  is_top_node(owner);
-  // print_f("% is top node: %", owner, is_top_node(owner));
+  asset x{0, priveos_symbol};
+  x.set_amount(asset::max_amount);
+  print_f("Asset: %\n" , x);
 }
 
 [[eosio::on_notify("*::transfer")]] 
