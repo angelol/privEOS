@@ -4,8 +4,30 @@
 #include "staking.cpp"
 #include "eosio.token.hpp"
 
+ACTION priveos::init() {
+  require_auth(get_self());
+  check(!global_singleton.exists(), "PrivEOS: Already initialized");
+  
+  global_singleton.set(global{
+    .unique_files = 0,
+    .files = 0,
+    .registered_nodes = 0,
+    .dac_activated = false,
+  }, get_self());
+  
+  // now delegate 600 tokens to the nodes
+  check(!node_delegation_singleton.exists(), "PrivEOS: node_delegation_singleton already exists. This should not be possible");
+  const auto delegation_amount = asset{6000000, priveos_symbol};
+  node_delegation_singleton.set(nodedelegat{
+    .funds = delegation_amount
+  }, get_self());
+  
+  free_priveos_balance_sub(delegation_amount);
+}
+
 ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data, const bool auditable, const symbol token, const bool contractpays) {
   require_auth(owner);
+  ensure_initialized();
   check(file.size() <= 256, "file has more than 256 bytes");
   check(data.size() <= 256, "data has more than 256 bytes");
   
@@ -22,6 +44,7 @@ ACTION priveos::store(const name owner, const name contract, const std::string f
     
 ACTION priveos::accessgrant(const name user, const name contract, const std::string file, const public_key public_key, const symbol token, const bool contractpays) {
   require_auth(user);
+  ensure_initialized();
   check(file.size() <= 256, "file has more than 256 bytes");
   
   /**
@@ -66,7 +89,7 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
       info.is_active = false;
     });
     
-    auto stats = global_singleton.get_or_default(global {});
+    auto stats = global_singleton.get();
     stats.registered_nodes += 1u;
     global_singleton.set(stats, get_self());
   }  

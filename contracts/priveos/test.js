@@ -82,8 +82,115 @@ describe('Test before DAC activation', function () {
     // console.log("beforeEach called")
   })
   
-  it('Check global stats initial values', async () => {
+  it('Issue priveos token', async() => {
+    await priveos_token_contract.create(priveos_token_contract.executor.name, "1000.0000 PRIVEOS")
+    await priveos_token_contract.issue(priveos_token_contract.name, "1000.0000 PRIVEOS", "Issue total supply all at once")
+    
+    await helpers.token_send(priveos_token_contract.executor, priveos_token_contract.executor, slantagwallet, "1000.0000 PRIVEOS")    
+    const balance = await rpc.get_currency_balance(priveos_token_contract.executor.name, slantagwallet.name, "PRIVEOS")
+    expect(balance[0]).to.equal("1000.0000 PRIVEOS")
+    
+    await helpers.token_send(priveos_token_contract.executor, slantagwallet, contract.executor, "800.0000 PRIVEOS")
+    const balance2 = await rpc.get_currency_balance(priveos_token_contract.executor.name, contract.executor.name, "PRIVEOS")
+    expect(balance2[0]).to.equal("800.0000 PRIVEOS")
+    const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    expect(res.rows[0].funds).to.equal("800.0000 PRIVEOS")
+      
+    await contract.delegate(alice.name, "200.0000 PRIVEOS")
+    const res2 = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    expect(res2.rows[0].funds).to.equal("600.0000 PRIVEOS")
+    
+    const res3 = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'delegation', limit:100})
+    expect(res3.rows).to.deep.include({
+      user: alice.name,
+      funds: "200.0000 PRIVEOS",
+    })
+    
+    const res4 = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    expect(res4.rows[0].funds).to.equal("600.0000 PRIVEOS")
+  })
+
+  it('Priveos founder tokens', async() => {
+    let res
+    const locked_until = Math.round((new Date()).getTime()/1000) + 5  
+    
+    await helpers.token_send(priveos_token_contract.executor, slantagwallet, contract.executor, "10.0000 PRIVEOS")
+    
+    const resf1 = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    expect(resf1.rows[0].funds).to.equal("610.0000 PRIVEOS")
+    
+    await helpers.add_founder(priveos_token_contract, contract, bob, 10, locked_until)
+    
+    res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    expect(res.rows[0].funds).to.equal("600.0000 PRIVEOS")
+    
+    res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'founderbal', limit:100})
+    expect(res.rows).to.deep.include({
+      founder: bob.name,
+      funds: "5.0000 PRIVEOS",
+      locked_until,
+    })
+    
+    const balance = await rpc.get_currency_balance(priveos_token_contract.executor.name, bob.name, "PRIVEOS")
+    expect(balance[0]).to.equal("5.0000 PRIVEOS")
+    
+    await expect(
+      contract.unstake(bob.name, "1.0000 PRIVEOS", {from: bob})
+    ).to.be.rejectedWith("Funds have not yet become unlocked")
+    await Bluebird.delay(6000)
+
+    res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    expect(res.rows[0].funds).to.equal("600.0000 PRIVEOS")
+    
+    await contract.unstake(bob.name, "1.0000 PRIVEOS", {from: bob})
+    
+    res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    expect(res.rows[0].funds).to.equal("600.0000 PRIVEOS")
+    
+    const balance2 = await rpc.get_currency_balance(priveos_token_contract.executor.name, bob.name, "PRIVEOS")
+    expect(balance2[0]).to.equal("6.0000 PRIVEOS")
+    
+    await contract.unstake(bob.name, "2.0000 PRIVEOS", {from: bob})
+    
+    const balance3 = await rpc.get_currency_balance(priveos_token_contract.executor.name, bob.name, "PRIVEOS")
+    expect(balance3[0]).to.equal("8.0000 PRIVEOS")
+    
+    await expect(
+      contract.unstake(bob.name, "3.0000 PRIVEOS", {from: bob})
+    ).to.be.rejectedWith('Overdrawn balance. User has only 2.0000 PRIVEOS but is trying to withdraw 3.0000 PRIVEOS')
+    
+    await contract.unstake(bob.name, "1.5000 PRIVEOS", {from: bob})
+    await contract.unstake(bob.name, "0.5000 PRIVEOS", {from: bob})
+
+    const balance4 = await rpc.get_currency_balance(priveos_token_contract.executor.name, bob.name, "PRIVEOS")
+    expect(balance4[0]).to.equal("10.0000 PRIVEOS")
+    
+    res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'founderbal', limit:100})
+    expect(res.rows).to.be.empty
+    
+    res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    expect(res.rows[0].funds).to.equal("600.0000 PRIVEOS")
+    
+  })
+  
+  
+  it('Contract init', async() => {
     expect(await helpers.global_stats(contract)).to.be.undefined
+    await contract.init()
+    expect(await helpers.global_stats(contract)).to.deep.equal({
+      "unique_files": 0,
+      "files": "0.00000000000000000",
+      "dac_activated": 0,
+      "registered_nodes": 0,
+      "active_nodes": 0
+    });
+    
+    let res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    expect(res.rows[0].funds).to.equal("0.0000 PRIVEOS")
+    
+    res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'nodedelegat', limit:100})
+    expect(res.rows[0].funds).to.equal("600.0000 PRIVEOS")
+    
   })
   
   it('Regnode', async () => {
@@ -391,33 +498,7 @@ describe('Test before DAC activation', function () {
     
   })
   
-  it('Issue priveos token', async() => {
-    await priveos_token_contract.create(priveos_token_contract.executor.name, "1000.0000 PRIVEOS")
-    await priveos_token_contract.issue(priveos_token_contract.name, "1000.0000 PRIVEOS", "Issue total supply all at once")
-    
-    await helpers.token_send(priveos_token_contract.executor, priveos_token_contract.executor, slantagwallet, "1000.0000 PRIVEOS")    
-    const balance = await rpc.get_currency_balance(priveos_token_contract.executor.name, slantagwallet.name, "PRIVEOS")
-    expect(balance[0]).to.equal("1000.0000 PRIVEOS")
-    
-    await helpers.token_send(priveos_token_contract.executor, slantagwallet, contract.executor, "800.0000 PRIVEOS")
-    const balance2 = await rpc.get_currency_balance(priveos_token_contract.executor.name, contract.executor.name, "PRIVEOS")
-    expect(balance2[0]).to.equal("800.0000 PRIVEOS")
-    const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
-    expect(res.rows[0].funds).to.equal("800.0000 PRIVEOS")
-      
-    await contract.delegate(alice.name, "200.0000 PRIVEOS")
-    const res2 = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
-    expect(res2.rows[0].funds).to.equal("600.0000 PRIVEOS")
-    
-    const res3 = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'delegation', limit:100})
-    expect(res3.rows).to.deep.include({
-      user: alice.name,
-      funds: "200.0000 PRIVEOS",
-    })
-    
-    const res4 = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
-    expect(res4.rows[0].funds).to.equal("600.0000 PRIVEOS")
-  })
+  
   
   
   
@@ -428,53 +509,6 @@ describe('Test before DAC activation', function () {
 
 describe('Token holder rewards', function () {
   this.timeout(60000)
-
-  it('Priveos founder tokens', async() => {
-    const locked_until = Math.round((new Date()).getTime()/1000) + 5  
-
-    await helpers.add_founder(priveos_token_contract, contract, bob, 10, locked_until)
-    const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
-    expect(res.rows[0].funds).to.equal("590.0000 PRIVEOS")
-    
-    const res2 = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'founderbal', limit:100})
-    expect(res2.rows).to.deep.include({
-      founder: bob.name,
-      funds: "5.0000 PRIVEOS",
-      locked_until,
-    })
-    
-    const balance = await rpc.get_currency_balance(priveos_token_contract.executor.name, bob.name, "PRIVEOS")
-    expect(balance[0]).to.equal("5.0000 PRIVEOS")
-    
-    await expect(
-      contract.unstake(bob.name, "1.0000 PRIVEOS", {from: bob})
-    ).to.be.rejectedWith("Funds have not yet become unlocked")
-    await Bluebird.delay(6000)
-    
-    await contract.unstake(bob.name, "1.0000 PRIVEOS", {from: bob})
-    
-    const balance2 = await rpc.get_currency_balance(priveos_token_contract.executor.name, bob.name, "PRIVEOS")
-    expect(balance2[0]).to.equal("6.0000 PRIVEOS")
-    
-    await contract.unstake(bob.name, "2.0000 PRIVEOS", {from: bob})
-    
-    const balance3 = await rpc.get_currency_balance(priveos_token_contract.executor.name, bob.name, "PRIVEOS")
-    expect(balance3[0]).to.equal("8.0000 PRIVEOS")
-    
-    await expect(
-      contract.unstake(bob.name, "3.0000 PRIVEOS", {from: bob})
-    ).to.be.rejectedWith('Overdrawn balance. User has only 2.0000 PRIVEOS but is trying to withdraw 3.0000 PRIVEOS')
-    
-    await contract.unstake(bob.name, "1.5000 PRIVEOS", {from: bob})
-    await contract.unstake(bob.name, "0.5000 PRIVEOS", {from: bob})
-
-    const balance4 = await rpc.get_currency_balance(priveos_token_contract.executor.name, bob.name, "PRIVEOS")
-    expect(balance4[0]).to.equal("10.0000 PRIVEOS")
-    
-    const res3 = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'founderbal', limit:100})
-    expect(res3.rows).to.be.empty
-    
-  })
   
   it('Withdraw token holder reward', async () => {
     await contract.dacrewards(bob.name, "4,EOS", {from: bob})

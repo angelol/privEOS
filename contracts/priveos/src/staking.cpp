@@ -10,7 +10,10 @@ ACTION priveos::stake(const name user, const asset quantity, const uint32_t lock
 
 ACTION priveos::unstake(const name user, const asset quantity) {
   require_auth(user);
+  
+  // move from locked to free balance before sending out
   sub_locked_balance(user, quantity);
+  free_priveos_balance_add(quantity);
   
   action(
     permission_level{get_self(), "active"_n},
@@ -65,6 +68,7 @@ ACTION priveos::undelegate(const name user, const asset value) {
 
 void priveos::free_priveos_balance_add(const asset quantity) {
   check(quantity.symbol == priveos_symbol, "PrivEOS: Only PRIVEOS tokens allowed");
+  check(quantity.amount > 0, "PrivEOS: Amount must be positive.");
   auto bal = free_balance_singleton.get_or_default(
     freebal {
       .funds = asset{0, priveos_symbol}
@@ -77,6 +81,7 @@ void priveos::free_priveos_balance_add(const asset quantity) {
 
 void priveos::free_priveos_balance_sub(const asset quantity) {
   check(quantity.symbol == priveos_symbol, "PrivEOS: Only PRIVEOS tokens allowed");
+  check(quantity.amount > 0, "PrivEOS: Amount must be positive.");
   auto bal = free_balance_singleton.get();
   check(bal.funds >= quantity, "PrivEOS: Trying to overdraw free balance");
   bal.funds -= quantity;
@@ -145,8 +150,7 @@ void priveos::consistency_check() {
     *    tokens count towards the delegatee's percentage in DAC revenue
     *    payout calculations. Unlike permanent tokens, the delegatee only 
     *    has a claim to the revenue payout for as long as those tokens are
-    *    delegated to them. The DAC can undelegate any time when certain
-    *    conditions are met (non-compliance of BP etc.).
+    *    delegated to them.
     * 3) Free balance
     *    Tokens that have been deposited into the contract but have
     *    not yet been assigned to any of the above categories.

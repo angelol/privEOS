@@ -31,6 +31,7 @@ CONTRACT priveos : public eosio::contract {
   public:
     priveos(name self,name code, datastream<const char*> ds) : eosio::contract(self,code,ds),
       free_balance_singleton(get_self(), get_self().value),
+      node_delegation_singleton(get_self(), get_self().value),
       founder_balances(get_self(), get_self().value),
       delegations(get_self(), get_self().value),
       feebalances(get_self(), get_self().value),
@@ -66,8 +67,14 @@ CONTRACT priveos : public eosio::contract {
     TABLE freebal {
       asset funds;
     };
-    typedef singleton<"freebal"_n, freebal> free_balance_table;
+    TABLE nodedelegat {
+      asset funds;
+    };
+    using free_balance_table = singleton<"freebal"_n, freebal>;
     free_balance_table free_balance_singleton;
+    
+    using node_delegation = singleton<"nodedelegat"_n, nodedelegat>;
+    node_delegation node_delegation_singleton;
     
     TABLE founderbal {
       name        founder;
@@ -134,6 +141,14 @@ CONTRACT priveos : public eosio::contract {
       uint64_t primary_key() const { return user.value; }
     };
     using nodepay_table = multi_index<"nodepay"_n, nodepayinfo>;
+    
+    /* This table holds the fee balance dedicated to the nodes */
+    TABLE nodebal {
+      asset funds;
+      
+      uint64_t primary_key()const { return funds.symbol.code().raw(); }
+    };
+    using nodebal_table = multi_index<"nodebal"_n, nodebal>;
     
     TABLE global {
       uint64_t unique_files = 0;
@@ -250,7 +265,7 @@ CONTRACT priveos : public eosio::contract {
     using peerdisapproval_table = multi_index<"peerdisappr"_n, peerdisapproval>;
     peerdisapproval_table peerdisapprovals;
 
-    
+    ACTION init();
     ACTION store(
       const name owner, 
       const name contract, 
@@ -424,8 +439,11 @@ CONTRACT priveos : public eosio::contract {
     }
     
     bool has_dac_been_activated() {
-      const auto s = global_singleton.get_or_default(global {});
-      return s.dac_activated;
+      return global_singleton.get().dac_activated;
+    }
+    
+    void ensure_initialized() {
+      check(global_singleton.exists(), "PrivEOS: Must initialize first");
     }
     
 };

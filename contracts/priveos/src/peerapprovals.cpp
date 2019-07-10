@@ -107,7 +107,7 @@ void priveos::activate_node(const nodeinfo& node) {
         info.is_active = true;
       });
       
-      auto stats = global_singleton.get_or_default(global {});
+      auto stats = global_singleton.get();
       stats.active_nodes += 1;
       global_singleton.set(stats, get_self());
     }
