@@ -21,8 +21,8 @@ using namespace eosio;
 template<typename... Args>
 inline void check(bool pred, const string& format, Args const& ... args) {
   if(!pred) {
-    const char* msg = fmt(format, args...);
-    check(pred, msg);    
+    const auto msg = fmt(format, args...);
+    check(pred, msg.c_str());    
   }
 }
 
@@ -389,7 +389,7 @@ CONTRACT priveos : public eosio::contract {
     void nodetoken_balance_add(const name &owner, const asset& amount) {
       const auto it = nodetoken_balances.find(owner.value);
       check(amount.amount >= 0, "PrivEOS: Nodetoken amount to be added must be non-negative");
-      check(it != nodetoken_balances.end(), "PrivEOS: nodetoken_balances entry does not yet exist for {}", owner);
+      check(it != nodetoken_balances.end(), "PrivEOS: nodetoken_balances entry does not yet exist for %s", owner);
       nodetoken_balances.modify(it, same_payer, [&](auto &x) {
         x.owner = owner;
         x.funds += amount;
@@ -399,9 +399,9 @@ CONTRACT priveos : public eosio::contract {
 
     void increment_filecount(const name& dappcontract) {
       const auto voterinfo_it = voters.find(dappcontract.value);
-      check(voterinfo_it != voters.end(), "PrivEOS: Contract {} has not voted yet.", dappcontract);
+      check(voterinfo_it != voters.end(), "PrivEOS: Contract %s has not voted yet.", dappcontract);
       const auto voterinfo = *voterinfo_it;
-      check(voterinfo.nodes.size() <= max_votes, "PrivEOS: It should not have been possible to vote for more than {} nodes but you voted for {}", max_votes, voterinfo.nodes.size());
+      check(voterinfo.nodes.size() <= max_votes, "PrivEOS: It should not have been possible to vote for more than %s nodes but you voted for %s", max_votes, voterinfo.nodes.size());
       
       // update filecount for all nodes involved
       uint32_t step{3};

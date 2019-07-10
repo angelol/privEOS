@@ -58,19 +58,19 @@ void priveos::update_price_table(const name& payer, const asset& price, T& price
 }
 
 const asset priveos::get_read_fee(const symbol& currency) {
-  const auto price = read_prices.get(currency.code().raw(), fmt("PrivEOS: Token {} not accepted", currency));
+  const auto price = read_prices.get(currency.code().raw(), fmt("PrivEOS: Token %s not accepted", currency).c_str());
   return price.money;
 }
 
 const asset priveos::get_store_fee(const symbol& currency) {
-  const auto price = store_prices.get(currency.code().raw(), fmt("PrivEOS: Token {} not accepted", currency));
+  const auto price = store_prices.get(currency.code().raw(), fmt("PrivEOS: Token %s not accepted", currency).c_str());
   return price.money;
 }
 
 void priveos::add_balance(const name& user, const asset& value) {
   balances_table balances(get_self(), user.value);
   const auto user_it = balances.find(value.symbol.code().raw());      
-  check(user_it != balances.end(), "PrivEOS: Balance table entry does not exist for user {}, call prepare first", user);
+  check(user_it != balances.end(), "PrivEOS: Balance table entry does not exist for user %s, call prepare first", user);
   balances.modify(user_it, user, [&](auto& bal){
       bal.funds += value;
   });
@@ -81,7 +81,7 @@ void priveos::sub_balance(const name& user, const asset& value) {
     return;
   }
   balances_table balances(get_self(), user.value);
-  const auto& user_balance = balances.get(value.symbol.code().raw(), fmt("PrivEOS: User {} has no balance", user));
+  const auto& user_balance = balances.get(value.symbol.code().raw(), fmt("PrivEOS: User %s has no balance", user).c_str());
   check(user_balance.funds >= value, "PrivEOS: Overdrawn balance");
   
   if(user_balance.funds == value) {

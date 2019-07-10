@@ -110,7 +110,7 @@ void priveos::sub_locked_balance(const name user, const asset value) {
   check(value.symbol == priveos_symbol, "PrivEOS: Only PRIVEOS tokens allowed");
   const auto& user_balance = founder_balances.get(user.value, "PrivEOS: User has no balance");
   check(user_balance.locked_until < now(), "PrivEOS: Funds have not yet become unlocked");
-  check(user_balance.funds >= value, "PrivEOS: Overdrawn balance. User has only {} but is trying to withdraw {}", user_balance.funds, value);
+  check(user_balance.funds >= value, "PrivEOS: Overdrawn balance. User has only %s but is trying to withdraw %s", user_balance.funds, value);
   
   if(user_balance.funds == value) {
     founder_balances.erase(user_balance);

@@ -21,7 +21,7 @@ void priveos::charge_fee(const name& user, const name& contract, const asset& fe
 
 void priveos::add_fee_balance(const asset& value) {
   const auto bal_it = feebalances.find(value.symbol.code().raw()); 
-  check(bal_it != feebalances.end(), "PrivEOS: Feebalance table entry does not exist for asset {}.", value);
+  check(bal_it != feebalances.end(), "PrivEOS: Feebalance table entry does not exist for asset %s.", value);
   
   feebalances.modify(bal_it, same_payer, [&](auto& bal){
       bal.funds += value;
@@ -34,7 +34,7 @@ void priveos::sub_fee_balance(const asset& value) {
     return;
   }
   const auto bal_it = feebalances.find(value.symbol.code().raw()); 
-  check(bal_it != feebalances.end(), "PrivEOS: Feebalance table entry does not exist for asset {}.", value);
+  check(bal_it != feebalances.end(), "PrivEOS: Feebalance table entry does not exist for asset %s.", value);
   
   check(bal_it->funds >= value, "PrivEOS: Trying to overdraw fee balance.");
 

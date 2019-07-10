@@ -109,7 +109,7 @@ ACTION priveos::peerappr(const name sender, const name owner) {
   
   nodes.get(sender.value, "Sender must be a registered node");
   const auto &node = nodes.get(owner.value, "Owner must be a registered node");
-  check(is_top_node(node), "You're outside of the top {}", top_nodes);
+  check(is_top_node(node), "You're outside of the top %s", top_nodes);
   was_approved_by(sender, node);
 }
 
@@ -118,14 +118,14 @@ ACTION priveos::peerdisappr(const name sender, const name owner) {
   
   nodes.get(sender.value, "Sender must be a registered node");
   const auto &node = nodes.get(owner.value, "Owner must be a registered node");
-  check(is_top_node(node), "You're outside of the top {}", top_nodes);
+  check(is_top_node(node), "You're outside of the top %s", top_nodes);
   was_disapproved_by(sender, node);
 }
     
 ACTION priveos::unregnode(const name owner) {
   require_auth(owner);
   const auto itr = nodes.find(owner.value);
-  check(itr != nodes.end(), "User {} is not registered as node", owner); 
+  check(itr != nodes.end(), "User %s is not registered as node", owner); 
   disable_node(*itr);
   nodes.erase(itr);
   
@@ -149,7 +149,7 @@ ACTION priveos::setprice(const name node, const asset price, const std::string a
   check(price.amount >= 0, "Price must be non-negative.");
   
   nodes.get(node.value, "node not found.");
-  check(is_top_node(node), "You're outside of the top {}", top_nodes);
+  check(is_top_node(node), "You're outside of the top %s", top_nodes);
   currencies.get(price.symbol.code().raw(), "Token not accepted");
   
   
@@ -184,7 +184,7 @@ ACTION priveos::admsetprice(const asset price, const std::string action) {
 ACTION priveos::addcurrency(const symbol currency, const name contract) {
   require_auth(get_self());
   
-  check(currencies.find(currency.code().raw()) == currencies.end(), "PrivEOS: Currency {} already exists.", currency);
+  check(currencies.find(currency.code().raw()) == currencies.end(), "PrivEOS: Currency %s already exists.", currency);
   
   /* From now on, we're ready to accept this currency */
   currencies.emplace(get_self(), [&](auto& c) {
@@ -214,13 +214,13 @@ ACTION priveos::prepare(const name user, const symbol currency) {
 
 ACTION priveos::vote(const name dappcontract, std::vector<name> votees) {
   require_auth(dappcontract);
-  check(votees.size() <= max_votes, "PrivEOS: Please vote for not more than {} nodes.", max_votes);
+  check(votees.size() <= max_votes, "PrivEOS: Please vote for not more than %s nodes.", max_votes);
     
   const auto min_nodes = get_voting_min_nodes();
-  check(votees.size() >= min_nodes, "PrivEOS: You need to vote for at least {} nodes.", min_nodes);
+  check(votees.size() >= min_nodes, "PrivEOS: You need to vote for at least %s nodes.", min_nodes);
   
   for(const auto& node : votees) {
-    check(nodes.find(node.value) != nodes.end(), "PrivEOS: You're trying to vote for {} which is not a registered node.", node);
+    check(nodes.find(node.value) != nodes.end(), "PrivEOS: You're trying to vote for %s which is not a registered node.", node);
   }
 
   std::sort(votees.begin(), votees.end());
@@ -246,7 +246,7 @@ ACTION priveos::vote(const name dappcontract, std::vector<name> votees) {
 ACTION priveos::dacrewards(const name user, const symbol currency) {
   require_auth(user);
   
-  const auto current_lifetime_balance = feebalances.get(currency.code().raw(), fmt("PrivEOS: There is no balance found for {}", currency)).lifetime;
+  const auto current_lifetime_balance = feebalances.get(currency.code().raw(), fmt("PrivEOS: There is no balance found for %s", currency).c_str()).lifetime;
   
   print_f("current_lifetime_balance: % ", current_lifetime_balance);
   asset last_claim_balance{0, currency};
@@ -337,7 +337,7 @@ ACTION priveos::test(const name owner) {
 void priveos::transfer(const name from, const name to, const asset quantity, const std::string memo) {
   check(quantity.is_valid(), "PrivEOS: Invalid quantity");
   check(quantity.amount > 0, "PrivEOS: Deposit amount must be > 0");
-  check(is_account(from), "PrivEOS: The account {} does not exist.");
+  check(is_account(from), "PrivEOS: The account %s does not exist.");
   check(memo.size() <= 256, "PrivEOS: memo has more than 256 bytes");
   check(from != to, "cannot transfer to self" );
   
@@ -361,7 +361,7 @@ void priveos::transfer(const name from, const name to, const asset quantity, con
   
   if(quantity.symbol == priveos_symbol) {
     /* This is just for PRIVEOS tokens */
-    check(get_first_receiver() == priveos_token_contract, "PrivEOS: Sorry, we don't take any fake tokens. Contract should be {} but is {}", priveos_token_contract, get_first_receiver());
+    check(get_first_receiver() == priveos_token_contract, "PrivEOS: Sorry, we don't take any fake tokens. Contract should be %s but is %s", priveos_token_contract, get_first_receiver());
     free_priveos_balance_add(quantity);    
   } else {
     /* This is for tokens of any kind (e.g. as deposits towards fee payments) */
@@ -374,7 +374,7 @@ void priveos::transfer(const name from, const name to, const asset quantity, con
      * that should be the "eosio.token" account.
      * Make sure we're checking that against the known contract account. 
      */
-    check(curr.contract == get_first_receiver(), "PrivEOS: Token contract should be {} but is {}. We're not so easily fooled.", curr.contract, get_first_receiver());
+    check(curr.contract == get_first_receiver(), "PrivEOS: Token contract should be %s but is %s. We're not so easily fooled.", curr.contract, get_first_receiver());
     add_balance(from, quantity);  
   }
 }
