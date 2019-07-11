@@ -21,8 +21,9 @@ ACTION priveos::init() {
   node_delegation_singleton.set(nodedelegat{
     .funds = delegation_amount
   }, get_self());
-  
-  free_priveos_balance_sub(delegation_amount);
+  if(free_balance_singleton.exists()) {
+    free_priveos_balance_sub(delegation_amount);
+  }
 }
 
 ACTION priveos::store(const name owner, const name contract, const std::string file, const std::string data, const bool auditable, const symbol token, const bool contractpays) {

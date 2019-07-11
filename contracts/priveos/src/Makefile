@@ -12,16 +12,25 @@ token:
 
 deploy: build
 	$(CLEOS_ENDPOINT) set contract $(CONTRACT_ACCOUNT) ../src $(CPP_IN).wasm $(CPP_IN).abi
+	
+deploy_token: token
+	$(CLEOS_ENDPOINT) set contract priveostoken ../src eosio.token.wasm eosio.token.abi
 
 init:
 	make system
 	make setup
+	make deploy_token
 	make deploy
+	make create_tokens
+	make init_contract
 	make regnodes
 	make fundusers
 	make addcurrency
 	make setprice
+	make admsetprice
 	make watchdogpermissions
+	make activatenodes
+	make vote
 
 
 create_wallet:
@@ -59,8 +68,10 @@ xxx:
 setup:
 	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio $(CONTRACT_ACCOUNT) $(PUBLIC_KEY) $(PUBLIC_KEY)
 	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio dappcontract $(PUBLIC_KEY) $(PUBLIC_KEY)
+	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio slantagpurse $(PUBLIC_KEY) $(PUBLIC_KEY)
 	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio $(ALICE) $(ALICE_PUBLIC_KEY) $(ALICE_PUBLIC_KEY)
 	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio $(BOB) $(BOB_PUBLIC_KEY) $(BOB_PUBLIC_KEY)
+	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio priveostoken $(BOB_PUBLIC_KEY) $(BOB_PUBLIC_KEY)
 	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio priveosxfees $(PUBLIC_KEY) $(PUBLIC_KEY)
 	$(CLEOS_ENDPOINT) set account permission $(CONTRACT_ACCOUNT) active '{"threshold": 1,"keys": [{"key": "$(PUBLIC_KEY)","weight": 1}],"accounts": [{"permission":{"actor":"$(CONTRACT_ACCOUNT)","permission":"eosio.code"},"weight":1}]}' owner -p $(CONTRACT_ACCOUNT)
 	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnodexxx1 $(PUBLIC_KEY) $(PUBLIC_KEY)
@@ -68,7 +79,14 @@ setup:
 	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnodexxx3 $(PUBLIC_KEY) $(PUBLIC_KEY)
 	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnodexxx4 $(PUBLIC_KEY) $(PUBLIC_KEY)
 	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio testnodexxx5 $(PUBLIC_KEY) $(PUBLIC_KEY)
-	
+
+init_contract:
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) init '[]' -p $(CONTRACT_ACCOUNT)
+
+create_tokens:
+	$(CLEOS_ENDPOINT) push action priveostoken create '[$(CONTRACT_ACCOUNT), "1000.0000 PRIVEOS"]' -p priveostoken
+	$(CLEOS_ENDPOINT) push action priveostoken create '[$(CONTRACT_ACCOUNT), "461168601842738.0000 NODET"]' -p priveostoken
+
 fundusers:
 	$(CLEOS_ENDPOINT) transfer eosio $(ALICE) "100.0000 EOS" -p eosio
 	$(CLEOS_ENDPOINT) transfer eosio $(BOB) "100.0000 EOS" -p eosio
@@ -98,6 +116,13 @@ watchdogpermissions:
 	$(CLEOS_ENDPOINT) set action permission testnodexxx5 priveosrules peerappr watchdog
 	$(CLEOS_ENDPOINT) set action permission testnodexxx5 priveosrules peerdisappr watchdog
 	
+activatenodes:
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) admactivate '["testnodexxx1"]' -p slantagpurse
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) admactivate '["testnodexxx2"]' -p slantagpurse
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) admactivate '["testnodexxx3"]' -p slantagpurse
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) admactivate '["testnodexxx4"]' -p slantagpurse
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) admactivate '["testnodexxx5"]' -p slantagpurse
+
 
 admunreg:
 	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) admunreg '["testnodexxx1"]' -p $(CONTRACT_ACCOUNT)
@@ -163,7 +188,7 @@ showbalances:
 	$(CLEOS_ENDPOINT) get table $(CONTRACT_ACCOUNT) $(BOB) balances
 
 vote:
-	$(CLEOS_ENDPOINT) push action ${CONTRACT_ACCOUNT} vote '["$(ALICE)", ["testnodexxx2", "testnodexxx3", "testnodexxx1"]]' -p $(ALICE)
+	$(CLEOS_ENDPOINT) push action ${CONTRACT_ACCOUNT} vote '["dappcontract", ["testnodexxx2", "testnodexxx3", "testnodexxx1"]]' -p dappcontract
 	
 testrand:
 	$(CLEOS_ENDPOINT) push action ${CONTRACT_ACCOUNT} testrand '["$(CONTRACT_ACCOUNT)"]' -p $(CONTRACT_ACCOUNT)
