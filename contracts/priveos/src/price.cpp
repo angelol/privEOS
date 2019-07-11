@@ -3,7 +3,6 @@
 template<typename T>
 void priveos::update_pricefeed(const name& node, const asset& price, const std::string& action, T& pricefeeds) {
   auto itr = pricefeeds.find(node.value);
-  print("inserting ", price, " into node ", node);
   if(itr != pricefeeds.end()) {
     pricefeeds.modify(itr, node, [&](auto& pf) {
       pf.price = price;

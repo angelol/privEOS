@@ -377,7 +377,6 @@ CONTRACT priveos : public eosio::contract {
     template<typename T>
     void update_pricefeed(const name& node, const asset& price, const std::string& action, T& pricefeeds);
     
-    ACTION test(const name owner);
   private:
     // price functions
     void charge_fee(const name& user, const name& contract, const asset& fee, const bool contractpays);
@@ -491,12 +490,10 @@ CONTRACT priveos : public eosio::contract {
           break;
         }
         if(it->owner == owner) {
-          print_f("Node % is a match at % ", it->owner, i);
           return true;
         }
         it++;
       }
-      print_f("No match found");
       return false;
     }
     
