@@ -104,8 +104,9 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
 }
 
 ACTION priveos::peerappr(const name sender, const name owner) {
-  print("peerapprove: sender: ", sender);
   require_auth(sender);
+  check(has_dac_been_activated(), "PrivEOS: Peer approvals will become available once the DAC has activated");
+
   
   nodes.get(sender.value, "Sender must be a registered node");
   const auto &node = nodes.get(owner.value, "Owner must be a registered node");
@@ -115,6 +116,7 @@ ACTION priveos::peerappr(const name sender, const name owner) {
 
 ACTION priveos::peerdisappr(const name sender, const name owner) {
   require_auth(sender);
+  check(has_dac_been_activated(), "PrivEOS: Peer disapprovals will become available once the DAC has activated");
   
   nodes.get(sender.value, "Sender must be a registered node");
   const auto &node = nodes.get(owner.value, "Owner must be a registered node");
@@ -135,12 +137,20 @@ ACTION priveos::unregnode(const name owner) {
   global_singleton.set(stats, get_self());
 }
 
-ACTION priveos::admunreg(const name owner) {
-  require_auth(get_self());
+ACTION priveos::admactivate(const name owner) {
+  require_auth(interim_watchdog_account);
+  check(!has_dac_been_activated(), "DAC has already been activated. This action is obsolete.");
+
+  const auto& node = nodes.get(owner.value, "owner not found");  
+  activate_node(node);
+}
+
+ACTION priveos::admdisable(const name owner) {
+  require_auth(interim_watchdog_account);
+  check(!has_dac_been_activated(), "DAC has already been activated. This action is obsolete.");
+
   const auto& node = nodes.get(owner.value, "owner not found");
-  nodes.modify(node, same_payer, [&](nodeinfo& info) {
-    info.is_active = false;
-  });
+  disable_node(node);
 }
 
 ACTION priveos::setprice(const name node, const asset price, const std::string action) {

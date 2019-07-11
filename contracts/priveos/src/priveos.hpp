@@ -50,10 +50,10 @@ CONTRACT priveos : public eosio::contract {
     static constexpr symbol priveos_symbol{"PRIVEOS", 4};
     static constexpr symbol nodetoken_symbol{"NODET", 4};
 
-    
-#ifdef TOKENCONTRACT // allows specifying the token contract during compile for unittests
 #define STR_EXPAND(tok) #tok
 #define STR(tok) STR_EXPAND(tok)
+    
+#ifdef TOKENCONTRACT // allows specifying the token contract during compile for unittests
     static constexpr name priveos_token_contract{STR(TOKENCONTRACT)};
 #else
     static constexpr name priveos_token_contract{"priveostoken"};
@@ -63,7 +63,11 @@ CONTRACT priveos : public eosio::contract {
     static constexpr uint32_t FIVE_MINUTES{5*60};
     static constexpr uint32_t top_nodes{30};
     static constexpr uint32_t max_votes{top_nodes};
-
+#ifdef WATCHDOG_ACCOUNT
+    static constexpr name interim_watchdog_account{STR(WATCHDOG_ACCOUNT)};
+#else
+    static constexpr name interim_watchdog_account{"slantagpurse"};
+#endif
     
     /**
       * PRIVEOS TOKEN STAKING (implemented in staking.cpp)
@@ -324,9 +328,8 @@ CONTRACT priveos : public eosio::contract {
       const name owner
     );
     
-    ACTION admunreg(
-      const name owner
-    );
+    ACTION admactivate(const name owner);
+    ACTION admdisable(const name owner);
     
     ACTION setprice(
       const name node,
@@ -428,7 +431,7 @@ CONTRACT priveos : public eosio::contract {
       const auto offset = sampling<name>(voterinfo.offset, voterinfo.nodes, step, callback);
 
       // update global file stats
-      auto stats = global_singleton.get_or_default(global {});
+      auto stats = global_singleton.get();
       stats.unique_files += 1;
       stats.files += n_files;
       global_singleton.set(stats, get_self());

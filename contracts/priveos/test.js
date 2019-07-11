@@ -29,7 +29,7 @@ const TOKEN_ABI = 'src/eosio.token.abi'
 
 const contractAccount = eoslime.Account.load('priveosrules', '5KXtuBpLc6Y9Q8Q8s8CQm2G7L98bV8PK1ZKnSKvNeoiuhZw6uDH')
 
-let alice, bob, contract, nodes, dappcontract, priveos_token_contract, node_token_contract, slantagwallet
+let alice, bob, contract, nodes, dappcontract, priveos_token_contract, watchdog_account, slantagwallet
 
 const epsilon = 0.001
 
@@ -42,11 +42,12 @@ describe('Test before DAC activation', function () {
     const cpuAmount = "1.0000 EOS"
     const netAmount = "1.0000 EOS"
     const ramBytes = 2048*1024
-    let accounts = await eoslime.Account.createRandoms(4);
+    let accounts = await eoslime.Account.createRandoms(5);
     alice = accounts[0]
     bob = accounts[1]
     dappcontract = accounts[2]
     slantagwallet = accounts[3]
+    watchdog_account = accounts[4]
     console.log("slantagwallet is: ", slantagwallet.name)
     for(const x of accounts) {
       await eoslime.Account.provider.defaultAccount.send(x, "10.0000")
@@ -56,12 +57,9 @@ describe('Test before DAC activation', function () {
     // deploy priveos token
     priveos_token_contract = await eoslime.CleanDeployer.deploy(TOKEN_WASM, TOKEN_ABI, {}, cpuAmount, netAmount, ramBytes)
     console.log("PrivEOS Token contract deployed to: ", priveos_token_contract.executor.name)
+
     
-    // deploy node token
-    // node_token_contract = await eoslime.CleanDeployer.deploy(TOKEN_WASM, TOKEN_ABI, {}, cpuAmount, netAmount, ramBytes)
-    // console.log("Node Token contract deployed to: ", node_token_contract.executor.name)
-    
-    const command = `eosio-cpp -I. -DLOCAL -DTOKENCONTRACT=${priveos_token_contract.executor.name} -abigen priveos.cpp -o priveos.wasm`
+    const command = `eosio-cpp -I. -DLOCAL -DTOKENCONTRACT=${priveos_token_contract.executor.name} -DWATCHDOG_ACCOUNT=${watchdog_account.name} -abigen priveos.cpp -o priveos.wasm`
     console.log("Command: ", command)
     const { stdout, stderr } = await exec(command, {cwd: './src'})
     console.log(stdout, stderr)
@@ -310,22 +308,10 @@ describe('Test before DAC activation', function () {
 
   })
   
-  it('Approve nodes', async () => {
-    let res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'nodes', limit:100})
-    
-    const all_inactive = _.every(res.rows, x => !x.is_active)    
-    expect(all_inactive).to.be.true;
-    
-    for(const a of nodes) {
-      for(const b of nodes) {
-        await contract.peerappr(a.name, b.name, {from: a})
-      }
+  it('Activate nodes', async() => {
+    for(const node of nodes) {
+      await contract.admactivate(node.name, {from: watchdog_account})
     }
-    
-    res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'nodes', limit:100})
-    
-    const all_active = _.every(res.rows, x => x.is_active)    
-    expect(all_active).to.be.true;
     
     expect(await helpers.global_stats(contract)).to.deep.equal({
       "unique_files": 0,
@@ -336,35 +322,28 @@ describe('Test before DAC activation', function () {
     });
   })
   
-  it('Disapprove nodes', async () => {
+  it('Disable nodes', async() => {
+    const node = nodes[0]
+    await contract.admdisable(node.name, {from: watchdog_account})
     
-    /* All nodes disapprove the first node */
-    for(const a of nodes) {
-      const b = nodes[0]
-      await contract.peerdisappr(a.name, b.name, {from: a})
-    }
-        
     expect(await helpers.global_stats(contract)).to.deep.equal({
       "unique_files": 0,
       "files": "0.00000000000000000",
-      "registered_nodes": 10,
       "dac_activated": 0,
-      "active_nodes": 9,
+      "registered_nodes": 10,
+      "active_nodes": 9
     });
     
-    /* And we're reapproving it */
-    for(const a of nodes) {
-      const b = nodes[0]
-      await contract.peerappr(a.name, b.name, {from: a})
-    }
-        
+    await contract.admactivate(node.name, {from: watchdog_account})
+    
     expect(await helpers.global_stats(contract)).to.deep.equal({
       "unique_files": 0,
       "files": "0.00000000000000000",
-      "registered_nodes": 10,
       "dac_activated": 0,
-      "active_nodes": 10,
+      "registered_nodes": 10,
+      "active_nodes": 10
     });
+
   })
   
   
@@ -554,4 +533,62 @@ describe('Token holder rewards', function () {
   })
 })
 
-
+// describe('After DAC activation'), function () {
+//   it('Approve nodes', async () => {
+//     let res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'nodes', limit:100})
+// 
+//     const all_inactive = _.every(res.rows, x => !x.is_active)    
+//     expect(all_inactive).to.be.true;
+// 
+//     for(const a of nodes) {
+//       for(const b of nodes) {
+//         await contract.peerappr(a.name, b.name, {from: a})
+//       }
+//     }
+// 
+//     res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'nodes', limit:100})
+// 
+//     const all_active = _.every(res.rows, x => x.is_active)    
+//     expect(all_active).to.be.true;
+// 
+//     expect(await helpers.global_stats(contract)).to.deep.equal({
+//       "unique_files": 0,
+//       "files": "0.00000000000000000",
+//       "dac_activated": 0,
+//       "registered_nodes": 10,
+//       "active_nodes": 10
+//     });
+//   })
+// 
+//   it('Disapprove nodes', async () => {
+// 
+//     /* All nodes disapprove the first node */
+//     for(const a of nodes) {
+//       const b = nodes[0]
+//       await contract.peerdisappr(a.name, b.name, {from: a})
+//     }
+// 
+//     expect(await helpers.global_stats(contract)).to.deep.equal({
+//       "unique_files": 0,
+//       "files": "0.00000000000000000",
+//       "registered_nodes": 10,
+//       "dac_activated": 0,
+//       "active_nodes": 9,
+//     });
+// 
+//     /* And we're reapproving it */
+//     for(const a of nodes) {
+//       const b = nodes[0]
+//       await contract.peerappr(a.name, b.name, {from: a})
+//     }
+// 
+//     expect(await helpers.global_stats(contract)).to.deep.equal({
+//       "unique_files": 0,
+//       "files": "0.00000000000000000",
+//       "registered_nodes": 10,
+//       "dac_activated": 0,
+//       "active_nodes": 10,
+//     });
+//   })
+// 
+// }
