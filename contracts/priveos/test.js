@@ -335,6 +335,9 @@ describe('Test before DAC activation', function () {
     });
     
     await contract.admactivate(node.name, {from: watchdog_account})
+    await expect(
+      contract.admactivate(node.name)
+    ).to.be.rejectedWith(`missing authority of ${watchdog_account.name}`)
     
     expect(await helpers.global_stats(contract)).to.deep.equal({
       "unique_files": 0,
