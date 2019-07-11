@@ -36,7 +36,7 @@ void priveos::sub_fee_balance(const asset& value) {
   const auto bal_it = feebalances.find(value.symbol.code().raw()); 
   check(bal_it != feebalances.end(), "PrivEOS: Feebalance table entry does not exist for asset %s.", value);
   
-  check(bal_it->funds >= value, "PrivEOS: Trying to overdraw fee balance.");
+  check(bal_it->funds >= value, "PrivEOS: sub_fee_balance: Trying to subtract %s but we only have %s.", value, bal_it->funds);
 
   feebalances.modify(bal_it, same_payer, [&](auto& bal){
       bal.funds -= value;

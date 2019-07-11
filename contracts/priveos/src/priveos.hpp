@@ -37,6 +37,8 @@ CONTRACT priveos : public eosio::contract {
       delegations(get_self(), get_self().value),
       nodetoken_balances(get_self(), get_self().value),
       feebalances(get_self(), get_self().value),
+      nodepay(get_self(), get_self().value),
+      nodebalances(get_self(), get_self().value),
       global_singleton(get_self(), get_self().value),
       voters(get_self(), get_self().value),
       nodes(get_self(), get_self().value), 
@@ -144,20 +146,34 @@ CONTRACT priveos : public eosio::contract {
     TABLE nodepayinfo {
       time_point    last_claimed_at;
       asset         last_claim_balance;
+      
+      uint64_t primary_key() const { return last_claim_balance.symbol.code().raw(); }
+    };
+    using nodepay_table = multi_index<"nodepay"_n, nodepayinfo>;
+    nodepay_table nodepay;
+    
+    TABLE nodewithdraw {
+      time_point    last_claimed_at;
+      asset         last_claim_balance;
       name          user;
       
       uint64_t primary_key() const { return user.value; }
     };
-    using nodepay_table = multi_index<"nodepay"_n, nodepayinfo>;
+    using nodewithdraw_table = multi_index<"nodewithdraw"_n, nodewithdraw>;
     
     /* This table holds the fee balance dedicated to the nodes */
     TABLE nodebal {
       asset funds;
       
+      /**
+        * The sum of fees since the beginning. Never decreases.
+        */
+      asset lifetime;
+      
       uint64_t primary_key()const { return funds.symbol.code().raw(); }
     };
     using nodebal_table = multi_index<"nodebal"_n, nodebal>;
-    
+    nodebal_table nodebalances;
     /**
       * Every time a file share is store with a node, this particular node
       * get a token. That token is staked with the priveos contract.

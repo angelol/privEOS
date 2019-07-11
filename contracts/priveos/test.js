@@ -29,7 +29,7 @@ const TOKEN_ABI = 'src/eosio.token.abi'
 
 const contractAccount = eoslime.Account.load('priveosrules', '5KXtuBpLc6Y9Q8Q8s8CQm2G7L98bV8PK1ZKnSKvNeoiuhZw6uDH')
 
-let alice, bob, contract, nodes, dappcontract, priveos_token_contract, watchdog_account, slantagwallet
+let alice, bob, contract, nodes, dappcontract, priveos_token_contract, watchdog_account, slantagwallet, voted_nodes
 
 const epsilon = 0.001
 
@@ -374,14 +374,15 @@ describe('Test before DAC activation', function () {
   })
   
   it('voting', async () => {
-    const voted_nodes = _.shuffle(nodes.map(x => x.name)).slice(0, 5)
+    voted_nodes = _.shuffle(nodes).slice(0, 5)
     // console.log("Voted_notes: ", voted_nodes)
+    const voted_node_names = voted_nodes.map(x => x.name)
     const actions = [
         {
             account: contract.name,
             name: "vote",
             authorization: [dappcontract.executiveAuthority],
-            data: {dappcontract: dappcontract.name, votees: voted_nodes},
+            data: {dappcontract: dappcontract.name, votees: voted_node_names},
         }
     ]
     /* We have to use eosjs2 for this as the old one doesn't support 
@@ -396,7 +397,7 @@ describe('Test before DAC activation', function () {
     const res = await rpc.get_table_rows({json:true, scope: contract.name, code: contract.name, table: 'voters', limit:100})
     
     
-    const sorted_nodes = _.sortBy(voted_nodes)
+    const sorted_nodes = _.sortBy(voted_node_names)
     // console.log("votes table: ", JSON.stringify(res.rows, null, 2))
     // console.log("expected_value: ", JSON.stringify(expected_value))
     
@@ -511,24 +512,36 @@ describe('Token holder rewards', function () {
   this.timeout(60000)
   
   it('Withdraw token holder reward', async () => {
-    await contract.dacrewards(bob.name, "4,EOS", {from: bob})
+    // generate some fees
+    for(let i = 0; i < 20; i++) {
+      await contract.store(alice.name, dappcontract.name, "identifier" + i, "data", 0, "4,EOS", 1, {from: alice})
+    }
     
+    await contract.dacrewards(bob.name, "4,EOS", {from: bob})
+  
     // need to wait before sending second identical tx
     // Bluebird.delay(6001)
-
+  
     // await expect(
     //   contract.dacrewards(bob.name, "4,EOS", {from: bob})
     // ).to.be.rejectedWith('There is nothing to withdraw, please try again later')
-    
+  
     const private_key = await eosjs_ecc.randomKey()
     const public_key = eosjs_ecc.privateToPublic(private_key)
     await contract.accessgrant(alice.name, dappcontract.name, "xxx", public_key, "4,EOS", 1, {from: alice})
-    
+  
     // Bluebird.delay(6001)
-    
+  
     // await contract.dacrewards(bob.name, "4,EOS", {from: bob})
-
+  
+  
+  })
+  
+  it('Withdraw node reward', async () => {
     
+    for(const node of voted_nodes) {
+      await contract.noderewards(node.name, "4,EOS", {from: node})
+    }
   })
   
   it('XXX', async () => {

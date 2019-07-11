@@ -209,6 +209,11 @@ ACTION priveos::addcurrency(const symbol currency, const name contract) {
     bal.funds = asset{0, currency};
     bal.lifetime = asset{0, currency};
   });
+  
+  nodebalances.emplace(get_self(), [&](auto& bal) {
+    bal.funds = asset{0, currency};
+    bal.lifetime = asset{0, currency};
+  });
 }
 
 ACTION priveos::prepare(const name user, const symbol currency) {
@@ -334,7 +339,105 @@ ACTION priveos::dacrewards(const name user, const symbol currency) {
 // Nodes can call this to withdraw their share of the fees
 ACTION priveos::noderewards(const name user, const symbol currency) {
   require_auth(user);
+  nodes.get(user.value, "PrivEOS: User is not a registered node.");
+
+  const auto current_lifetime_balance = feebalances.get(currency.code().raw(), fmt("PrivEOS: There is no balance found for %s", currency).c_str()).lifetime;
+
+  print_f("current_lifetime_balance: % ", current_lifetime_balance);
   
+  asset last_claim_balance{0, currency};
+  const auto nodepay_it = nodepay.find(currency.code().raw());
+  if(nodepay_it != nodepay.end()) {
+    last_claim_balance = nodepay_it->last_claim_balance;
+  }
+  print_f("last_claim_balance: % ", last_claim_balance);
+  check(current_lifetime_balance >= last_claim_balance, "PrivEOS: Data Corruption");
+  
+  const auto whole = current_lifetime_balance - last_claim_balance;
+  print_f("whole: % ", whole);
+  
+  const auto priveos_tokens = node_delegation_singleton.get().funds;
+  print_f("priveos_tokens: % ", priveos_tokens);
+  const auto token_supply = token::get_supply(priveos_token_contract, priveos_symbol.code());
+  print_f("token_supply: % ", token_supply);
+  const auto my_share = static_cast<double>(priveos_tokens.amount) / static_cast<double>(token_supply.amount);
+  print_f("my_share: % ", my_share);
+  
+  asset withdrawal_amount{0, currency};
+  // static_cast always rounds down, which is exactly what we need
+  withdrawal_amount.amount = static_cast<int64_t>(static_cast<double>(whole.amount) * my_share);
+  print_f("withdrawal_amount: % ", withdrawal_amount);
+  
+  check(withdrawal_amount.amount >= 0, "PrivEOS: Withdrawal amount is too small, please try again later.");
+  sub_fee_balance(withdrawal_amount);
+  const auto nodebal_it = nodebalances.find(currency.code().raw());
+  nodebalances.modify(nodebal_it, same_payer, [&](auto& x){
+    x.funds += withdrawal_amount;
+    x.lifetime += withdrawal_amount;
+  });
+
+  const auto inserter = [&](auto& x) {
+    x.last_claimed_at = current_time_point();
+    x.last_claim_balance = current_lifetime_balance;
+  };
+  if(nodepay_it == nodepay.end()) {
+    nodepay.emplace(user, inserter);
+  } else {
+    nodepay.modify(nodepay_it, user, inserter);
+  }
+  
+  // We have now successfully withdrawn the amount dedicated to the nodes and
+  // stored it in the nodebalances table.
+  // Next step is to calculate how much this individual node user gets.
+  const auto my_nodet_balance = nodetoken_balances.get(user.value).funds;
+  print_f("my_nodet_balance: % ", my_nodet_balance);
+  const auto nodet_supply = token::get_supply(priveos_token_contract, nodetoken_symbol.code());
+  print_f("nodet_supply: % ", nodet_supply);
+  const auto my_nodet_share = static_cast<double>(my_nodet_balance.amount) / static_cast<double>(nodet_supply.amount);
+  print_f("my_nodet_share: % ", my_nodet_share);
+  
+  const auto current_withdraw_lifetime_balance = nodebalances.get(currency.code().raw()).lifetime;
+  
+  print_f("current_withdraw_lifetime_balance: % ", current_withdraw_lifetime_balance);
+  
+  asset last_withdraw_balance{0, currency};
+  nodewithdraw_table withdraw_t{get_self(), currency.code().raw()};
+  const auto withdraw_it = withdraw_t.find(user.value);
+  if(withdraw_it != withdraw_t.end()) {
+    last_withdraw_balance = withdraw_it->last_claim_balance;
+  }
+  print_f("last_withdraw_balance: % ", last_withdraw_balance);
+  const auto whole_withdraw = current_withdraw_lifetime_balance - last_withdraw_balance;
+  print_f("whole_withdraw: % ", current_withdraw_lifetime_balance);
+  
+  asset my_withdraw_share{0, currency};
+  my_withdraw_share.amount = static_cast<int64_t>(static_cast<double>(whole_withdraw.amount) * my_nodet_share);
+  
+  check(my_withdraw_share.amount > 0, "PrivEOS: The withdrawal amount is too small (%s), please try again later", my_withdraw_share);
+  
+  print_f("my_withdraw_share: %s", my_withdraw_share);
+  const auto withdraw_inserter = [&](auto& x) {
+    x.last_claimed_at = current_time_point();
+    x.last_claim_balance = current_withdraw_lifetime_balance;
+    x.user = user;
+  };
+  if(withdraw_it == withdraw_t.end()) {
+    withdraw_t.emplace(user, withdraw_inserter);
+  } else {
+    withdraw_t.modify(withdraw_it, user, withdraw_inserter);
+  }
+  
+  nodebalances.modify(nodebal_it, same_payer, [&](auto& x){
+    x.funds -= my_withdraw_share;
+  });
+  const auto token_contract = currencies.get(currency.code().raw()).contract;  
+  action(
+    permission_level{get_self(), "active"_n},
+    token_contract,
+    "transfer"_n,
+    std::make_tuple(get_self(), user, my_withdraw_share, "Node Rewards"s)
+  ).send();
+    // check(false, ""s);
 }
 
 ACTION priveos::test(const name owner) {
