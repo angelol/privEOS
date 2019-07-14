@@ -55,6 +55,11 @@ async function get_accessgrant_trace(chain, dappcontract, user, file, txid, time
   const db = await chain.mongo.db()
   const start = new Date()
   let trace
+  
+  let ts = new Date()
+  const hours = 60*60
+  ts.setSeconds(ts.getSeconds() - 12*hours)
+  
   while(true) {
     const params = {
       "account" : chain.config.contract, 
@@ -63,6 +68,7 @@ async function get_accessgrant_trace(chain, dappcontract, user, file, txid, time
       "data.user": user,
       "data.contract": dappcontract,
       "transactionId": txid,
+      "timestamp": {$gte : ts },
     }
     const items = await db.collection('accessgrant')
       .find(params)
