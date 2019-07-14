@@ -5,7 +5,7 @@ EOS_ENDPOINT?=http://localhost:8888
 CLEOS_ENDPOINT=${CLEOS} -u ${EOS_ENDPOINT}
 
 build:
-	 eosio-cpp -I. -D=LOCAL -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
+	 eosio-cpp -Wall -Werror -I. -D=LOCAL -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
 
 token:
 	 eosio-cpp -I. -abigen eosio.token.cpp -o eosio.token.wasm 
