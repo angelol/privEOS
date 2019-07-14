@@ -1,5 +1,5 @@
 const assert = require('assert')
-const eoslime = require('eoslime').init('local')
+const eoslime = require('eoslime-priveos').init('local')
 const eosjs_ecc = require('eosjs-ecc-priveos')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec);

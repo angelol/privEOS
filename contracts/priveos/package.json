@@ -12,6 +12,7 @@
     "chai-as-promised": "^7.1.1",
     "eosjs": "^20.0.0",
     "eosjs-ecc-priveos": "^4.0.7",
+    "eoslime-priveos": "^0.0.14",
     "priveos": "^0.2.2",
     "underscore": "^1.9.1",
     "uuid": "^3.3.2"
