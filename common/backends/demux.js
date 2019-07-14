@@ -15,6 +15,8 @@ async function store_data(chain, file, data, hash, owner, dappcontract) {
     dappcontract,
     created_at: new Date(),
    }
+   
+  assert.ok(await db.collection('data').isCapped(), "The mongodb collection 'data' should be capped")
   await db.collection('data').insertOne(doc).timeout(100, "Timeout while Backend.store_data")
 }
 
