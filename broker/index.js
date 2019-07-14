@@ -19,10 +19,16 @@ if(process.argv[2]) {
 	config.brokerPort = process.argv[2]
 }
 
+function add_default_headers(req, res, next) {
+	res.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+	next()
+}
+
 const server = restify.createServer()
-server.use(restify.plugins.bodyParser({
-	maxBodySize: 1024*1024,
-}))
+server.use([
+	restify.plugins.bodyParser({maxBodySize: 1024*1024}),
+	add_default_headers,
+])
 
  
 const cors = corsMiddleware({

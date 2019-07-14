@@ -3,6 +3,7 @@ const restify = require('restify')
 const log = require('../common/log')
 const config = require('../common/config')
 const KMS = require('./kms')
+const { add_default_headers } = require('../broker/helpers')
 
 if(process.argv[2]) {
 	config.kmsPort = process.argv[2]
@@ -12,9 +13,10 @@ if(process.argv[2]) {
 console.log('config.chains', config.chains)
 
 var server = restify.createServer()
-server.use(restify.plugins.bodyParser({
-	maxBodySize: 1024*1024,
-}))
+server.use([
+	restify.plugins.bodyParser({maxBodySize: 1024*1024}),
+	add_default_headers,
+])
 
 server.get('/kms/status/', async function(req, res, next) {
 	try { 

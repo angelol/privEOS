@@ -24,8 +24,14 @@ async function fetch_from_ipfs(hash) {
   return result[0].content.toString('utf8')
 }
 
+function add_default_headers(req, res, next) {
+	res.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+	next()
+}
+
 module.exports = {
   get_nodes,
   all_nodes,
   fetch_from_ipfs,
+  add_default_headers,
 }
