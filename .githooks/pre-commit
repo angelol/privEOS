@@ -7,7 +7,7 @@
 #
 # To enable this hook, rename this file to "pre-commit".
 
-fgrep -q --exclude-dir node_modules --exclude-dir .githooks --exclude-dir .git -r 'JSON.parse' .
+fgrep -q --exclude-dir node_modules --exclude-dir .githooks --exclude-dir .git --exclude yarn-error.log -r 'JSON.parse' .
 if [ $? != 1 ]; then
 	echo "JSON.parse not allowed. Please use Bourne.parse instead."
 	exit 1
