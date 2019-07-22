@@ -24,10 +24,17 @@ function add_default_headers(req, res, next) {
 	next()
 }
 
+const throttle_fun = restify.plugins.throttle({
+	rate: 0.1, // 1 request every 10 seconds
+	burst: 2,
+  xff: true, // use x-forwarded-for header set by nginx
+})
+
 const server = restify.createServer()
 server.use([
 	restify.plugins.bodyParser({maxBodySize: 1024*1024}),
 	add_default_headers,
+	throttle_fun,
 ])
 
  

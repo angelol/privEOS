@@ -4,6 +4,7 @@ const log = require('../common/log')
 const config = require('../common/config')
 const KMS = require('./kms')
 const { add_default_headers } = require('../broker/helpers')
+const { whitelisted_throttle_fun } = require('./throttling')
 
 if(process.argv[2]) {
 	config.kmsPort = process.argv[2]
@@ -16,7 +17,13 @@ var server = restify.createServer()
 server.use([
 	restify.plugins.bodyParser({maxBodySize: 1024*1024}),
 	add_default_headers,
+	whitelisted_throttle_fun,
 ])
+
+
+server.get('/test/', async function(req, res, next) {
+	res.send('ohai!')
+})
 
 server.get('/kms/status/', async function(req, res, next) {
 	try { 
