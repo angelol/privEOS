@@ -229,7 +229,7 @@ Edit your `/etc/nginx/sites-enabled/default` config file to look like this (repl
       }
     }
     
-The services should never be exposed to the outside network without a load balancer or proxy like nginx. If you would like to use a different load balancer/proxy, please make sure to replicate the configuration exactly. It is vitally important to set the X-Forwarded-For header in the example above as leaving it out would open up a security issue.
+The services should never be exposed to the outside network without a load balancer or proxy like nginx. If you would like to use a different load balancer/proxy, please make sure to replicate the configuration exactly. It is vitally important to set the X-Forwarded-For header as in the example above as leaving it out would open up a security issue.
 
 Install SSL certificate and reconfigure Nginx:
 
