@@ -216,7 +216,8 @@ Edit your `/etc/nginx/sites-enabled/default` config file to look like this (repl
     server {
       listen 80;
       server_name my.server.name;
-
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      
       location /broker/ {
         proxy_pass http://broker;
       }
