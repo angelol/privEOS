@@ -507,3 +507,104 @@ describe('Test before DAC activation', function () {
 
 })
 
+
+describe('Token holder rewards', function () {
+  this.timeout(60000)
+  
+  it('Withdraw token holder reward', async () => {
+    // generate some fees
+    for(let i = 0; i < 20; i++) {
+      await contract.store(alice.name, dappcontract.name, "identifier" + i, "data", 0, "4,EOS", 1, {from: alice})
+    }
+    
+    await contract.dacrewards(bob.name, "4,EOS", {from: bob})
+  
+    // need to wait before sending second identical tx
+    // Bluebird.delay(6001)
+  
+    // await expect(
+    //   contract.dacrewards(bob.name, "4,EOS", {from: bob})
+    // ).to.be.rejectedWith('There is nothing to withdraw, please try again later')
+  
+    const private_key = await eosjs_ecc.randomKey()
+    const public_key = eosjs_ecc.privateToPublic(private_key)
+    await contract.accessgrant(alice.name, dappcontract.name, "xxx", public_key, "4,EOS", 1, {from: alice})
+  
+    // Bluebird.delay(6001)
+  
+    // await contract.dacrewards(bob.name, "4,EOS", {from: bob})
+  
+  
+  })
+  
+  it('Withdraw node reward', async () => {
+    
+    for(const node of voted_nodes) {
+      await contract.noderewards(node.name, "4,EOS", {from: node})
+    }
+  })
+  
+  it('XXX', async () => {
+    await contract.test(nodes[0].name)
+  })
+})
+
+// describe('After DAC activation'), function () {
+//   it('Approve nodes', async () => {
+//     let res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'nodes', limit:100})
+// 
+//     const all_inactive = _.every(res.rows, x => !x.is_active)    
+//     expect(all_inactive).to.be.true;
+// 
+//     for(const a of nodes) {
+//       for(const b of nodes) {
+//         await contract.peerappr(a.name, b.name, {from: a})
+//       }
+//     }
+// 
+//     res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'nodes', limit:100})
+// 
+//     const all_active = _.every(res.rows, x => x.is_active)    
+//     expect(all_active).to.be.true;
+// 
+//     expect(await helpers.global_stats(contract)).to.deep.equal({
+//       "unique_files": 0,
+//       "files": "0.00000000000000000",
+//       "dac_activated": 0,
+//       "registered_nodes": 10,
+//       "active_nodes": 10
+//     });
+//   })
+// 
+//   it('Disapprove nodes', async () => {
+// 
+//     /* All nodes disapprove the first node */
+//     for(const a of nodes) {
+//       const b = nodes[0]
+//       await contract.peerdisappr(a.name, b.name, {from: a})
+//     }
+// 
+//     expect(await helpers.global_stats(contract)).to.deep.equal({
+//       "unique_files": 0,
+//       "files": "0.00000000000000000",
+//       "registered_nodes": 10,
+//       "dac_activated": 0,
+//       "active_nodes": 9,
+//     });
+// 
+//     /* And we're reapproving it */
+//     for(const a of nodes) {
+//       const b = nodes[0]
+//       await contract.peerappr(a.name, b.name, {from: a})
+//     }
+// 
+//     expect(await helpers.global_stats(contract)).to.deep.equal({
+//       "unique_files": 0,
+//       "files": "0.00000000000000000",
+//       "registered_nodes": 10,
+//       "dac_activated": 0,
+//       "active_nodes": 10,
+//     });
+//   })
+// 
+// }
