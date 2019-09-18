@@ -36,6 +36,7 @@ CONTRACT priveos : public eosio::contract {
       founder_balances(get_self(), get_self().value),
       delegations(get_self(), get_self().value),
       feebalances(get_self(), get_self().value),
+      nodepay(get_self(), get_self().value),
       nodebalances(get_self(), get_self().value),
       nodetoken_balances(get_self(), get_self().value),
       global_singleton(get_self(), get_self().value),
@@ -133,6 +134,32 @@ CONTRACT priveos : public eosio::contract {
     using feebal_table = multi_index<"feebal"_n, feebal>;
     feebal_table feebalances;
     
+    TABLE holderpayinfo {
+      time_point    last_claimed_at;
+      asset         last_claim_balance;
+      name          user; 
+      
+      uint64_t primary_key() const { return user.value; }
+    };
+    using holderpay_table = multi_index<"holderpay"_n, holderpayinfo>;
+    
+    TABLE nodepayinfo {
+      time_point    last_claimed_at;
+      asset         last_claim_balance;
+      
+      uint64_t primary_key() const { return last_claim_balance.symbol.code().raw(); }
+    };
+    using nodepay_table = multi_index<"nodepay"_n, nodepayinfo>;
+    nodepay_table nodepay;
+    
+    TABLE nodewithdraw {
+      time_point    last_claimed_at;
+      asset         last_claim_balance;
+      name          user;
+      
+      uint64_t primary_key() const { return user.value; }
+    };
+    using nodewithdraw_table = multi_index<"nodewithdraw"_n, nodewithdraw>;
     
     /* This table holds the fee balance dedicated to the nodes */
     TABLE nodebal {
