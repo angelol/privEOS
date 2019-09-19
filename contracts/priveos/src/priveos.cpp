@@ -17,7 +17,7 @@ ACTION priveos::init() {
   
   // now delegate 600 tokens to the nodes
   check(!node_delegation_singleton.exists(), "PrivEOS: node_delegation_singleton already exists. This should not be possible");
-  const auto delegation_amount = asset{6000000, priveos_symbol};
+  const asset delegation_amount{6000000, priveos_symbol};
   node_delegation_singleton.set(nodedelegat{
     .funds = delegation_amount
   }, get_self());
@@ -159,10 +159,8 @@ ACTION priveos::setprice(const name node, const asset price, const std::string a
   check(price.is_valid(), "PrivEOS: Invalid price");
   check(price.amount >= 0, "Price must be non-negative.");
   
-  nodes.get(node.value, "node not found.");
-  check(is_top_node(node), "You're outside of the top %s", top_nodes);
+  nodes.get(node.value, "PrivEOS: node not found.");
   currencies.get(price.symbol.code().raw(), "Token not accepted");
-  
   
   if(action == store_action_name) {
     store_pricefeed_table pricefeeds{get_self(), price.symbol.code().raw()};

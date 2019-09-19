@@ -15,7 +15,7 @@
 
 using namespace eosio;
 
-/* eosio::check overload that allows giving a format string for more 
+/* eosio::check overload that allows passing a format string for more 
  * helpful error messages.
  */
 template<typename... Args>
@@ -475,6 +475,21 @@ CONTRACT priveos : public eosio::contract {
     
     static uint32_t now() {
       return current_time_point().sec_since_epoch();
+    }
+    
+    std::vector<nodeinfo> get_top_nodes() const {
+      std::vector<nodeinfo> node_list{};
+      const auto idx = nodes.template get_index<"byfiles"_n>();
+      auto it = idx.begin();
+      
+      for(uint32_t i{0}; i < top_nodes; i++) {
+        if(it == idx.end()) {
+          break;
+        }
+        node_list.push_back(*it);
+        it++;
+      }
+      return node_list;
     }
     
     bool is_top_node(const nodeinfo& node_i) const {

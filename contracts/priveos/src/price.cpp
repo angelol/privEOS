@@ -28,11 +28,22 @@ void priveos::propagate_price_change(const name& node, const asset& price, const
       */
       return;
   }
-  std::vector<int64_t> vec;
-  for(const auto& pf : pricefeeds) {
-    vec.push_back(pf.price.amount);        
+  
+  /**
+    * Get the price from all top N nodes into a vector
+    */
+  std::vector<int64_t> prices{};
+  const auto top_nodes = get_top_nodes();
+  for(const auto& node: top_nodes) {
+    const auto itr = pricefeeds.find(node.owner.value);
+    if(itr == pricefeeds.end()) {
+      continue;
+    } else {
+      prices.push_back(itr->price.amount);
+    }
   }
-  const auto median_price = asset{median(vec), price.symbol};  
+  
+  const auto median_price = asset{median(prices), price.symbol};  
   if(action == accessgrant_action_name) {
     update_price_table(node, median_price, read_prices);
   } else if(action == store_action_name) {
