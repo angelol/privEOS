@@ -114,7 +114,11 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
         x.funds = asset{0, nodetoken_symbol};
       });
     }
-  }  
+    
+    // charge registration fee
+    sub_balance(owner, node_registration_fee);
+    add_fee_balance(node_registration_fee);
+  } 
 }
 
 ACTION priveos::peerappr(const name sender, const name owner) {

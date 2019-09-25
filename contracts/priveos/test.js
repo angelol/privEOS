@@ -203,8 +203,19 @@ describe('Test before DAC activation', function () {
     
   })
   
+  it('Currency', async () => {
+    await contract.addcurrency("4,EOS", "eosio.token")
+    const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'currencies', limit:100})
+    expect(res.rows).to.deep.equal([{
+      "currency": "4,EOS",
+      "contract": "eosio.token"
+    }])
+  })
+  
   it('Regnode', async () => {
     for(const node of nodes) {
+      await contract.prepare(node.name, "4,EOS", {from: node})
+      await node.send(contract.executor, "10.0000")
       await contract.regnode(node.name, node.key.public_key, node.url, {from: node})
     }
     const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'nodes', limit:100})
@@ -280,18 +291,6 @@ describe('Test before DAC activation', function () {
       "active_nodes": 0
     })
   })
-  
-
-  
-  it('Currency', async () => {
-    await contract.addcurrency("4,EOS", "eosio.token")
-    const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'currencies', limit:100})
-    expect(res.rows).to.deep.equal([{
-      "currency": "4,EOS",
-      "contract": "eosio.token"
-    }])
-  })
-  
   
   it("Set price", async () => {      
     for(const node of nodes) {
@@ -549,19 +548,19 @@ describe('Token holder rewards', function () {
     await contract.dacrewards(bob.name, "4,EOS", {from: bob})
   
     // need to wait before sending second identical tx
-    // Bluebird.delay(6001)
+    Bluebird.delay(6001)
   
-    // await expect(
-    //   contract.dacrewards(bob.name, "4,EOS", {from: bob})
-    // ).to.be.rejectedWith('There is nothing to withdraw, please try again later')
+    await expect(
+      contract.dacrewards(bob.name, "4,EOS", {from: bob})
+    ).to.be.rejectedWith('There is nothing to withdraw, please try again later')
   
     const private_key = await eosjs_ecc.randomKey()
     const public_key = eosjs_ecc.privateToPublic(private_key)
     await contract.accessgrant(alice.name, dappcontract.name, "xxx", public_key, "4,EOS", 1, {from: alice})
   
-    // Bluebird.delay(6001)
+    Bluebird.delay(6001)
   
-    // await contract.dacrewards(bob.name, "4,EOS", {from: bob})
+    await contract.dacrewards(bob.name, "4,EOS", {from: bob})
   
   
   })

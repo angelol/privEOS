@@ -92,7 +92,12 @@ CONTRACT priveos : public eosio::contract {
   static constexpr name bond_token_contract{"eosio.token"};
   const asset bond_amount{1000ll*10000ll, bond_symbol}; // 1000.0000 EOS
 #endif
-    
+#ifdef REGISTRATION_FEE
+  const asset node_registration_fee{std::atoll(STR(REGISTRATION_FEE)), bond_symbol};
+#else
+  const asset node_registration_fee{10ll*10000ll, bond_symbol};
+#endif
+
     /**
       * PRIVEOS TOKEN STAKING (implemented in staking.cpp)
       */
