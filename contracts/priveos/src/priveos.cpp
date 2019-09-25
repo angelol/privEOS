@@ -63,10 +63,22 @@ ACTION priveos::accessgrant(const name user, const name contract, const std::str
     
   charge_read_fee(user, contract, token, contractpays);
 }
-    
+
+ACTION priveos::postbond(const name owner, const asset amount) {
+  require_auth(owner);
+  const auto itr = nodes.find(owner.value);
+  check(amount.amount > 0, "PrivEOS: Amount must be positive");
+  check(itr != nodes.end(), "PrivEOS: You must register before posting a bond.");
+  check(amount.symbol == bond_symbol, "PrivEOS: Wrong currency. Bond must be %s.", bond_symbol);
+  
+  priveos::sub_balance(owner, amount);
+  nodes.modify(itr, same_payer, [&](auto &x) {
+    x.bond += amount;
+  });
+}
+
 ACTION priveos::regnode(const name owner, const public_key node_key, const std::string url) {
   require_auth(owner);
-
   check(node_key != public_key(), "public key should not be the default value");
   check(node_key.type == 0u, "Only K1 Keys supported");
   check(url.size() <= 256, "url has more than 256 bytes");
@@ -88,6 +100,7 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
       info.node_key = node_key;
       info.url = url;
       info.is_active = false;
+      info.bond = asset{0, bond_symbol};
     });
     
     auto stats = global_singleton.get();
@@ -456,6 +469,6 @@ void priveos::transfer(const name from, const name to, const asset quantity, con
      * Make sure we're checking that against the known contract account. 
      */
     check(curr.contract == get_first_receiver(), "PrivEOS: Token contract should be %s but is %s. We're not so easily fooled.", curr.contract, get_first_receiver());
-    add_balance(from, quantity);  
+    priveos::add_balance(from, quantity);  
   }
 }

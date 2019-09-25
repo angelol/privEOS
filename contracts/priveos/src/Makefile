@@ -5,7 +5,8 @@ EOS_ENDPOINT?=http://localhost:8888
 CLEOS_ENDPOINT=${CLEOS} -u ${EOS_ENDPOINT}
 
 build:
-	 eosio-cpp -Wall -Werror -I. -D=LOCAL -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
+	 # eosio-cpp -Wall -Werror -I. -O=z -D=LOCAL -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
+	 eosio-cpp -Wall -Werror -I. -O=z -D=LOCAL -DBOND_AMOUNT=400000000 -DBOND_SYMBOL=TLOS -DBOND_DIGITS=4 -DBOND_TOKEN_CONTRACT=eosio.token -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
 
 token:
 	 eosio-cpp -I. -abigen eosio.token.cpp -o eosio.token.wasm 
@@ -65,6 +66,13 @@ system:
 xxx:
 	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) test '["testnodexxx1"]'  -p $(CONTRACT_ACCOUNT)
 
+postbond:
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) prepare '["testnodexxx1", "4,EOS"]' -p testnodexxx1
+	$(CLEOS_ENDPOINT) transfer testnodexxx1 $(CONTRACT_ACCOUNT) "1.0000 EOS" -p testnodexxx1
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) postbond '["testnodexxx1", "1.0000 EOS"]'  -p testnodexxx1
+
+
+	
 setup:
 	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio $(CONTRACT_ACCOUNT) $(PUBLIC_KEY) $(PUBLIC_KEY)
 	$(CLEOS_ENDPOINT) system newaccount --stake-net "1.0000 EOS" --stake-cpu "1.0000 EOS" --buy-ram-kbytes 8000 eosio dappcontract $(PUBLIC_KEY) $(PUBLIC_KEY)
@@ -90,6 +98,7 @@ create_tokens:
 fundusers:
 	$(CLEOS_ENDPOINT) transfer eosio $(ALICE) "100.0000 EOS" -p eosio
 	$(CLEOS_ENDPOINT) transfer eosio $(BOB) "100.0000 EOS" -p eosio
+	$(CLEOS_ENDPOINT) transfer eosio testnodexxx1 "100.0000 EOS" -p eosio
 
 	
 regnodes:

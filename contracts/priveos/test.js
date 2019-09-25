@@ -59,7 +59,7 @@ describe('Test before DAC activation', function () {
     console.log("PrivEOS Token contract deployed to: ", priveos_token_contract.executor.name)
 
     
-    const command = `eosio-cpp -I. -DLOCAL -DTOKENCONTRACT=${priveos_token_contract.executor.name} -DWATCHDOG_ACCOUNT=${watchdog_account.name} -abigen priveos.cpp -o priveos.wasm`
+    const command = `eosio-cpp -I. -O=z -DLOCAL -DTOKENCONTRACT=${priveos_token_contract.executor.name} -DWATCHDOG_ACCOUNT=${watchdog_account.name} -abigen priveos.cpp -o priveos.wasm`
     console.log("Command: ", command)
     const { stdout, stderr } = await exec(command, {cwd: './src'})
     console.log(stdout, stderr)
@@ -70,6 +70,7 @@ describe('Test before DAC activation', function () {
     nodes = await eoslime.Account.createRandoms(10)
     let port = 8001
     for(const node of nodes) {
+      await eoslime.Account.provider.defaultAccount.send(node, "1100.0000")
       await node.buyBandwidth(cpuAmount, netAmount, eoslime.Account.provider.defaultAccount)
       await node.buyRam(1024, eoslime.Account.provider.defaultAccount)
       const private_key = await eosjs_ecc.randomKey()
@@ -96,7 +97,9 @@ describe('Test before DAC activation', function () {
     await helpers.token_send(priveos_token_contract.executor, slantagwallet, contract.executor, "800.0000 PRIVEOS")
     const balance2 = await rpc.get_currency_balance(priveos_token_contract.executor.name, contract.executor.name, "PRIVEOS")
     expect(balance2[0]).to.equal("800.0000 PRIVEOS")
-    const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    // const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    const res = await rpc.get_table_rows({json:true, scope: contract.name, code: contract.name, table: 'freebal', limit:100})
+    console.log("Line 101 res: ", res)
     expect(res.rows[0].funds).to.equal("800.0000 PRIVEOS")
       
     await contract.delegate(alice.name, "200.0000 PRIVEOS")
@@ -216,6 +219,9 @@ describe('Test before DAC activation', function () {
         url: node.url,
         is_active: 0,
         files: "0.00000000000000000",
+        bond: "0.0000 EOS",
+        cleared_for_leaving: 0,
+        wants_to_leave: 0,
       })
     }
     expected_rows = _.sortBy(expected_rows, x => x.owner)
@@ -248,6 +254,9 @@ describe('Test before DAC activation', function () {
         url: node.url,
         is_active: 0,
         files: "0.00000000000000000",
+        bond: "0.0000 EOS",
+        cleared_for_leaving: 0,
+        wants_to_leave: 0,
       })
     }
     expected_rows = _.sortBy(expected_rows, x => x.owner)
@@ -271,6 +280,8 @@ describe('Test before DAC activation', function () {
       "active_nodes": 0
     })
   })
+  
+
   
   it('Currency', async () => {
     await contract.addcurrency("4,EOS", "eosio.token")
@@ -307,6 +318,17 @@ describe('Test before DAC activation', function () {
     }])
 
   })
+  
+    it('Postbond', async () => {
+      const node = nodes[0]
+      await contract.prepare(node.name, "4,EOS", {from: node})
+      // await node.send(contract.executor, "1.1234")
+      await contract.postbond(node.name, "1.1234 EOS", {from: node})
+      
+      const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'nodes', limit:100})      
+      const nodeinfo = res.rows.find(x => x.owner == node.name)
+      expect(nodeinfo.bond).to.equal("1.1234 EOS")
+    })
   
   it('Activate nodes', async() => {
     for(const node of nodes) {
@@ -544,9 +566,9 @@ describe('Token holder rewards', function () {
     }
   })
   
-  it('XXX', async () => {
-    await contract.test(nodes[0].name)
-  })
+  // it('XXX', async () => {
+  //   await contract.test(nodes[0].name)
+  // })
 })
 
 // describe('After DAC activation'), function () {

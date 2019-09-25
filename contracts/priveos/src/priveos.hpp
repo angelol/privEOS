@@ -26,7 +26,6 @@ inline void check(bool pred, const string& format, Args const& ... args) {
   }
 }
 
-
 CONTRACT priveos : public eosio::contract {
   using contract::contract;
   public:
@@ -69,6 +68,29 @@ CONTRACT priveos : public eosio::contract {
     static constexpr name interim_watchdog_account{STR(WATCHDOG_ACCOUNT)};
 #else
     static constexpr name interim_watchdog_account{"slantagpurse"};
+#endif
+
+// Make bond amount and currency configurable at compile time
+#ifdef BOND_AMOUNT
+  #ifdef BOND_SYMBOL
+    #ifdef BOND_DIGITS
+      #ifdef BOND_TOKEN_CONTRACT
+        static constexpr symbol bond_symbol{STR(BOND_SYMBOL), BOND_DIGITS};
+        static constexpr name bond_token_contract{STR(BOND_TOKEN_CONTRACT)};
+        const asset bond_amount{std::atoll(STR(BOND_AMOUNT)), bond_symbol};
+      #else
+        #error BOND_TOKEN_CONTRACT required.
+      #endif
+    #else
+      #error BOND_DIGITS required.
+    #endif
+  #else
+    #error BOND_SYMBOL required.
+  #endif
+#else
+  static constexpr symbol bond_symbol{"EOS", 4};
+  static constexpr name bond_token_contract{"eosio.token"};
+  const asset bond_amount{1000ll*10000ll, bond_symbol}; // 1000.0000 EOS
 #endif
     
     /**
@@ -213,11 +235,14 @@ CONTRACT priveos : public eosio::contract {
     voter_table voters;
     
     TABLE nodeinfo {
-      name        owner;
-      eosio::public_key   node_key;
-      std::string         url;
-      bool                is_active = false;
-      double              files = 0.0;
+      name owner;
+      eosio::public_key node_key;
+      std::string url;
+      bool is_active = false;
+      double files = 0.0;
+      asset bond;
+      bool wants_to_leave = false;
+      bool cleared_for_leaving = false;
       
       uint64_t primary_key()const { return owner.value; }
       
@@ -328,6 +353,11 @@ CONTRACT priveos : public eosio::contract {
       const name owner, 
       const eosio::public_key node_key, 
       const std::string url
+    );
+    
+    ACTION postbond(
+      const name owner, 
+      const asset amount
     );
     
     ACTION peerappr(
