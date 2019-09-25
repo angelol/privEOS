@@ -322,9 +322,16 @@ describe('Test before DAC activation', function () {
     it('Postbond', async () => {
       const node = nodes[0]
       await contract.prepare(node.name, "4,EOS", {from: node})
-      // await node.send(contract.executor, "1.1234")
-      await contract.postbond(node.name, "1.1234 EOS", {from: node})
+      await node.send(contract.executor, "1.1234")
+      await expect(     
+        contract.postbond(node.name, "1.1235 EOS", {from: node})
+      ).to.rejectedWith(`Overdrawn balance`)
       
+      await contract.postbond(node.name, "1.1234 EOS", {from: node})
+      await expect(     
+        contract.postbond(node.name, "1.1233 EOS", {from: node})
+      ).to.rejectedWith(`User ${node.name} has no balance`)
+
       const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'nodes', limit:100})      
       const nodeinfo = res.rows.find(x => x.owner == node.name)
       expect(nodeinfo.bond).to.equal("1.1234 EOS")
