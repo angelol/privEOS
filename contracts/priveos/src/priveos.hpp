@@ -379,6 +379,8 @@ CONTRACT priveos : public eosio::contract {
       const name owner
     );
     
+    ACTION approveleave(const name owner);
+    
     ACTION admactivate(const name owner);
     ACTION admdisable(const name owner);
     

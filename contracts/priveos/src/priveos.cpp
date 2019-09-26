@@ -92,6 +92,8 @@ ACTION priveos::regnode(const name owner, const public_key node_key, const std::
     nodes.modify(node_idx, owner, [&](auto& info) {
       info.node_key = node_key;
       info.url = url;
+      info.wants_to_leave = false;
+      info.cleared_for_leaving = false;
     });
   } else {
     // we have a new node
@@ -142,17 +144,32 @@ ACTION priveos::peerdisappr(const name sender, const name owner) {
   was_disapproved_by(sender, node);
 }
     
+// starts the process by which a node can leave the system
 ACTION priveos::unregnode(const name owner) {
   require_auth(owner);
   const auto itr = nodes.find(owner.value);
   check(itr != nodes.end(), "User %s is not registered as node", owner); 
-  disable_node(*itr);
-  nodes.erase(itr);
+  const auto node = *itr;
+
+  check(node.wants_to_leave == false, "PrivEOS: Node %s already indicated the wish to leave.", node.owner);
+  check(node.cleared_for_leaving == false, "PrivEOS: Node %s is already cleared for leaving.", node.owner);
   
-  
-  auto stats = global_singleton.get();
-  stats.registered_nodes -= 1u;
-  global_singleton.set(stats, get_self());
+  disable_node(node);
+  nodes.modify(itr, same_payer, [&](auto &x) {
+    x.wants_to_leave = true;
+  });
+}
+
+ACTION priveos::approveleave(const name owner) {
+  require_auth(get_self());
+  const auto itr = nodes.find(owner.value);
+  check(itr != nodes.end(), "User %s is not registered as node", owner); 
+  const auto node = *itr;
+  check(node.wants_to_leave == true, "PrivEOS: Node %s does not want to leave.", node.owner);
+  check(node.cleared_for_leaving == false, "PrivEOS: Node %s is already cleared for leaving.", node.owner);
+  nodes.modify(itr, same_payer, [&](auto &x) {
+    x.cleared_for_leaving = true;
+  });
 }
 
 ACTION priveos::admactivate(const name owner) {

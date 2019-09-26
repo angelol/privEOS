@@ -258,6 +258,16 @@ describe('Test before DAC activation', function () {
     let actual_rows = res.rows
     
     let expected_rows = []
+    expected_rows.push({
+      owner: node.name,
+      node_key: node.key.public_key,
+      url: node.url,
+      is_active: 0,
+      files: "0.00000000000000000",
+      bond: "0.0000 EOS",
+      cleared_for_leaving: 0,
+      wants_to_leave: 1,
+    })
     for(const node of nodes.slice(1)) {
       expected_rows.push({
         owner: node.name,
@@ -277,7 +287,7 @@ describe('Test before DAC activation', function () {
       "unique_files": 0,
       "files": "0.00000000000000000",
       "dac_activated": 0,
-      "registered_nodes": 9,
+      "registered_nodes": 10,
       "active_nodes": 0
     })
     
@@ -475,7 +485,7 @@ describe('Test before DAC activation', function () {
     const res = await contract.provider.eos.getTableRows({json:true, scope: contract.name, code: contract.name, table: 'nodes', limit:100})
     // console.log("After first store: ", res.rows)
     
-    expect(await helpers.fee_balance(contract)).to.equal(store_price)
+    expect(await helpers.fee_balance(contract)).to.equal("100.0200 EOS")
     
     node_token_balance = await rpc.get_currency_balance(priveos_token_contract.executor.name, contract.executor.name, "NODET")
     expect(helpers.asset_equal_epsilon(node_token_balance[0], "5.0000 NODET")).to.be.true
@@ -499,7 +509,7 @@ describe('Test before DAC activation', function () {
 
     // console.log("After second store: ", res.rows)
     
-    expect(await helpers.fee_balance(contract)).to.equal("0.0400 EOS")
+    expect(await helpers.fee_balance(contract)).to.equal("100.0400 EOS")
     
     const node_token_balance = await rpc.get_currency_balance(priveos_token_contract.executor.name, contract.executor.name, "NODET")
     
@@ -514,7 +524,7 @@ describe('Test before DAC activation', function () {
     await contract.accessgrant(bob.name, dappcontract.name, identifier, public_key, "4,EOS", 1, {from: bob})
     
     // console.log("bal_res.rows: ", JSON.stringify(bal_res.rows, null, 2))
-    expect(await helpers.fee_balance(contract)).to.equal("0.0500 EOS")
+    expect(await helpers.fee_balance(contract)).to.equal("100.0500 EOS")
     
     const gstats = await helpers.global_stats(contract)
     expect(gstats).to.include({
