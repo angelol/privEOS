@@ -420,8 +420,10 @@ CONTRACT priveos : public eosio::contract {
     
     ACTION vote(const name dappcontract, std::vector<name> votees);
     ACTION dacrewards(const name user, const symbol currency);
-    ACTION noderewards(const name user, const symbol currency);
-    
+    void dacrewards_impl(const name user, const symbol currency, const bool raise);
+    ACTION noderewards(const name user, const symbol currency);    
+    void noderewards_impl(const name user, const symbol currency, const bool raise);
+
     void transfer(const name from, const name to, const asset quantity, const std::string memo);
     
     template<typename T>

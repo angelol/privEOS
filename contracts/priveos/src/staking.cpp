@@ -10,6 +10,8 @@ ACTION priveos::founderstake(const name user, const asset quantity, const uint32
 
 ACTION priveos::stake(const name user, const asset quantity) {
   require_auth(user);
+  dacrewards_impl(user, quantity.symbol, false);
+
   free_priveos_balance_sub(quantity);
   add_staked_balance(user, quantity);
   consistency_check();
@@ -17,6 +19,7 @@ ACTION priveos::stake(const name user, const asset quantity) {
 
 ACTION priveos::unstake(const name user, const asset quantity) {
   require_auth(user);
+  dacrewards_impl(user, quantity.symbol, false);
   
   // move from locked to free balance before sending out
   sub_staked_balance(user, quantity);
@@ -28,16 +31,13 @@ ACTION priveos::unstake(const name user, const asset quantity) {
     "transfer"_n,
     std::make_tuple(get_self(), user, quantity, std::string("Withdrawal"))
   ).send();
-
-  /**
-    * It's not possible to see the effects of this inline action within
-    * the same transaction, so we can't call consistency_check here. 
-    */
+  
 }
 
 ACTION priveos::founderunsta(const name user, const asset quantity) {
   require_auth(user);
-  
+  dacrewards_impl(user, quantity.symbol, false);
+
   // move from locked to free balance before sending out
   sub_locked_balance(user, quantity);
   free_priveos_balance_add(quantity);
