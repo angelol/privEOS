@@ -334,10 +334,10 @@ eosjs@^20.0.0:
     eosjs-ecc "4.0.4"
     text-encoding "0.7.0"
 
-eoslime-priveos@^0.0.14:
-  version "0.0.14"
-  resolved "https://registry.yarnpkg.com/eoslime-priveos/-/eoslime-priveos-0.0.14.tgz#1e07db4249bd52de98cee6f446870a3736148e23"
-  integrity sha512-bMRXB+eaAkFeAtFheIBzOqv7ZaRvbL53ja0m8eQmjCgt2PHj9xs2GMgtT44c7eefBiOMlFFx+lQFbxuHAmRCqw==
+eoslime-priveos@^0.0.17:
+  version "0.0.17"
+  resolved "https://registry.yarnpkg.com/eoslime-priveos/-/eoslime-priveos-0.0.17.tgz#2af8e0d060e50a5b5d5ecd617c4ec55e40763f59"
+  integrity sha512-6u3zjRUKTotxiqX6RtNg4aPLGY26S8kuyafkWdZfDD83SVOFY+9czjHgB/RvRLwvT7tI6GSl282e81I6yfl4Kw==
   dependencies:
     crypto-js "3.1.9-1"
     eosjs "16.0.9"

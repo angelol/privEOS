@@ -306,27 +306,41 @@ ACTION priveos::dacrewards(const name user, const symbol currency) {
   check(current_lifetime_balance > last_claim_balance, "PrivEOS: There is nothing to withdraw, please try again later.");
   
   const auto whole = current_lifetime_balance - last_claim_balance;
+  print_f("Whole amount to withdraw: % ", whole);
   
   /** 
     * determine full balance of user
     * token holdings can consist of either:
-    * 1) Staked tokens
-    * 2) Tokens the user holds in his account
+    * 1) Locked founder tokens
+    * 2) Staked tokens
     * 3) Tokens that have been delegated to the user
     * We have to consider all of the above types.
+    * Please note that only staked/locked tokens are eligible for rewards. Simply
+    * holding the tokens in your wallet is not enough.
     */
-  asset staked_tokens{0, priveos_symbol};
+  asset locked_tokens{0, priveos_symbol};
   const auto founderbal_it = founder_balances.find(user.value);
   if(founderbal_it != founder_balances.end()) {
-    staked_tokens = founderbal_it->funds;
+    locked_tokens = founderbal_it->funds;
   }
-  const auto held_tokens = token::get_balance(priveos_token_contract, user, priveos_symbol);
+  print_f("User % has % locked tokens. ", user, locked_tokens);
+  asset staked_tokens{0, priveos_symbol};
+  const auto stakedbal_it = staked_balances.find(user.value);
+  if(stakedbal_it != staked_balances.end()) {
+    staked_tokens = stakedbal_it->funds;
+  }
+  print_f("User % has % staked tokens. ", user, staked_tokens);
   asset delegated_tokens{0, priveos_symbol};
   const auto delegation_it = delegations.find(user.value);
   if(delegation_it != delegations.end()) {
     delegated_tokens = delegation_it->funds;
   }
-  const auto my_tokens = staked_tokens + held_tokens + delegated_tokens;
+  
+  print_f("User % has % delegated tokens. ");
+  
+  const auto my_tokens = staked_tokens + locked_tokens + delegated_tokens;
+  print_f("That's a total of % tokens. ", my_tokens);
+
   const auto token_supply = token::get_supply(priveos_token_contract, priveos_symbol.code());
   const auto my_share = static_cast<double>(my_tokens.amount) / static_cast<double>(token_supply.amount);
     

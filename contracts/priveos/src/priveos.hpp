@@ -33,6 +33,7 @@ CONTRACT priveos : public eosio::contract {
       free_balance_singleton(get_self(), get_self().value),
       node_delegation_singleton(get_self(), get_self().value),
       founder_balances(get_self(), get_self().value),
+      staked_balances(get_self(), get_self().value),
       delegations(get_self(), get_self().value),
       feebalances(get_self(), get_self().value),
       nodepay(get_self(), get_self().value),
@@ -120,9 +121,18 @@ CONTRACT priveos : public eosio::contract {
       
       uint64_t primary_key() const { return founder.value; }        
     };
-      
-    typedef multi_index<"founderbal"_n, founderbal> founderbal_table;
+    using founderbal_table = multi_index<"founderbal"_n, founderbal>;
     founderbal_table founder_balances;
+    
+    // same as founderbal but without timelock
+    TABLE stakedbal {
+      name        user;
+      asset       funds;
+      
+      uint64_t primary_key() const { return user.value; }        
+    };
+    using stakedbal_table = multi_index<"stakedbal"_n, stakedbal>;
+    stakedbal_table staked_balances;
     
     TABLE delegation {
       name        user;
@@ -130,16 +140,20 @@ CONTRACT priveos : public eosio::contract {
         
       uint64_t primary_key() const { return user.value; }        
     };
-    typedef multi_index<"delegation"_n, delegation> delegations_table;
+    using delegations_table = multi_index<"delegation"_n, delegation>;
     delegations_table delegations;
     
-    ACTION stake(const name user, const asset quantity, const uint32_t locked_until);
+    ACTION founderstake(const name user, const asset quantity, const uint32_t locked_until);
+    ACTION stake(const name user, const asset quantity);
     ACTION unstake(const name user, const asset quantity);
+    ACTION founderunsta(const name user, const asset quantity);
     ACTION delegate(const name user, const asset value);
     ACTION undelegate(const name user, const asset value);
     
     void free_priveos_balance_add(const asset quantity);
     void free_priveos_balance_sub(const asset quantity);
+    void add_staked_balance(const name user, const asset value);
+    void sub_staked_balance(const name user, const asset value);
     void add_locked_balance(const name user, const asset value, const uint32_t locked_until);
     void sub_locked_balance(const name user, const asset value);
     void consistency_check();
@@ -212,8 +226,7 @@ CONTRACT priveos : public eosio::contract {
       
       uint64_t primary_key() const { return owner.value; }        
     };
-      
-    typedef multi_index<"nodetokenbal"_n, nodetokenbal> nodetokenbal_table;
+    using nodetokenbal_table = multi_index<"nodetokenbal"_n, nodetokenbal>;
     nodetokenbal_table nodetoken_balances;
     
     TABLE global {
