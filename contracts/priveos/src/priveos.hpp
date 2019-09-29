@@ -446,7 +446,8 @@ CONTRACT priveos : public eosio::contract {
     void sub_balance(const name& user, const asset& value);
     void add_fee_balance(const asset& value);
     void sub_fee_balance(const asset& value);
-
+    bool is_bond_posted_in_full(const nodeinfo &node);
+    
     int64_t median(std::vector<int64_t>& v);
       
     // peeraprovals

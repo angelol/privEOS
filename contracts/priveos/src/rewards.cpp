@@ -104,7 +104,19 @@ void priveos::dacrewards_impl(const name user, const symbol currency, const bool
 // Nodes can call this to withdraw their share of the fees
 void priveos::noderewards_impl(const name user, const symbol currency, const bool raise=true) {
   require_auth(user);
-  nodes.get(user.value, "PrivEOS: User is not a registered node.");
+  const auto node = nodes.get(user.value, "PrivEOS: User is not a registered node.");
+  
+  const auto bond_is_posted_in_full = is_bond_posted_in_full(node);
+  if(currency != bond_symbol) {
+    check(bond_is_posted_in_full, "PrivEOS: Cannot withdraw %s until bond of % is posted in full.", currency, bond_amount);
+  } else {
+    /** 
+      * If currency is identical to bond_amount, we go forward and transfer the
+      * withdrawal amount to the bond so it can be slowly accrued over time.
+      * Once the bond amount has been accrued, the amount that's over the bond 
+      * amount will be transferred to the user's wallet.
+      **/
+  }
 
   const auto feebalances_itr = feebalances.find(currency.code().raw());
   if(feebalances_itr == feebalances.end()) {
@@ -157,6 +169,7 @@ void priveos::noderewards_impl(const name user, const symbol currency, const boo
   const auto my_nodet_balance = nodetoken_balances.get(user.value).funds;
   const auto nodet_supply = token::get_supply(priveos_token_contract, nodetoken_symbol.code());
   const auto my_nodet_share = static_cast<double>(my_nodet_balance.amount) / static_cast<double>(nodet_supply.amount);
+  check(my_nodet_share <= 1.0, "Sanity Check");
   
   const auto current_withdraw_lifetime_balance = nodebalances.get(currency.code().raw()).lifetime;
   
@@ -173,6 +186,13 @@ void priveos::noderewards_impl(const name user, const symbol currency, const boo
   
   check(my_withdraw_share.amount > 0, "PrivEOS: The withdrawal amount is too small (%s), please try again later", my_withdraw_share);
   
+  /** If bond is fully posted/accrued, user can withdraw the free Amount
+    * if bond is not fully posted, transfer this balance into the bond,
+    * so node operators who have not posted the full bond in the beginning 
+    * can slowly accrue it.
+    */  
+
+  
   const auto withdraw_inserter = [&](auto& x) {
     x.last_claimed_at = current_time_point();
     x.last_claim_balance = current_withdraw_lifetime_balance;
@@ -187,12 +207,44 @@ void priveos::noderewards_impl(const name user, const symbol currency, const boo
   nodebalances.modify(nodebal_it, same_payer, [&](auto& x){
     x.funds -= my_withdraw_share;
   });
-  const auto token_contract = currencies.get(currency.code().raw()).contract;  
-  action(
-    permission_level{get_self(), "active"_n},
-    token_contract,
-    "transfer"_n,
-    std::make_tuple(get_self(), user, my_withdraw_share, "Node Rewards"s)
-  ).send();
-    // check(false, ""s);
+  
+  const auto token_contract = currencies.get(currency.code().raw()).contract;
+  if(currency == bond_symbol) {
+    // transfer to bond 
+    const auto nodes_itr = nodes.find(user.value);
+    nodes.modify(nodes_itr, same_payer, [&](auto &x) {
+      x.bond += my_withdraw_share;
+    });
+    /**
+      * If the bond amount is greater than the minimum bond amount (priveos::bond_amount) = 1000 EOS,
+      * transfer the rest into the user's wallet.
+      */
+    const auto currently_posted_bond = nodes.get(user.value).bond;
+    const auto withdraw_amount_after_bond = currently_posted_bond - priveos::bond_amount;
+    if(withdraw_amount_after_bond.amount > 0) {  
+      action(
+        permission_level{get_self(), "active"_n},
+        token_contract,
+        "transfer"_n,
+        std::make_tuple(get_self(), user, withdraw_amount_after_bond, "Node Rewards"s)
+      ).send();
+      
+      nodes.modify(nodes_itr, same_payer, [&](auto &x) {
+        x.bond -= withdraw_amount_after_bond;
+        check(x.bond.amount >= 0, "PrivEOS: Trying to fall below the required bond amount after withdrawal.");
+      });
+    }
+  } else {
+    check(is_bond_posted_in_full(node), "PrivEOS: This should only work if bond is posted in full");
+    action(
+      permission_level{get_self(), "active"_n},
+      token_contract,
+      "transfer"_n,
+      std::make_tuple(get_self(), user, my_withdraw_share, "Node Rewards"s)
+    ).send();
+  }
+}
+
+bool priveos::is_bond_posted_in_full(const nodeinfo &node) {
+  return node.bond >= priveos::bond_amount;
 }
