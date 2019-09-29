@@ -5,8 +5,8 @@ EOS_ENDPOINT?=http://localhost:8888
 CLEOS_ENDPOINT=${CLEOS} -u ${EOS_ENDPOINT}
 
 build:
-	 # eosio-cpp -Wall -Werror -I. -O=z -D=LOCAL -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
-	 eosio-cpp -Wall -Werror -I. -O=z -D=LOCAL -DBOND_AMOUNT=400000000 -DBOND_SYMBOL=TLOS -DBOND_DIGITS=4 -DBOND_TOKEN_CONTRACT=eosio.token -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
+	 eosio-cpp -Wall -Werror -I. -O=z -D=LOCAL -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
+	 # eosio-cpp -Wall -Werror -I. -O=z -D=LOCAL -DBOND_AMOUNT=400000000 -DBOND_SYMBOL=TLOS -DBOND_DIGITS=4 -DBOND_TOKEN_CONTRACT=eosio.token -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
 
 token:
 	 eosio-cpp -I. -abigen eosio.token.cpp -o eosio.token.wasm 
@@ -24,9 +24,9 @@ init:
 	make deploy
 	make create_tokens
 	make init_contract
-	make regnodes
-	make fundusers
 	make addcurrency
+	make fundusers
+	make regnodes
 	make setprice
 	make admsetprice
 	make watchdogpermissions
@@ -99,9 +99,26 @@ fundusers:
 	$(CLEOS_ENDPOINT) transfer eosio $(ALICE) "100.0000 EOS" -p eosio
 	$(CLEOS_ENDPOINT) transfer eosio $(BOB) "100.0000 EOS" -p eosio
 	$(CLEOS_ENDPOINT) transfer eosio testnodexxx1 "100.0000 EOS" -p eosio
+	$(CLEOS_ENDPOINT) transfer eosio testnodexxx2 "100.0000 EOS" -p eosio
+	$(CLEOS_ENDPOINT) transfer eosio testnodexxx3 "100.0000 EOS" -p eosio
+	$(CLEOS_ENDPOINT) transfer eosio testnodexxx4 "100.0000 EOS" -p eosio
+	$(CLEOS_ENDPOINT) transfer eosio testnodexxx5 "100.0000 EOS" -p eosio
 
 	
 regnodes:
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) prepare '["testnodexxx1", "4,EOS"]' -p testnodexxx1
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) prepare '["testnodexxx2", "4,EOS"]' -p testnodexxx2
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) prepare '["testnodexxx3", "4,EOS"]' -p testnodexxx3
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) prepare '["testnodexxx4", "4,EOS"]' -p testnodexxx4
+	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) prepare '["testnodexxx5", "4,EOS"]' -p testnodexxx5
+
+	$(CLEOS_ENDPOINT) transfer testnodexxx1 $(CONTRACT_ACCOUNT) "10.0000 EOS" -p testnodexxx1
+	$(CLEOS_ENDPOINT) transfer testnodexxx2 $(CONTRACT_ACCOUNT) "10.0000 EOS" -p testnodexxx2
+	$(CLEOS_ENDPOINT) transfer testnodexxx3 $(CONTRACT_ACCOUNT) "10.0000 EOS" -p testnodexxx3
+	$(CLEOS_ENDPOINT) transfer testnodexxx4 $(CONTRACT_ACCOUNT) "10.0000 EOS" -p testnodexxx4
+	$(CLEOS_ENDPOINT) transfer testnodexxx5 $(CONTRACT_ACCOUNT) "10.0000 EOS" -p testnodexxx5
+
+
 	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx1", "$(PK_NODE_1)", "http://localhost:8001"]' -p testnodexxx1
 	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx2", "$(PK_NODE_2)", "http://localhost:8002"]' -p testnodexxx2
 	$(CLEOS_ENDPOINT) push action $(CONTRACT_ACCOUNT) regnode '["testnodexxx3", "$(PK_NODE_3)", "http://localhost:8003"]' -p testnodexxx3
