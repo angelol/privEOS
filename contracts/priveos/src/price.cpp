@@ -92,7 +92,7 @@ void priveos::sub_balance(const name& user, const asset& value) {
   }
   balances_table balances(get_self(), user.value);
   const auto& user_balance = balances.get(value.symbol.code().raw(), fmt("PrivEOS: User %s has no balance", user).c_str());
-  check(user_balance.funds >= value, "PrivEOS: Overdrawn balance");
+  check(user_balance.funds >= value, "PrivEOS: Trying to deduct %s but user %s only has %s", value, user, user_balance.funds);
   
   if(user_balance.funds == value) {
     balances.erase(user_balance);
