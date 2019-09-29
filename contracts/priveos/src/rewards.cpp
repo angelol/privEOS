@@ -231,7 +231,7 @@ void priveos::noderewards_impl(const name user, const symbol currency, const boo
       
       nodes.modify(nodes_itr, same_payer, [&](auto &x) {
         x.bond -= withdraw_amount_after_bond;
-        check(x.bond.amount >= 0, "PrivEOS: Trying to fall below the required bond amount after withdrawal.");
+        check(x.bond >= priveos::bond_amount, "PrivEOS: Trying to fall below the required bond amount after withdrawal.");
       });
     }
   } else {
