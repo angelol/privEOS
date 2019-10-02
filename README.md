@@ -50,6 +50,7 @@ Once your node is all set up, you can call ```priveosrules:regnode```, it's the 
 To prevent spam, the action charges a fee of 10 EOS or 400 TLOS on Telos that you need to deposit before you can register. This fee will be paid into the regular rewards pool.
 
 Example command:
+
     cleos -u https://jungle2.cryptolions.io  push action priveosrules prepare '["YOUR_EOS_ACCOUNT", "4,EOS"]' -p YOUR_EOS_ACCOUNT
     cleos -u https://jungle2.cryptolions.io transfer YOUR_EOS_ACCOUNT priveosrules "10.0000 EOS" "Registration fee"
     cleos -u https://jungle2.cryptolions.io  push action priveosrules regnode '["YOUR_EOS_ACCOUNT", "YOUR_NODE_PUBLIC_KEY", "https://YOUR_SERVER_NAME"]' -p YOUR_EOS_ACCOUNT
