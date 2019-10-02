@@ -111,6 +111,9 @@ fundusers:
 	$(CLEOS) transfer eosio testnodexxx4 "100.0000 EOS" -p eosio
 	$(CLEOS) transfer eosio testnodexxx5 "100.0000 EOS" -p eosio
 
+admreg:
+	$(CLEOS) push action $(CONTRACT_ACCOUNT) admreg '["testnodexxx1", "$(PK_NODE_1)", "http://localhost:8001"]' -p $(CONTRACT_ACCOUNT)
+
 	
 regnodes:
 	$(CLEOS) push action $(CONTRACT_ACCOUNT) prepare '["testnodexxx1", "4,EOS"]' -p testnodexxx1
