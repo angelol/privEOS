@@ -367,6 +367,8 @@ CONTRACT priveos : public eosio::contract {
       const bool contractpays
     );
     
+    ACTION admreg(const name owner, const public_key node_key, const std::string url);
+
     ACTION regnode(
       const name owner, 
       const eosio::public_key node_key, 

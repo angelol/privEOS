@@ -78,6 +78,52 @@ ACTION priveos::postbond(const name owner, const asset amount) {
   });
 }
 
+ACTION priveos::admreg(const name owner, const public_key node_key, const std::string url) {
+  require_auth(get_self());
+  check(node_key != public_key(), "public key should not be the default value");
+  check(node_key.type == 0u, "Only K1 Keys supported");
+  check(url.size() <= 256, "url has more than 256 bytes");
+#ifndef LOCAL
+  check(url.substr(0u, 8u) == "https://"s, "URL parameter must be a valid https URL");
+#endif
+  
+  const auto node_idx = nodes.find(owner.value);
+  if(node_idx != nodes.end()) {
+    // node already exists
+    nodes.modify(node_idx, owner, [&](auto& info) {
+      info.node_key = node_key;
+      info.url = url;
+      info.wants_to_leave = false;
+      info.cleared_for_leaving = false;
+    });
+  } else {
+    // we have a new node
+    nodes.emplace(owner, [&](auto& info) {
+      info.owner = owner;
+      info.node_key = node_key;
+      info.url = url;
+      info.is_active = false;
+      info.bond = asset{0, bond_symbol};
+    });
+    
+    auto stats = global_singleton.get();
+    stats.registered_nodes += 1u;
+    global_singleton.set(stats, get_self());
+    
+    // allocate memory
+    if(nodetoken_balances.find(owner.value) == nodetoken_balances.end()) {
+      nodetoken_balances.emplace(owner, [&](auto& x) {
+        x.owner = owner;
+        x.funds = asset{0, nodetoken_symbol};
+      });
+    }
+    
+    // charge registration fee
+    // sub_balance(owner, node_registration_fee);
+    // add_fee_balance(node_registration_fee);
+  } 
+}
+
 ACTION priveos::regnode(const name owner, const public_key node_key, const std::string url) {
   require_auth(owner);
   check(node_key != public_key(), "public key should not be the default value");
