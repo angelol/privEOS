@@ -83,13 +83,14 @@ async function get_broker_status_data() {
       errors.push(`Error while getting info`)
     }
 
-    if(watchdog_status.error) {
-      log.error(`Watchdog error: ${watchdog_status.error}`)
-      warnings.push(`Watchdog not running`)
-    } else if(watchdog_status != 'ok') {
-      log.error(`Watchdog returned status: ${watchdog_status}`)
-      warnings.push(`Watchdog Error: ${watchdog_status}`)
-    }
+    /* Disable watchdog warning */
+    // if(watchdog_status.error) {
+    //   log.error(`Watchdog error: ${watchdog_status.error}`)
+    //   warnings.push(`Watchdog not running`)
+    // } else if(watchdog_status != 'ok') {
+    //   log.error(`Watchdog returned status: ${watchdog_status}`)
+    //   warnings.push(`Watchdog Error: ${watchdog_status}`)
+    // }
     
     if(errors.length) {
       result['errors'] = errors
