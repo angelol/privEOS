@@ -36,38 +36,7 @@ apps:
     args   : 3005 testnodexxx5
     watch  : ['.', '../common']
     wait_ready: true
- 
-# start 5 instances of the watchdog for testing
-  - script : index.js
-    cwd    : watchdog
-    name   : watchdog_1
-    args   : 3101 testnodexxx1
-    watch  : ['.', '../common']
-    wait_ready: true
-  - script : index.js
-    cwd    : watchdog
-    name   : watchdog_2
-    args   : 3102 testnodexxx2
-    watch  : ['.', '../common']
-    wait_ready: true
-  - script : index.js
-    cwd    : watchdog
-    name   : watchdog_3
-    args   : 3103 testnodexxx3
-    watch  : ['.', '../common']
-    wait_ready: true
-  - script : index.js
-    cwd    : watchdog
-    name   : watchdog_4
-    args   : 3104 testnodexxx4
-    watch  : ['.', '../common']
-    wait_ready: true
-  - script : index.js
-    cwd    : watchdog
-    name   : watchdog_5
-    args   : 3105 testnodexxx5
-    watch  : ['.', '../common']
-    wait_ready: true
+
 
 # start 5 instances of the broker for testing
   - script : index.js
