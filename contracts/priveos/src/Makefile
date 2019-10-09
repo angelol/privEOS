@@ -7,8 +7,14 @@ CLEOS=cleos -u ${EOS_ENDPOINT}
 build:
 	 eosio-cpp -Wall -Werror -I. -O=z -D=LOCAL -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
 
+build_release:
+	 eosio-cpp -Wall -Werror -I. -O=z -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
+
 build_telos:
 	 eosio-cpp -Wall -Werror -I. -O=z -D=LOCAL -DBOND_AMOUNT=400000000 -DBOND_SYMBOL=TLOS -DBOND_DIGITS=4 -DBOND_TOKEN_CONTRACT=eosio.token -DREGISTRATION_FEE=4000000 -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
+
+build_telos_release:
+	 eosio-cpp -Wall -Werror -I. -O=z -DBOND_AMOUNT=400000000 -DBOND_SYMBOL=TLOS -DBOND_DIGITS=4 -DBOND_TOKEN_CONTRACT=eosio.token -DREGISTRATION_FEE=4000000 -abigen $(CPP_IN).cpp -o $(CPP_IN).wasm 
 
 token:
 	 eosio-cpp -I. -abigen eosio.token.cpp -o eosio.token.wasm 
