@@ -29,12 +29,20 @@ const throttle_fun = restify.plugins.throttle({
 	burst: 2,
   xff: true, // use x-forwarded-for header set by nginx
 })
+function our_throttle_fun(req, res, next) {
+  /* Don't throttle requests to status because they are already cached and inexpensive */
+	if(req.path() == '/broker/status/') {
+		next()
+	} else {
+		return throttle_fun(req, res, next)
+	}
+}
 
 const server = restify.createServer()
 server.use([
 	restify.plugins.bodyParser({maxBodySize: 1024*1024}),
 	add_default_headers,
-	throttle_fun,
+	our_throttle_fun,
 ])
 
  
