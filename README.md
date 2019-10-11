@@ -72,6 +72,8 @@ This process needs to be repeated for every chain that you would like to connect
 
 ## Posting your bond (optional)
 
+This step is optional but recommended. If you post a bond, it gives a signal to dApps that you are being serious. As dApps will need to select which nodes they are going to be using to store their files, they will be more likely to select nodes that have the full bond posted. The more dApps vote for your node and the more transactions these dApps make, the more money you earn. For more information on how the bond works and why it is necessary, please see our article on [privEOS tokenomics](https://steemit.com/priveos/@slant/priveos-tokenomics).
+
     cleos -u https://jungle2.cryptolions.io  push action priveosrules prepare '["YOUR_EOS_ACCOUNT", "4,EOS"]' -p YOUR_EOS_ACCOUNT
     cleos -u https://jungle2.cryptolions.io transfer YOUR_EOS_ACCOUNT priveosrules "1000.0000 EOS" "Bond, shaken, not stirred"
     cleos -u https://jungle2.cryptolions.io  push action priveosrules postbond '["YOUR_EOS_ACCOUNT", "1000.0000 EOS"]' -p YOUR_EOS_ACCOUNT
