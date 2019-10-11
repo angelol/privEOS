@@ -3,13 +3,23 @@
 This is the main privEOS repository containing the server-side software that all nodes in the privEOS network must run.
 
 ## Server Specs
-You need a server with the following hardware specs:
+It is recommended to run two separate servers, one for the privEOS server software and one for IPFS. The reason is that IPFS tends to monopolize server resources and that way it will interfere less with the privEOS server software.
+
+For the privEOS Server Software, you need a server with at least the following hardware specs:
 
 * 4 GB of RAM
 * 20 GB of Storage
-* Bare metal or Cloud Server is both fine
+* Bare metal is strongly suggested for private key security
 
-These specs are valid for the testnet and might be increased over time as usage increases or as new functionality is introduced.
+This server will only store the off-chain index in mongodb that privEOS needs. This index will grow slowly as the number of transations on the privEOS network increases. For quick desaster recovery, it is recommended to backup the mongodb database as resyncing from scratch will take a long time.
+
+For the IPFS server, we recommend at least the following specs:
+
+* 8 GB of RAM
+* 20 GB of Storage
+* Cloud is fine, but it should have a good ping to the main server
+
+This server stores the IPFS payloads that are referenced by the on-chain privEOS transactions. For quick desaster recovery, it is recommended to backup the IPFS data directory as resyncing from scratch will take a long time.
 
 ## Setting up a PrivEOS Node
 
@@ -20,29 +30,17 @@ Using the automation setup is a great way to start up quickly. It will help in h
 ## Firewall Configuration
 The privEOS software itself only listens on localhost, so there is no danger that services could inadvertently be exposed to the outside. Other services like MongoDB are configured to only listen on localhost as well by default. 
 
-If you are using a firewall, please make sure that it allows stateful connections from the server to the outside. Additionally, the following ports need to be reachable from the outside:
+If you are using a firewall, please make sure that it allows stateful connections from the server to the outside. 
+
+For the main privEOS Server, you need to open these ports: 
 * `22` or your custom OpenSSH port if you use non-standard port
 * `80` We are running an SSL-only service, however the Let's Encrypt cronjob which automatically renews the certificate needs this port.
 * `443` This is the standard SSL port that Nginx is listening on.
-* `4001` We recommend opening this up for IPFS so other Swarm nodes can connect to us. This also makes our setup future-proof as there are ideas to build a private IPFS subnet consisting of privEOS nodes.
 
-## Add Watchdog Permission
-
-When a new node `regnode`s with privEOS, it is not active by default. It first has to be approved by a minimum number of peers. Every node runs the watchdog daemon for this purpose. It checks the status of new nodes, and if everything is okay, approves it by calling the `priveosrules:peerappr` action. Once a minimum number of peers have approved a certain node, it is activated. This is to make sure that only functional nodes can be activated.
-
-The same process happens with currently active nodes. The watchdog regularly checks the status of all active nodes. If a node is offline or has a problem, the watchdog calls the `priveosrules:peerdisappr` action. Once a threshold amount of peer nodes have disapproved a node, it is being deactivated by the smart contract.
-
-That's why every node needs to be able to call the actions `priveosrules:peerappr` and `priveosrules:peerdisappr` non-interactively. For this purpose, we create a custom permission that is linked to these actions.
-
-Please generate a new, dedicated public/private keypair for this purpose and then create your custom permission like this:
-
-    cleos set account permission YOUR_EOS_ACCOUNT watchdog YOUR_NEW_DEDICATED_PUBLIC_KEY active
-    cleos set action permission YOUR_EOS_ACCOUNT priveosrules peerappr watchdog
-    cleos set action permission YOUR_EOS_ACCOUNT priveosrules peerdisappr watchdog
-    
-This new permission named `watchdog` can only be used to call the above actions and nothing else, so it is safe to store this private key on the server.
-
-This needs to be repeated for every chain.
+On the IPFS server:
+* `22` or your custom OpenSSH port if you use non-standard port
+* `4001` This is the port used by the IPFS Swarm protocol. 
+* `5001` For the IPFS HTTP API. You may restrict access to this API to the API of your main server as only the privEOS main server will need to connect. 
     
 ## Registering your Node
 Once your node is all set up, you can call ```priveosrules:regnode```, it's the privEOS equivalent of ```eosio:regproduce``` 🙂
@@ -71,6 +69,12 @@ In order to set your price:
 The price charged for reading and writing to privEOS will be the median of all prices set by the BPs.
 
 This process needs to be repeated for every chain that you would like to connect to.
+
+## Posting your bond (optional)
+
+    cleos -u https://jungle2.cryptolions.io  push action priveosrules prepare '["YOUR_EOS_ACCOUNT", "4,EOS"]' -p YOUR_EOS_ACCOUNT
+    cleos -u https://jungle2.cryptolions.io transfer YOUR_EOS_ACCOUNT priveosrules "1000.0000 EOS" "Bond, shaken, not stirred"
+    cleos -u https://jungle2.cryptolions.io  push action priveosrules postbond '["YOUR_EOS_ACCOUNT", "1000.0000 EOS"]' -p YOUR_EOS_ACCOUNT
 
 ## Checking your Node Health
 Once you've completed the ```regnode``` step above, your node should appear on the [privEOS monitor](https://monitor.priveos.io/). 
