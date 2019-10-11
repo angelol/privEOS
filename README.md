@@ -76,6 +76,8 @@ This step is optional but recommended. If you post a bond, it gives a signal to 
 
 The bond amount is 1,000.0000 EOS for the EOS mainnet and 40,000.0000 TLOS for the Telos mainnet.
 
+The bond will have to be transferred in from you main account that you're using to `regnode`. If your funds are currently in a different account, you're gonna have to transfer them to your main account first and deposit them from there like this:
+
     cleos -u https://jungle2.cryptolions.io  push action priveosrules prepare '["YOUR_EOS_ACCOUNT", "4,EOS"]' -p YOUR_EOS_ACCOUNT
     cleos -u https://jungle2.cryptolions.io transfer YOUR_EOS_ACCOUNT priveosrules "1000.0000 EOS" "Bond, shaken, not stirred"
     cleos -u https://jungle2.cryptolions.io  push action priveosrules postbond '["YOUR_EOS_ACCOUNT", "1000.0000 EOS"]' -p YOUR_EOS_ACCOUNT
