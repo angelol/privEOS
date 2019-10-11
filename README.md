@@ -40,7 +40,7 @@ For the main privEOS Server, you need to open these ports:
 On the IPFS server:
 * `22` or your custom OpenSSH port if you use non-standard port
 * `4001` This is the port used by the IPFS Swarm protocol. 
-* `5001` For the IPFS HTTP API. You may restrict access to this API to the API of your main server as only the privEOS main server will need to connect. 
+* `5001` For the IPFS HTTP API.  
     
 ## Registering your Node
 Once your node is all set up, you can call ```priveosrules:regnode```, it's the privEOS equivalent of ```eosio:regproduce``` 🙂
