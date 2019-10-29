@@ -1,6 +1,7 @@
 {
   "name": "priveos-node",
-  "version": "v1.0",
+  "version": "1.0.0",
+  "description": "Node software to run a node on the privEOS network (privacy preserving platform)",
   "main": "index.js",
   "repository": "git@github.com:rawrat/privEOS.git",
   "resolutions": {
